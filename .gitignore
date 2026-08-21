@@ -12,3 +12,11 @@ next-env.d.ts
 # registry.generated.json stays tracked so a bare `tsc --noEmit` resolves.
 content/courses/*/modules/
 .preview-db/
+
+# Python build artefacts
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.pytest_cache/
