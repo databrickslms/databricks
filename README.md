@@ -202,9 +202,36 @@ quiz_attempt      every submission           → course_id, score, total, answer
 ```
 
 Every progress row carries `course_id`. Module slugs are only unique within a course
-(`00-…` exists in each), so the course is part of the key — not an afterthought.
+(`00-…` exists in each), so the course is part of the uniqueness key — not an extra column.
+
+**Creating the tables.** Either run `npm run db:push`, or paste `drizzle/0000_*.sql`
+straight into Neon's SQL editor — that file is the committed, tested DDL, so you don't need
+a local toolchain to bootstrap the database. Regenerate it with `npx drizzle-kit generate`
+after any schema change.
 
 `npm run db:studio` opens Drizzle Studio against your database.
+
+### 5.1 Tests
+
+```bash
+npm test          # database integration suite — 35 assertions
+```
+
+`tests/db.test.ts` runs the real query code from `src/lib/progress.ts` against an
+**in-process Postgres** (PGlite), applying the same DDL as `db:push`. No live database
+needed. It covers enrolment and track switching, per-course isolation (the same module slug
+in two courses), view-versus-complete, quiz scoring rules (70% threshold, best-score
+retention, attempt history), the hand-written cohort SQL, and cascade deletes.
+
+It has already caught two real bugs:
+
+- `crypto.randomUUID()` relied on the `crypto` global, which only exists from Node 19.
+  Every insert would have crashed on Node 18. Now imported explicitly from `node:crypto`.
+- `getCohort` joined *from* enrolments, so a learner with progress but no enrolment row
+  was silently missing from the instructor dashboard. It now derives from the union of
+  enrolments, progress and attempts.
+
+Run it after any change to the schema or the progress layer.
 
 ## 6. Troubleshooting
 
@@ -225,13 +252,22 @@ Every progress row carries `course_id`. Module slugs are only unique within a co
 
 ## 7. What has and hasn't been verified
 
-Verified locally: production build, TypeScript, the catalog page, course home, reference
-pages, markdown rendering (headings, anchors, scrollable tables, code highlighting,
-callouts), auth redirects on protected routes, legacy `/learn` and `/reference` redirects,
-`planned` courses correctly returning 404 rather than a half-built page, the API's 401
-guard and its unknown-course rejection, the content pipeline's failure modes, and the
-module→quiz join for all 18 Genie Agents modules.
+Verified locally: production build from a clean clone, TypeScript, the catalog page, course
+home, reference pages, markdown rendering (headings, anchors, scrollable tables, code
+highlighting, callouts), auth redirects on protected routes, legacy `/learn` and
+`/reference` redirects, `planned` courses correctly returning 404 rather than a half-built
+page, the API's 401 guard and its unknown-course rejection, the content pipeline's failure
+modes, the module→quiz join for all 18 Genie Agents modules, the generated DDL, and **35
+database assertions against a real Postgres** (§5.1) covering course isolation, quiz
+scoring and the cohort query.
 
-**Not verified without live credentials:** the Google OAuth round trip, database writes,
-and the quiz-score save path. These need a real Neon URL and Google client — exercise them
-first after your first sign-in.
+**Still not verified — needs live credentials:** the Google OAuth round trip end to end
+(consent screen → callback → session cookie → a `user` row in Neon). The database *queries*
+are now tested, but the OAuth handshake and the Neon connection itself are not. Exercise
+these first after deploying:
+
+1. Sign in with Google → you land on `/c/genie-agents/learn`.
+2. Open a module → a `module_progress` row appears.
+3. Submit a knowledge check at ≥ 70% → the module shows complete and a `quiz_attempt` row exists.
+4. Switch tracks → the sidebar outline changes.
+5. `/instructor` lists you (your email must be in `INSTRUCTOR_EMAILS`).

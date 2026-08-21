@@ -1,0 +1,19 @@
+{
+  "//": "Standalone rather than extending ../tsconfig.json: tsx's extends resolution uses Array.prototype.toReversed, which needs Node 20, and local dev is on Node 18.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "esnext"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "paths": {
+      "@/*": ["../src/*"],
+      "server-only": ["../node_modules/server-only/empty.js"]
+    }
+  }
+}

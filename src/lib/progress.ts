@@ -149,42 +149,44 @@ export type CohortRow = {
   lastActive: Date | null
 }
 
-/** One row per learner per course they have enrolled in. */
+/**
+ * One row per learner per course they have any activity in.
+ *
+ * Derived from the union of enrolments, module progress and quiz attempts —
+ * not from enrolments alone. A learner with progress but no enrolment row
+ * (imported data, a deleted enrolment) must still appear: silently omitting
+ * someone from an instructor report is worse than showing an incomplete row.
+ */
 export async function getCohort(): Promise<CohortRow[]> {
   const db = getDb()
-  const rows = await db
-    .select({
-      id: schema.users.id,
-      name: schema.users.name,
-      email: schema.users.email,
-      image: schema.users.image,
-      courseId: schema.enrollments.courseId,
-      track: schema.enrollments.track,
-      completed: sql<number>`(
-        select count(*) from ${schema.moduleProgress} mp
-        where mp.user_id = ${schema.users.id}
-          and mp.course_id = ${schema.enrollments.courseId}
-          and mp.completed = true
-      )`.as('completed'),
-      quizzesTaken: sql<number>`(
-        select count(distinct qa.module_slug) from ${schema.quizAttempts} qa
-        where qa.user_id = ${schema.users.id}
-          and qa.course_id = ${schema.enrollments.courseId}
-      )`.as('quizzes_taken'),
-      avgScore: sql<number | null>`(
-        select round(avg(qa.score::numeric / nullif(qa.total, 0)) * 100)
-        from ${schema.quizAttempts} qa
-        where qa.user_id = ${schema.users.id}
-          and qa.course_id = ${schema.enrollments.courseId}
-      )`.as('avg_score'),
-      lastActive: sql<Date | null>`(
-        select max(mp.last_viewed_at) from ${schema.moduleProgress} mp
-        where mp.user_id = ${schema.users.id}
-          and mp.course_id = ${schema.enrollments.courseId}
-      )`.as('last_active'),
-    })
-    .from(schema.enrollments)
-    .innerJoin(schema.users, eq(schema.users.id, schema.enrollments.userId))
+  const { users, enrollments, moduleProgress, quizAttempts } = schema
 
-  return rows.sort((a, b) => Number(b.completed) - Number(a.completed))
+  const query = sql`
+    with activity as (
+          select ${enrollments.userId}    as user_id, ${enrollments.courseId}    as course_id from ${enrollments}
+      union select ${moduleProgress.userId} as user_id, ${moduleProgress.courseId} as course_id from ${moduleProgress}
+      union select ${quizAttempts.userId}   as user_id, ${quizAttempts.courseId}   as course_id from ${quizAttempts}
+    )
+    select
+      u.id, u.name, u.email, u.image,
+      a.course_id as "courseId",
+      e.track,
+      (select count(*) from ${moduleProgress} mp
+        where mp.user_id = a.user_id and mp.course_id = a.course_id and mp.completed) as completed,
+      (select count(distinct qa.module_slug) from ${quizAttempts} qa
+        where qa.user_id = a.user_id and qa.course_id = a.course_id) as "quizzesTaken",
+      (select round(avg(qa.score::numeric / nullif(qa.total, 0)) * 100) from ${quizAttempts} qa
+        where qa.user_id = a.user_id and qa.course_id = a.course_id) as "avgScore",
+      (select max(mp.last_viewed_at) from ${moduleProgress} mp
+        where mp.user_id = a.user_id and mp.course_id = a.course_id) as "lastActive"
+    from activity a
+    join ${users} u on u.id = a.user_id
+    left join ${enrollments} e on e.user_id = a.user_id and e.course_id = a.course_id
+    order by completed desc, u.name asc
+  `
+
+  const result = (await db.execute(query)) as unknown
+  // neon-http and pglite both return { rows }, but be tolerant of a bare array.
+  const rows = (Array.isArray(result) ? result : (result as { rows: unknown[] }).rows) as CohortRow[]
+  return rows
 }

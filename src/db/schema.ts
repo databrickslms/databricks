@@ -2,12 +2,13 @@ import {
   boolean, index, integer, jsonb, pgTable, primaryKey,
   text, timestamp, uniqueIndex,
 } from 'drizzle-orm/pg-core'
+import { randomUUID } from 'node:crypto'
 import type { AdapterAccountType } from 'next-auth/adapters'
 
 /* ─── Auth.js tables (shape required by @auth/drizzle-adapter) ─────────────── */
 
 export const users = pgTable('user', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text('id').primaryKey().$defaultFn(() => randomUUID()),
   name: text('name'),
   email: text('email').unique(),
   emailVerified: timestamp('emailVerified', { mode: 'date' }),
@@ -67,7 +68,7 @@ export const enrollments = pgTable(
 export const moduleProgress = pgTable(
   'module_progress',
   {
-    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    id: text('id').primaryKey().$defaultFn(() => randomUUID()),
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     courseId: text('course_id').notNull(),
     moduleSlug: text('module_slug').notNull(),
@@ -86,7 +87,7 @@ export const moduleProgress = pgTable(
 export const quizAttempts = pgTable(
   'quiz_attempt',
   {
-    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    id: text('id').primaryKey().$defaultFn(() => randomUUID()),
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     courseId: text('course_id').notNull(),
     moduleSlug: text('module_slug').notNull(),
