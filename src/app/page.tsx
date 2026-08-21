@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import { COURSES, SITE, coursesByArea, type Course } from '@/lib/courses'
 
+/**
+ * True only when running `npm run dev` / `npm run preview`. Gates authoring
+ * hints and internal curriculum notes so they never render for learners.
+ */
+const isAuthoring = () => process.env.NODE_ENV !== 'production'
+
 export default function Home() {
   const groups = coursesByArea()
   const live = COURSES.filter((c) => c.status === 'live')
@@ -73,18 +79,22 @@ export default function Home() {
 
         {groups.length < SITE.areas.length && (
           <div className="mt-14 rounded-2xl border border-dashed p-6">
-            <h3 className="text-[0.9rem] font-semibold">Areas with no courses yet</h3>
+            <h3 className="text-[0.9rem] font-semibold">More areas on the way</h3>
             <p className="mt-1.5 text-[0.85rem] leading-relaxed text-muted">
               {SITE.areas
                 .filter((a) => !groups.some((g) => g.area.id === a.id))
                 .map((a) => a.name)
                 .join(' · ')}
             </p>
-            <p className="mt-3 text-[0.8rem] leading-relaxed text-faint">
-              Add a course by creating <code className="font-mono">content/courses/&lt;id&gt;/course.json</code>{' '}
-              with an <code className="font-mono">area</code> and a{' '}
-              <code className="font-mono">plan.md</code>. See the README.
-            </p>
+            {isAuthoring() && (
+              <p className="mt-3 text-[0.8rem] leading-relaxed text-faint">
+                <span className="font-medium">Authoring:</span> add a course by creating{' '}
+                <code className="font-mono">content/courses/&lt;id&gt;/course.json</code> with an{' '}
+                <code className="font-mono">area</code> and a{' '}
+                <code className="font-mono">plan.md</code>. See the README. (This note is hidden
+                in production.)
+              </p>
+            )}
           </div>
         )}
       </section>
@@ -147,9 +157,9 @@ function CourseCard({ course }: { course: Course }) {
     return (
       <div className="card h-full border-dashed p-5 opacity-80">
         {body}
-        {course.notes && (
+        {course.notes && isAuthoring() && (
           <p className="mt-3 border-t pt-3 text-[0.775rem] leading-relaxed text-faint">
-            <span className="font-medium text-muted">Scoping note: </span>
+            <span className="font-medium text-muted">Authoring note: </span>
             {course.notes}
           </p>
         )}
