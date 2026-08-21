@@ -39,6 +39,24 @@ attempt is stored, so retakes are visible in the cohort view.
 
 ---
 
+## 0. Related: the lab dataset
+
+Course lab environments live in a separate repo,
+[**lakehouse-academy**](https://github.com/databrickslms/lakehouse-academy) — a
+pip-installable provisioner that writes lab notebooks into a Databricks workspace:
+
+```python
+%pip install git+https://github.com/databrickslms/lakehouse-academy.git
+dbutils.library.restartPython()
+import lakehouse_academy as academy
+academy.install('genie-agents')
+```
+
+It is deliberately separate: a Python package release should not require tagging a
+Next.js app, and this repo never reads the lab SQL.
+
+---
+
 ## 1. Free-tier architecture (read this first)
 
 | Piece | Service | Free terms |
