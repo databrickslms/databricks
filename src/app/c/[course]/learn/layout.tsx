@@ -19,7 +19,10 @@ export default async function LearnLayout({
   if (!isOpen(course)) notFound()
 
   const session = await getSession()
-  if (!session?.user?.id) redirect(`/login?next=/c/${id}/learn`)
+  // Do NOT redirect here. A layout cannot see which child page was requested, so
+  // redirecting would send every module deep link to the dashboard. Each page
+  // redirects with its own path instead; render children bare until then.
+  if (!session?.user?.id) return <>{children}</>
 
   const track = await getTrack(session.user.id, id)
   const progress = await getProgress(session.user.id, id)
