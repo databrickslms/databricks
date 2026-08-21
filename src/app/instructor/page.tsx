@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import { redirect } from 'next/navigation'
+import { Avatar } from '@/components/avatar'
 import { getSession } from '@/lib/session'
 import { COURSES, getCourse, trackLabel } from '@/lib/courses'
 import { modulesForTrack } from '@/lib/content'
@@ -113,13 +113,7 @@ function CohortTable({ courseId, rows }: { courseId: string; rows: CohortRow[] }
               <tr key={`${r.id}-${r.courseId}`} className="border-b last:border-0">
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-2.5">
-                    {r.image ? (
-                      <Image src={r.image} alt="" width={24} height={24} className="rounded-full" />
-                    ) : (
-                      <div className="grid h-6 w-6 place-items-center rounded-full bg-accent-soft text-[0.62rem] font-semibold text-accent">
-                        {r.name?.[0] ?? '?'}
-                      </div>
-                    )}
+                    <Avatar src={r.image} name={r.name} size={24} />
                     <div className="min-w-0">
                       <div className="truncate font-medium">{r.name ?? 'Unnamed'}</div>
                       <div className="truncate text-[0.72rem] text-faint">{r.email}</div>

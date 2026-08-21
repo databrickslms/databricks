@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import { ThemeToggle } from './theme-toggle'
+import { Avatar } from './avatar'
 import { SITE, openCourses } from '@/lib/courses'
 
 export function SiteHeader({ session }: { session: Session | null }) {
@@ -59,19 +59,7 @@ export function SiteHeader({ session }: { session: Session | null }) {
                   <div className="text-[0.66rem] uppercase tracking-wider text-accent">Instructor</div>
                 )}
               </div>
-              {user.image ? (
-                <Image
-                  src={user.image}
-                  alt=""
-                  width={30}
-                  height={30}
-                  className="rounded-full ring-1 ring-line"
-                />
-              ) : (
-                <div className="grid h-[30px] w-[30px] place-items-center rounded-full bg-accent-soft text-[0.7rem] font-semibold text-accent">
-                  {user.name?.[0] ?? '?'}
-                </div>
-              )}
+              <Avatar src={user.image} name={user.name} size={30} />
               {user.email !== 'preview@localhost' && (
                 <button
                   onClick={() => signOut({ redirectTo: '/' })}
