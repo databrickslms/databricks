@@ -1337,7 +1337,7 @@ Genie ships fast and the docs were reorganised recently (Spaces → Agents; the 
 | Appendix B — Genie directly vs supervisor | Module 16.4 |
 | Appendix B — supervisor non-negotiables (timeout, capacity, identity) | Module 16.4 |
 
-**Not covered on purpose:** specific internal ticket IDs (e.g. ES-2003513) and named internal teams — these belong in a living internal runbook, not in LMS content with a 12-month shelf life. Module 14 teaches learners to *file with evidence*; the routing table stays with support.
+**Not covered on purpose:** specific internal ticket IDs and named internal teams — these belong in a living internal runbook, not in LMS content with a 12-month shelf life. Module 14 teaches learners to *file with evidence*; the routing table stays with support.
 
 ---
 
