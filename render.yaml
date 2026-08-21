@@ -12,7 +12,10 @@ services:
     plan: free # ⚠️ free web services spin down after 15 min idle (~1 min cold start)
     region: oregon
     branch: main
-    buildCommand: npm ci && npm run build
+    # --include=dev is explicit: the build needs tailwindcss, postcss and
+    # typescript, which are devDependencies. npm 10 installs them regardless of
+    # NODE_ENV, but pinning the flag keeps a future npm from omitting them.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run start
     healthCheckPath: /login
     autoDeploy: true
