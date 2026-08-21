@@ -1,0 +1,42 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# NOTE ON "FREE": this blueprint intentionally does NOT create a Render Postgres
+# database. Render's free Postgres expires 30 days after creation (14-day grace,
+# then deletion), which would silently destroy learner accounts and progress.
+# Use Neon's free tier instead — 0.5 GB, never expires. See README §2.
+
+services:
+  - type: web
+    name: genie-agents-lms
+    runtime: node
+    plan: free # ⚠️ free web services spin down after 15 min idle (~1 min cold start)
+    region: oregon
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /login
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.1
+      - key: NODE_ENV
+        value: production
+      # Auth.js needs this because Render terminates TLS at its proxy.
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      # Generated once by Render and kept stable across deploys.
+      - key: AUTH_SECRET
+        generateValue: true
+      # ── Set these yourself in the Render dashboard (marked sync: false) ──
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_URL
+        sync: false
+      - key: AUTH_GOOGLE_ID
+        sync: false
+      - key: AUTH_GOOGLE_SECRET
+        sync: false
+      - key: INSTRUCTOR_EMAILS
+        sync: false
+      - key: ALLOWED_EMAIL_DOMAINS
+        sync: false

@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ink: 23 25 31;
+    --surface: 252 251 249;
+    --raised: 255 255 255;
+    --line: 226 223 217;
+    --muted: 98 103 114;
+    --faint: 146 151 162;
+    --accent: 214 79 42;
+    --accent-soft: 250 236 230;
+    --teal: 17 122 111;
+    --amber: 176 118 15;
+    --rose: 178 46 62;
+    --sel: 250 236 230;
+  }
+
+  :root:not([data-theme='light']) {
+    @media (prefers-color-scheme: dark) {
+      --ink: 236 237 240;
+      --surface: 14 15 18;
+      --raised: 22 24 29;
+      --line: 44 47 55;
+      --muted: 154 159 171;
+      --faint: 110 116 128;
+      --accent: 255 122 79;
+      --accent-soft: 46 26 20;
+      --teal: 61 191 174;
+      --amber: 226 168 62;
+      --rose: 240 122 134;
+      --sel: 56 30 22;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --ink: 236 237 240;
+    --surface: 14 15 18;
+    --raised: 22 24 29;
+    --line: 44 47 55;
+    --muted: 154 159 171;
+    --faint: 110 116 128;
+    --accent: 255 122 79;
+    --accent-soft: 46 26 20;
+    --teal: 61 191 174;
+    --amber: 226 168 62;
+    --rose: 240 122 134;
+    --sel: 56 30 22;
+  }
+
+  * { border-color: rgb(var(--line)); }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 5.5rem; }
+
+  body {
+    background-color: rgb(var(--surface));
+    color: rgb(var(--ink));
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: rgb(var(--sel)); }
+
+  /* Focus ring that reads well on both themes */
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  /* ── Prose ──────────────────────────────────────────────────────────────── */
+  .prose-course {
+    @apply prose prose-neutral dark:prose-invert max-w-none;
+    --tw-prose-body: rgb(var(--ink));
+    --tw-prose-headings: rgb(var(--ink));
+    --tw-prose-bold: rgb(var(--ink));
+    --tw-prose-links: rgb(var(--accent));
+    --tw-prose-quotes: rgb(var(--ink));
+    --tw-prose-quote-borders: rgb(var(--accent));
+    --tw-prose-counters: rgb(var(--muted));
+    --tw-prose-bullets: rgb(var(--faint));
+    --tw-prose-hr: rgb(var(--line));
+    --tw-prose-th-borders: rgb(var(--line));
+    --tw-prose-td-borders: rgb(var(--line));
+    --tw-prose-code: rgb(var(--ink));
+  }
+
+  .prose-course :where(h2) {
+    @apply font-display text-[1.7rem] font-normal tracking-[-0.01em] mt-14 mb-4 pb-2;
+    border-bottom: 1px solid rgb(var(--line));
+    scroll-margin-top: 5.5rem;
+  }
+  .prose-course :where(h3) {
+    @apply font-sans text-[1.06rem] font-semibold tracking-tight mt-9 mb-3;
+    scroll-margin-top: 5.5rem;
+  }
+  .prose-course :where(h4) { @apply text-[0.95rem] font-semibold mt-6 mb-2; }
+  .prose-course :where(p, li) { @apply text-[0.945rem] leading-[1.72]; }
+  .prose-course :where(strong) { @apply font-semibold; }
+
+  .prose-course :where(a.header-anchor) {
+    @apply ml-2 text-faint no-underline opacity-0 transition-opacity font-normal;
+  }
+  .prose-course :where(h2:hover, h3:hover) a.header-anchor { @apply opacity-100; }
+
+  /* Blockquote = the course's "teaching line" callout */
+  .prose-course :where(blockquote) {
+    @apply not-italic rounded-r-lg border-l-[3px] py-1 pl-5 pr-4 my-6 font-normal;
+    background: rgb(var(--accent-soft) / 0.55);
+    border-left-color: rgb(var(--accent));
+  }
+  .prose-course :where(blockquote p:first-of-type)::before,
+  .prose-course :where(blockquote p:last-of-type)::after { content: none; }
+
+  /* Inline code */
+  .prose-course :where(code):not(pre code) {
+    @apply rounded px-[0.35em] py-[0.12em] text-[0.855em] font-medium;
+    background: rgb(var(--ink) / 0.06);
+  }
+  .prose-course :where(code)::before,
+  .prose-course :where(code)::after { content: none; }
+
+  /* Code blocks */
+  .prose-course :where(pre) {
+    @apply rounded-xl border p-4 text-[0.83rem] leading-[1.6] my-6 overflow-x-auto;
+    background: rgb(var(--raised));
+    border-color: rgb(var(--line));
+  }
+
+  /* Tables scroll inside their own box */
+  .table-scroll { @apply -mx-1 my-6 overflow-x-auto rounded-xl border px-1; }
+  .table-scroll table { @apply my-0 w-full text-[0.865rem]; }
+  .prose-course :where(thead th) {
+    @apply whitespace-nowrap bg-transparent pb-2 pt-3 text-left text-[0.7rem] font-semibold uppercase tracking-[0.07em];
+    color: rgb(var(--muted));
+  }
+  .prose-course :where(tbody td) { @apply align-top py-2.5; }
+  .prose-course :where(tbody tr:last-child td) { @apply border-b-0; }
+
+  .prose-course :where(hr) { @apply my-12; }
+
+  /* ── Chrome ─────────────────────────────────────────────────────────────── */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.7rem] font-medium;
+    border-color: rgb(var(--line));
+    color: rgb(var(--muted));
+  }
+
+  .card {
+    @apply rounded-2xl border transition-all duration-200;
+    background: rgb(var(--raised));
+    border-color: rgb(var(--line));
+  }
+  .card-hover:hover { @apply -translate-y-0.5 shadow-lift; border-color: rgb(var(--accent) / 0.45); }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-150 disabled:opacity-45 disabled:cursor-not-allowed;
+  }
+  .btn-primary { @apply btn text-white; background: rgb(var(--accent)); }
+  .btn-primary:hover:not(:disabled) { background: rgb(var(--accent) / 0.88); }
+  .btn-ghost { @apply btn border; border-color: rgb(var(--line)); }
+  .btn-ghost:hover:not(:disabled) { background: rgb(var(--ink) / 0.04); }
+
+  /* highlight.js — theme-aware, minimal */
+  .hljs-comment, .hljs-quote { color: rgb(var(--faint)); font-style: italic; }
+  .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-section { color: rgb(var(--accent)); }
+  .hljs-string, .hljs-attr, .hljs-addition { color: rgb(var(--teal)); }
+  .hljs-number, .hljs-built_in, .hljs-type { color: rgb(var(--amber)); }
+  .hljs-title, .hljs-name, .hljs-function { color: rgb(var(--ink)); font-weight: 600; }
+  .hljs-deletion, .hljs-meta { color: rgb(var(--rose)); }
+}
+
+@layer utilities {
+  .grain {
+    background-image: radial-gradient(rgb(var(--ink) / 0.055) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
