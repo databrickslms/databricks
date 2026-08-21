@@ -139,16 +139,86 @@ Two more flaws are added to the *agent*, not the data, in Module 8: a bloated 22
 | API, tracing, CI/CD | 16 | the whole agent, exported as `serialized_space` |
 | Supervisor / multi-agent | 16 | 5 agents + document volume + external context |
 
-### 0.5 Build steps
-1. **Create the catalog and schemas** — `mfg.core`, `mfg.ref`, plus the `mfg.ref.documents` volume.
-2. **Run the seed notebook** — generates 24 months of history: ~900M transactions (or a 20M sampled tier for smaller workspaces), 2.1M customers, 340 branches, 1.4M loan-balance snapshots per month.
-3. **Plant the flaws** — the seed script does this deliberately; do not "fix" the data.
-4. **Load the volume** — 40 synthetic PDFs (memos, notes, complaints).
-5. **Apply governance objects** — one row filter on `dim_branch.region`, column masks on the four PII columns, and three user personas (§0.6).
-6. **Certify `fct_transactions`, deprecate `fct_txn_legacy`.**
-7. **Verify** — run the 12-statement validation script; each check maps to a planted flaw.
+### 0.5 Provisioning — one pip install
 
-**Two data tiers.** Ship a **Small** tier (20M transactions) so every learner can complete the accuracy modules, and a **Large** tier (900M, unclustered, one unmaintained external table) used only in Module 13 — you cannot teach latency on a toy dataset.
+The lab is installed by a package, not assembled by hand. In a Databricks notebook:
+
+```python
+%pip install databricks360
+dbutils.library.restartPython()
+```
+
+Then in a **new cell** — `restartPython()` clears everything, so the import cannot share a
+cell with the install:
+
+```python
+import databricks360 as academy
+
+academy.list_courses()
+academy.install('genie-agents')
+```
+
+That writes the lab notebooks into your workspace and prints the run order:
+
+```
+Installed 'genie-agents' → /Workspace/Users/you@company.com/databricks360/genie-agents
+  catalog: mfg    tier: small
+
+  Run these in order:
+    1. 01_catalog_and_schemas
+    2. 02_dimensions
+    3. 03_facts   (slow)
+```
+
+Because it runs *inside* a notebook, it authenticates as you — there is no host, token or CLI
+profile to configure.
+
+**It deliberately does not run the notebooks for you.** Watching a warehouse work through
+20M transactions, and seeing the flaws appear in the data, is the point of this module. It
+also means nothing spends compute without being asked.
+
+#### The notebooks
+
+| # | Notebook | What it builds | Status |
+|---|---|---|---|
+| 01 | `catalog_and_schemas` | the catalog, `core` / `ref` / `staging` schemas, the documents volume | shipped |
+| 02 | `dimensions` | six dimensions — plants flaws **2, 3, 5, 8, 9** | shipped |
+| 03 | `facts` | five fact tables — plants flaws **1, 4, 6, 7**. Slow: several minutes | shipped |
+| 04 | `decoys` | `fct_transactions_raw` (380 columns) and `fct_txn_legacy`, for Modules 7 and 13 | in development |
+| 05 | `governance` | row filter on `dim_branch.region`, column masks on the four PII columns, the three personas (§0.6) | in development |
+| 06 | `curated` | the "after" layer — `vw_transactions_net`, `vw_loan_book_eop`, `dim_customer_safe`, UC functions | in development |
+| 07 | `metric_view` | `mv_banking_metrics` | in development |
+| 99 | `validate` | one assertion per planted flaw — run last | in development |
+
+Run 01 → 03 today. The remaining notebooks arrive in later releases; `academy.list_courses()`
+always reports what the installed version actually ships.
+
+#### Options
+
+```python
+academy.install(
+    'genie-agents',
+    path='/Workspace/Shared/labs',   # default: your home folder
+    catalog='training_v2',           # default: mfg
+    tier='large',                    # default: small
+    overwrite=True,                  # replace notebooks from a previous install
+)
+```
+
+**Two data tiers.** **Small** (20M transactions) is the default and covers every module except
+13. **Large** (900M, left unclustered on purpose) exists only for Module 13, because you cannot
+measure query latency on a toy dataset. Start small.
+
+#### Why the data is deterministic
+
+Every generated value derives from `hash()` of the row key rather than `rand()`, and ages and
+tenures anchor to a fixed 2026-09-30 rather than `current_date`. Two consequences worth
+understanding, because they explain a design choice you will meet again in Module 11:
+
+- Your data is **byte-identical** to every other learner's, so a benchmark's ground-truth SQL
+  returns the same answer for everyone. Random seeding would silently invalidate the entire
+  benchmark set — and you would only notice when scores stopped making sense.
+- Re-running a notebook reproduces the same rows instead of a fresh random draw.
 
 ### 0.6 The three personas (used from Module 5 onward)
 | Persona | Role | Access |
@@ -158,7 +228,15 @@ Two more flaws are added to the *agent*, not the data, in Module 8: a bloated 22
 | **Elena Okafor** | CFO | unrestricted; PII masked except `annual_income` |
 
 ### Lab 0 (60 min)
-Provision the dataset, run the validation script, and write a one-line prediction for each of the nine flaws: *what wrong answer will an uncurated agent give?* Learners keep this sheet and check it in Module 4.
+1. `%pip install databricks360`, then `academy.install('genie-agents')`.
+2. Run `01_catalog_and_schemas`. Confirm the catalog, three schemas and the volume exist.
+3. Run `02_dimensions`, then `03_facts`. Check the row counts each notebook prints at the end.
+4. Open `dim_date` and find the row for **1 October 2025**. Note its `fiscal_year`. That single
+   value is flaw #2, and it is why "last year" is ambiguous at Meridian.
+5. Write a one-line prediction for each of the nine flaws: *what wrong answer will an
+   uncurated agent give?* Keep this sheet — you check it against reality in Module 4, and the
+   gap between what you predicted and what actually happened is the most useful thing you will
+   produce today.
 
 ### Knowledge check
 5 questions on the schema, the fiscal calendar, and which flaw causes which class of error.
