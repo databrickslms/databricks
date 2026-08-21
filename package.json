@@ -14,7 +14,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "test:db": "tsx --tsconfig tests/tsconfig.json tests/db.test.ts",
-    "test": "npm run test:db"
+    "test": "npm run test:db",
+    "preview": "npm run content && PREVIEW=1 next dev"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.4",

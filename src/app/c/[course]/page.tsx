@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { auth } from '@/auth'
+import { getSession } from '@/lib/session'
 import { getCourse, isOpen, trackNames } from '@/lib/courses'
 import { allModules, byStage } from '@/lib/content'
 
@@ -14,7 +14,7 @@ export default async function CourseHome({ params }: { params: Promise<{ course:
   const course = getCourse(id)
   if (!isOpen(course)) notFound()
 
-  const session = await auth().catch(() => null)
+  const session = await getSession()
   if (session?.user) redirect(`/c/${id}/learn`)
 
   const modules = allModules(id)

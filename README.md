@@ -107,18 +107,37 @@ Visit the site, **Start with Google**, pick a track. Your own email in
 
 ## 3. Run locally
 
+### 3.1 Just look at the UI — no accounts, no database
+
+```bash
+npm install
+npm run preview      # http://localhost:3000
+```
+
+Preview mode signs you in as a stand-in user and keeps progress in memory, so the whole
+signed-in interface is browsable with zero setup: the dashboard, every module page,
+knowledge checks that score and mark modules complete, the track picker, and the instructor
+cohort view. An amber banner across the top makes it unmistakable.
+
+Progress resets when the dev server restarts. That is deliberate — this exists to look at
+the UI, not to test persistence, which `npm test` covers properly.
+
+**It cannot activate in production.** Preview requires `PREVIEW=1` **and**
+`NODE_ENV !== "production"`. Since `next build` and `next start` set
+`NODE_ENV=production`, a deployed app ignores the flag even if it is set — verified, not
+assumed.
+
+### 3.2 The real thing, with Google sign-in and a database
+
 ```bash
 cp .env.example .env      # fill in DATABASE_URL, Google creds
 openssl rand -base64 32   # paste into AUTH_SECRET
-npm install
 npm run db:push           # create tables in Neon
 npm run dev               # http://localhost:3000
 ```
 
 Set `AUTH_URL="http://localhost:3000"` and add the matching localhost redirect URI in
-Google Cloud, or sign-in will fail with a redirect-mismatch error.
-
----
+Google Cloud, or sign-in fails with a redirect-mismatch error.
 
 ## 4. Courses and content
 

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { auth } from '@/auth'
+import { getSession } from '@/lib/session'
 import { Quiz, type Question } from '@/components/quiz'
 import { CompleteToggle } from '@/components/complete-toggle'
 import { getCourse, isOpen } from '@/lib/courses'
@@ -29,7 +29,7 @@ export default async function ModulePage({
   const course = getCourse(id)
   if (!isOpen(course)) notFound()
 
-  const session = await auth()
+  const session = await getSession()
   if (!session?.user?.id) redirect(`/login?next=/c/${id}/learn/${slug}`)
 
   const doc = getDoc(id, slug)

@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
-import { auth, signIn } from '@/auth'
+import { signIn } from '@/auth'
+import { getSession } from '@/lib/session'
+import { openCourses } from '@/lib/courses'
 
 export const metadata = { title: 'Sign in' }
 
@@ -9,8 +11,9 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; error?: string }>
 }) {
   const { next, error } = await searchParams
-  const session = await auth().catch(() => null)
-  if (session?.user) redirect(next ?? '/learn')
+  const session = await getSession()
+  const home = openCourses()[0] ? `/c/${openCourses()[0].id}/learn` : '/'
+  if (session?.user) redirect(next ?? home)
 
   return (
     <div className="grain flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-5 py-16">
@@ -35,7 +38,7 @@ export default async function LoginPage({
           className="mt-7"
           action={async () => {
             'use server'
-            await signIn('google', { redirectTo: next ?? '/learn' })
+            await signIn('google', { redirectTo: next ?? home })
           }}
         >
           <button type="submit" className="btn-ghost w-full !py-2.5 !text-[0.9rem] font-medium">

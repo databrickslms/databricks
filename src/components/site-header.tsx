@@ -72,12 +72,14 @@ export function SiteHeader({ session }: { session: Session | null }) {
                   {user.name?.[0] ?? '?'}
                 </div>
               )}
-              <button
-                onClick={() => signOut({ redirectTo: '/' })}
-                className="text-[0.78rem] text-faint transition-colors hover:text-ink"
-              >
-                Sign out
-              </button>
+              {user.email !== 'preview@localhost' && (
+                <button
+                  onClick={() => signOut({ redirectTo: '/' })}
+                  className="text-[0.78rem] text-faint transition-colors hover:text-ink"
+                >
+                  Sign out
+                </button>
+              )}
             </div>
           ) : (
             <Link href="/login" className="btn-primary !py-1.5 !text-[0.82rem]">

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { auth } from '@/auth'
+import { getSession } from '@/lib/session'
 import { TrackPicker } from '@/components/track-picker'
 import { ProgressRing } from '@/components/progress-ring'
 import { getCourse, isOpen, trackLabel, trackNames } from '@/lib/courses'
@@ -19,7 +19,7 @@ export default async function LearnHome({ params }: { params: Promise<{ course: 
   const course = getCourse(id)
   if (!isOpen(course)) notFound()
 
-  const session = await auth()
+  const session = await getSession()
   if (!session?.user?.id) redirect(`/login?next=/c/${id}/learn`)
 
   const track = await getTrack(session.user.id, id)

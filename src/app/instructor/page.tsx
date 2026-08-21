@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
-import { auth } from '@/auth'
+import { getSession } from '@/lib/session'
 import { COURSES, getCourse, trackLabel } from '@/lib/courses'
 import { modulesForTrack } from '@/lib/content'
 import { getCohort, type CohortRow } from '@/lib/progress'
@@ -15,7 +15,7 @@ const fmt = (d: Date | string | null) => {
 }
 
 export default async function InstructorPage() {
-  const session = await auth()
+  const session = await getSession()
   if (!session?.user?.id) redirect('/login?next=/instructor')
   if (!session.user.isInstructor) {
     return (

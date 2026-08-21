@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
-import { auth } from '@/auth'
+import { getSession } from '@/lib/session'
 import { CourseSidebar } from '@/components/course-sidebar'
 import { getCourse, isOpen, trackLabel } from '@/lib/courses'
 import { modulesForTrack } from '@/lib/content'
@@ -18,7 +18,7 @@ export default async function LearnLayout({
   const course = getCourse(id)
   if (!isOpen(course)) notFound()
 
-  const session = await auth()
+  const session = await getSession()
   if (!session?.user?.id) redirect(`/login?next=/c/${id}/learn`)
 
   const track = await getTrack(session.user.id, id)

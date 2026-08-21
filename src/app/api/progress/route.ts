@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { getSession } from '@/lib/session'
 import { saveAttempt, setCompleted, setTrack } from '@/lib/progress'
 import { getCourse, isOpen, isValidTrack } from '@/lib/courses'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
-  const session = await auth()
+  const session = await getSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
   }

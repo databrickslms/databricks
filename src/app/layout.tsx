@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 import { SessionProvider } from 'next-auth/react'
-import { auth } from '@/auth'
+import { getSession } from '@/lib/session'
 import { SiteHeader } from '@/components/site-header'
+import { PreviewBanner } from '@/components/preview-banner'
 import { SITE } from '@/lib/courses'
 import './globals.css'
 
@@ -28,7 +29,7 @@ export const viewport: Viewport = {
 const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth().catch(() => null)
+  const session = await getSession()
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={`${sans.variable} ${display.variable} ${mono.variable} font-sans antialiased`}>
         <SessionProvider session={session}>
+          <PreviewBanner />
           <SiteHeader session={session} />
           <main>{children}</main>
         </SessionProvider>

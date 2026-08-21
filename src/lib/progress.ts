@@ -2,12 +2,14 @@ import 'server-only'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { getDb, schema } from '@/db'
 import { getCourse, resolveTrack } from './courses'
+import { isPreview, store } from './preview'
 
 export type ProgressRow = { completed: boolean; bestScore: number | null; total: number | null }
 export type ProgressMap = Record<string, ProgressRow>
 
 export async function getTrack(userId: string, courseId: string): Promise<string> {
   const course = getCourse(courseId)
+  if (isPreview()) return resolveTrack(course!, store.getTrack(courseId) ?? null)
   const db = getDb()
   const [row] = await db
     .select({ track: schema.enrollments.track })
@@ -26,6 +28,7 @@ export async function getTrack(userId: string, courseId: string): Promise<string
 }
 
 export async function setTrack(userId: string, courseId: string, track: string) {
+  if (isPreview()) return store.setTrack(courseId, track)
   const db = getDb()
   await db
     .insert(schema.enrollments)
@@ -37,6 +40,7 @@ export async function setTrack(userId: string, courseId: string, track: string) 
 }
 
 export async function getProgress(userId: string, courseId: string): Promise<ProgressMap> {
+  if (isPreview()) return store.getProgress(courseId)
   const db = getDb()
   const scope = (table: typeof schema.moduleProgress | typeof schema.quizAttempts) =>
     and(eq(table.userId, userId), eq(table.courseId, courseId))
@@ -75,6 +79,7 @@ export async function getProgress(userId: string, courseId: string): Promise<Pro
 }
 
 export async function markViewed(userId: string, courseId: string, moduleSlug: string) {
+  if (isPreview()) return store.markViewed(courseId, moduleSlug)
   const db = getDb()
   await db
     .insert(schema.moduleProgress)
@@ -92,6 +97,7 @@ export async function markViewed(userId: string, courseId: string, moduleSlug: s
 export async function setCompleted(
   userId: string, courseId: string, moduleSlug: string, completed: boolean,
 ) {
+  if (isPreview()) return store.setCompleted(courseId, moduleSlug, completed)
   const db = getDb()
   await db
     .insert(schema.moduleProgress)
@@ -114,6 +120,7 @@ export async function saveAttempt(
   userId: string, courseId: string, moduleSlug: string,
   score: number, total: number, answers: number[],
 ) {
+  if (isPreview()) return store.saveAttempt(courseId, moduleSlug, score, total)
   const db = getDb()
   await db.insert(schema.quizAttempts).values({ userId, courseId, moduleSlug, score, total, answers })
   // Passing the knowledge check (>= 70%) also marks the module complete.
@@ -158,6 +165,7 @@ export type CohortRow = {
  * someone from an instructor report is worse than showing an incomplete row.
  */
 export async function getCohort(): Promise<CohortRow[]> {
+  if (isPreview()) return store.getCohort()
   const db = getDb()
   const { users, enrollments, moduleProgress, quizAttempts } = schema
 
