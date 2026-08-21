@@ -90,11 +90,16 @@ export default function Home() {
       </section>
 
       <footer className="border-t">
-        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-5 py-8 text-[0.78rem] text-faint">
-          <p>
-            {SITE.name} — an internal learning site. Content is grounded in{' '}
-            <code className="font-mono">docs.databricks.com</code>; not affiliated with Databricks.
+        <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-5 py-8 text-[0.78rem] text-faint">
+          <p className="max-w-xl">
+            {SITE.name} — an independent learning site. Content is grounded in{' '}
+            <code className="font-mono">docs.databricks.com</code>. Not affiliated with,
+            endorsed by, or sponsored by Databricks, Inc.
           </p>
+          <nav className="flex gap-4">
+            <Link href="/privacy" className="hover:text-ink">Privacy</Link>
+            <Link href="/terms" className="hover:text-ink">Terms</Link>
+          </nav>
         </div>
       </footer>
     </div>
