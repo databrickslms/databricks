@@ -7,12 +7,26 @@ Modelled on `dbdemos`: you run it **inside a Databricks notebook**, so
 `databricks-sdk` picks up the notebook's own identity. There is no host, token or
 profile to configure.
 
+## Install
+
+Not on PyPI yet, so install from the repo. In a **Databricks notebook**:
+
+```python
+%pip install git+https://github.com/databrickslms/databricks.git#subdirectory=packages/lakehouse-academy
+dbutils.library.restartPython()
+```
+
+Once published, that becomes `%pip install lakehouse-academy`.
+
+To pin a version, append a tag or commit:
+
+```python
+%pip install git+https://github.com/databrickslms/databricks.git@v0.1.0#subdirectory=packages/lakehouse-academy
+```
+
 ## Usage
 
 ```python
-%pip install lakehouse-academy
-dbutils.library.restartPython()
-
 import lakehouse_academy as academy
 
 academy.list_courses()
