@@ -254,20 +254,48 @@ Run it after any change to the schema or the progress layer.
 
 ## 6. Troubleshooting
 
+**Start here: open `/api/health` on the deployed site.** It reports exactly what is wrong
+without leaking anything — environment variables as booleans, never values, and database
+failures reduced to a short code. `200` means everything checks out; `503` names the
+problem.
+
+```json
+{
+  "ok": false,
+  "missingEnv": ["DATABASE_URL"],
+  "database": { "reachable": false, "code": "DATABASE_URL_NOT_SET" },
+  "content": { "courses": 2, "live": ["genie-agents"], "modules": 18 }
+}
+```
+
+| `database.code` | Meaning | Fix |
+|---|---|---|
+| `DATABASE_URL_NOT_SET` | The variable is missing on the server | Add it in Render → Environment, then redeploy |
+| `TABLES_MISSING` | Database reachable, schema not created | `npm run db:push`, or paste `drizzle/0000_*.sql` into Neon's SQL editor |
+| `DB_CREDENTIALS_REJECTED` | Wrong password in the connection string | Re-copy the Neon **pooled** string |
+| `DB_HOST_NOT_FOUND` | Host does not resolve | Check the host; it should contain `-pooler` |
+| `DB_UNREACHABLE` | Connection refused or timed out | Confirm the Neon project is not suspended and `sslmode=require` is present |
+| `DB_FETCH_FAILED` | Failed at the network layer | Usually a malformed `DATABASE_URL` |
+
+Also check `env.DATABASE_URL_is_pooled`. Using Neon's **non-pooled** string is a common
+mistake and causes intermittent failures under load rather than a clean error.
+
+The error page itself calls `/api/health` and shows the diagnosis inline, because Next
+strips error messages from production builds — so "Something broke" now tells you what
+broke.
+
+### Other symptoms
+
 | Symptom | Cause |
 |---|---|
-| `redirect_uri_mismatch` on sign-in | The Google redirect URI must be exactly `<AUTH_URL>/api/auth/callback/google`. |
-| Sign-in loops back to `/login` | `AUTH_URL` doesn't match the real origin, or `AUTH_TRUST_HOST` isn't `true`. |
-| "The app could not reach the database" | `DATABASE_URL` missing on Render, or you used the non-pooled Neon string. |
-| `relation "user" does not exist` | You haven't run `npm run db:push` yet. |
-| First visit takes ~60 seconds | Free Render web service cold start. Expected — see §1. |
-| `/instructor` says "Instructors only" | Add your email to `INSTRUCTOR_EMAILS` and redeploy. |
-| Access denied for a valid Google account | `ALLOWED_EMAIL_DOMAINS` is set and doesn't include that domain. |
-| A course 404s | Its `status` is `planned`. Give it a `plan.md` and set `status` to `live` or `draft`. |
-| `content build failed` | The message names the course and the problem. Folder name must equal `course.json` `"id"`. |
-| A course is missing from the catalog | Its `area` doesn't match an `id` in `site.json` → it has no group to render in. |
-
----
+| `redirect_uri_mismatch` on sign-in | The Google redirect URI must be exactly `<AUTH_URL>/api/auth/callback/google` |
+| Sign-in loops back to `/login` | `AUTH_URL` doesn't match the real origin, or `AUTH_TRUST_HOST` isn't `true` |
+| First visit takes ~60 seconds | Free Render web service cold start. Expected — see §1 |
+| `/instructor` says "Instructors only" | Add your email to `INSTRUCTOR_EMAILS` and redeploy |
+| Access denied for a valid Google account | `ALLOWED_EMAIL_DOMAINS` is set and doesn't include that domain |
+| A course 404s | Its `status` is `planned`. Give it a `plan.md` and set `status` to `live` or `draft` |
+| `content build failed` | The message names the course and the problem. Folder name must equal `course.json` `"id"` |
+| A course is missing from the catalog | Its `area` doesn't match an `id` in `site.json` |
 
 ## 7. What has and hasn't been verified
 
