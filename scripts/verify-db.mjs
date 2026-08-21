@@ -4,7 +4,25 @@
 //
 //   DATABASE_URL="postgresql://..." npm run verify:db
 
+import { existsSync, readFileSync } from 'node:fs'
 import { neon } from '@neondatabase/serverless'
+
+// Read DATABASE_URL from .env / .env.local when it is not already in the
+// environment, so a live credential never has to be typed on a command line
+// where it would land in shell history. Node 18 has no --env-file, hence this.
+function loadEnvFile() {
+  for (const file of ['.env.local', '.env']) {
+    if (!existsSync(file)) continue
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
+      const m = /^\s*(?:export\s+)?([A-Z0-9_]+)\s*=\s*(.*)$/.exec(line)
+      if (!m) continue
+      const [, key, rawValue] = m
+      if (process.env[key]) continue
+      process.env[key] = rawValue.trim().replace(/^["']|["']$/g, '')
+    }
+  }
+}
+if (!process.env.DATABASE_URL) loadEnvFile()
 
 const EXPECTED = [
   'account', 'enrollment', 'module_progress', 'quiz_attempt',
@@ -14,7 +32,10 @@ const EXPECTED = [
 const url = process.env.DATABASE_URL
 if (!url) {
   console.error('\n  ✗ DATABASE_URL is not set.\n')
-  console.error('    DATABASE_URL="postgresql://..." npm run verify:db\n')
+  console.error('    Preferred — put it in a .env file (gitignored), then:')
+  console.error('      npm run verify:db\n')
+  console.error('    Or pass it inline (note: this lands in your shell history):')
+  console.error('      DATABASE_URL="postgresql://..." npm run verify:db\n')
   process.exit(1)
 }
 

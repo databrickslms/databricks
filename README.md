@@ -257,12 +257,17 @@ Run it after any change to the schema or the progress layer.
 **Before deploying: validate your connection string locally.**
 
 ```bash
-DATABASE_URL="postgresql://..." npm run verify:db
+cp .env.example .env      # put your real DATABASE_URL in it
+npm run verify:db
 ```
 
 Reports the host, whether it is the pooled endpoint, and whether all 7 tables exist —
 without printing the string or the password. Catches a bad password or a non-pooled host
 before it becomes a hosting-dashboard debugging loop.
+
+It reads `DATABASE_URL` from `.env` or `.env.local` (both gitignored) so a live credential
+never has to be typed on a command line, where it would persist in shell history. Passing
+it inline still works if you prefer.
 
 **Start here: open `/api/health` on the deployed site.** It reports exactly what is wrong
 without leaking anything — environment variables as booleans, never values, and database
