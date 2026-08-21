@@ -15,7 +15,8 @@
     "db:studio": "drizzle-kit studio",
     "test:db": "tsx --tsconfig tests/tsconfig.json tests/db.test.ts",
     "test": "npm run test:db",
-    "preview": "npm run content && PREVIEW=1 next dev"
+    "preview": "npm run content && PREVIEW=1 next dev",
+    "verify:db": "node scripts/verify-db.mjs"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.4",

@@ -254,6 +254,16 @@ Run it after any change to the schema or the progress layer.
 
 ## 6. Troubleshooting
 
+**Before deploying: validate your connection string locally.**
+
+```bash
+DATABASE_URL="postgresql://..." npm run verify:db
+```
+
+Reports the host, whether it is the pooled endpoint, and whether all 7 tables exist —
+without printing the string or the password. Catches a bad password or a non-pooled host
+before it becomes a hosting-dashboard debugging loop.
+
 **Start here: open `/api/health` on the deployed site.** It reports exactly what is wrong
 without leaking anything — environment variables as booleans, never values, and database
 failures reduced to a short code. `200` means everything checks out; `503` names the
