@@ -9,10 +9,14 @@ import type { ProgressMap } from '@/lib/progress'
 export type NavModule = { slug: string; num: number; title: string; stage: string; duration: string }
 
 export function CourseSidebar({
+  courseId,
+  courseTitle,
   modules,
   progress,
   trackName,
 }: {
+  courseId: string
+  courseTitle: string
   modules: NavModule[]
   progress: ProgressMap
   trackName: string
@@ -42,12 +46,19 @@ export function CourseSidebar({
         className={`${open ? 'block' : 'hidden'} lg:block lg:sticky lg:top-[3.9rem] lg:max-h-[calc(100vh-3.9rem)] lg:overflow-y-auto no-scrollbar lg:py-6 lg:pr-5`}
         aria-label="Course outline"
       >
+        <Link
+          href="/"
+          className="mb-3 block truncate text-[0.72rem] text-faint transition-colors hover:text-ink"
+        >
+          ← All courses
+        </Link>
+
         <div className="mb-5 flex items-center gap-3 rounded-xl border p-3">
           <ProgressRing value={done} total={modules.length} size={40} />
           <div className="min-w-0">
-            <div className="truncate text-[0.8rem] font-medium">{trackName} track</div>
+            <div className="truncate text-[0.8rem] font-medium">{courseTitle}</div>
             <div className="text-[0.72rem] text-faint">
-              {done} of {modules.length} modules complete
+              {trackName} · {done}/{modules.length} complete
             </div>
           </div>
         </div>
@@ -59,12 +70,12 @@ export function CourseSidebar({
             </h3>
             <ul className="space-y-px">
               {items.map((m) => {
-                const active = pathname === `/learn/${m.slug}`
+                const active = pathname === `/c/${courseId}/learn/${m.slug}`
                 const p = progress[m.slug]
                 return (
                   <li key={m.slug}>
                     <Link
-                      href={`/learn/${m.slug}`}
+                      href={`/c/${courseId}/learn/${m.slug}`}
                       onClick={() => setOpen(false)}
                       className={`group flex items-start gap-2.5 rounded-lg px-2 py-[0.42rem] text-[0.815rem] leading-snug transition-colors ${
                         active ? 'bg-accent-soft font-medium text-ink' : 'text-muted hover:bg-ink/[0.035] hover:text-ink'

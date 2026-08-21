@@ -1,0 +1,89 @@
+{
+  "id": "genie-agents",
+  "order": 1,
+  "status": "live",
+  "title": "Genie Agents",
+  "subtitle": "From basics to advanced",
+  "domain": "Financial Services",
+  "accent": "orange",
+  "promise": "Build a Genie Agent your business team actually trusts.",
+  "description": "Eighteen units, from asking a first question to running an agent in production — on one bank's data with nine flaws planted on purpose. You will be able to prove it's right, explain why it's slow, and know which problems were never yours to fix.",
+  "defaultTrack": "author",
+  "stages": [
+    "Lab Setup",
+    "Foundations",
+    "How It Works",
+    "Building",
+    "Quality & Operations",
+    "Advanced / Extend",
+    "Capstone"
+  ],
+  "tracks": {
+    "business": {
+      "name": "Business User",
+      "blurb": "Ask better questions and read answers critically. No SQL.",
+      "hours": "~3 hours",
+      "modules": [
+        1,
+        2,
+        3
+      ]
+    },
+    "author": {
+      "name": "Agent Author",
+      "blurb": "Build, curate, tune, measure and own a Genie Agent end to end.",
+      "hours": "~20 hours",
+      "modules": "all"
+    },
+    "platform": {
+      "name": "Platform & Integration",
+      "blurb": "Governance, latency, cost, escalation, API and multi-agent design.",
+      "hours": "~8 hours",
+      "modules": [
+        0,
+        1,
+        4,
+        6,
+        13,
+        14,
+        15,
+        16
+      ]
+    }
+  },
+  "stageMap": {
+    "Lab Setup": [
+      0
+    ],
+    "Foundations": [
+      1,
+      2,
+      3
+    ],
+    "How It Works": [
+      4,
+      5,
+      6
+    ],
+    "Building": [
+      7,
+      8,
+      9,
+      10
+    ],
+    "Quality & Operations": [
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "Advanced / Extend": [
+      16
+    ],
+    "Capstone": [
+      17
+    ]
+  },
+  "area": "ai-agents"
+}

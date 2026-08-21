@@ -24,7 +24,12 @@
     },
     {
       "q": "When does Meridian's fiscal year start?",
-      "options": ["October 1", "January 1", "February 1", "April 1"],
+      "options": [
+        "October 1",
+        "January 1",
+        "February 1",
+        "April 1"
+      ],
       "answer": 0,
       "why": "FY2026 runs 2025-10-01 to 2026-09-30. This is why 'last year' is ambiguous and needs a fiscal-calendar instruction."
     },
@@ -43,13 +48,23 @@
   "1": [
     {
       "q": "A data engineer wants help writing a PySpark backfill job. Which Genie product?",
-      "options": ["Genie Code", "Genie One", "A Genie Agent", "Supervisor Agent"],
+      "options": [
+        "Genie Code",
+        "Genie One",
+        "A Genie Agent",
+        "Supervisor Agent"
+      ],
       "answer": 0,
       "why": "Genie Code is the AI coding and data assistant for technical practitioners. Genie Agents answer business questions over curated data."
     },
     {
       "q": "You find a 2024 blog post about creating a 'Genie Space'. What is that called now?",
-      "options": ["A Genie Agent", "Genie One", "Genie Code", "A metric view"],
+      "options": [
+        "A Genie Agent",
+        "Genie One",
+        "Genie Code",
+        "A metric view"
+      ],
       "answer": 0,
       "why": "Genie Spaces were renamed Genie Agents. Recognising the old term matters because older screenshots and posts still use it."
     },
@@ -103,13 +118,23 @@
   "3": [
     {
       "q": "Which mode can answer questions about PDFs in a Unity Catalog volume?",
-      "options": ["Agent mode", "Chat mode", "Both equally", "Neither"],
+      "options": [
+        "Agent mode",
+        "Chat mode",
+        "Both equally",
+        "Neither"
+      ],
       "answer": 0,
       "why": "Chat mode requires structured data. Agent mode can analyse unstructured files the author attached to the agent."
     },
     {
       "q": "How many SQL queries does Chat mode typically run per question?",
-      "options": ["One", "One per table in the agent", "Three to five", "As many as needed"],
+      "options": [
+        "One",
+        "One per table in the agent",
+        "Three to five",
+        "As many as needed"
+      ],
       "answer": 0,
       "why": "Chat mode generates a single query. Agent mode builds a research plan and runs many queries, iterating on what it finds."
     },
@@ -231,7 +256,12 @@
     },
     {
       "q": "340 branch managers need to ask questions and give feedback but must not change business logic. Which level?",
-      "options": ["CAN RUN", "CAN VIEW", "CAN EDIT", "CAN MANAGE"],
+      "options": [
+        "CAN RUN",
+        "CAN VIEW",
+        "CAN EDIT",
+        "CAN MANAGE"
+      ],
       "answer": 0,
       "why": "CAN EDIT would let any of them change definitions for everyone. CAN VIEW would not let them ask questions."
     },
@@ -331,7 +361,12 @@
   "9": [
     {
       "q": "What is the knowledge-store snippet limit per agent?",
-      "options": ["About 200", "100", "500", "1,024"],
+      "options": [
+        "About 200",
+        "100",
+        "500",
+        "1,024"
+      ],
       "answer": 0,
       "why": "Descriptions, join relationships and SQL expressions all draw on the same ~200 budget. Past it, extra context stops being used."
     },
@@ -359,7 +394,12 @@
     },
     {
       "q": "'Posted transactions only' (status = 'POSTED') should be implemented as which kind of SQL expression?",
-      "options": ["A filter", "A measure", "A field", "A text instruction"],
+      "options": [
+        "A filter",
+        "A measure",
+        "A field",
+        "A text instruction"
+      ],
       "answer": 0,
       "why": "Filters capture reusable conditions, measures capture KPIs, fields capture derived attributes. Encoding this as prose is the classic mistake."
     }
@@ -413,7 +453,12 @@
   "11": [
     {
       "q": "How many benchmark questions can one agent hold?",
-      "options": ["Up to 500", "Up to 100", "Up to 200", "Up to 1,000"],
+      "options": [
+        "Up to 500",
+        "Up to 100",
+        "Up to 200",
+        "Up to 1,000"
+      ],
       "answer": 0,
       "why": "They measure accuracy only and never feed back as context."
     },
@@ -522,7 +567,12 @@
     },
     {
       "q": "A naive polling loop in your own integration was measured adding how much delay?",
-      "options": ["About 6–8 seconds", "Under 1 second", "About 30 seconds", "It adds none"],
+      "options": [
+        "About 6–8 seconds",
+        "Under 1 second",
+        "About 30 seconds",
+        "It adds none"
+      ],
       "answer": 0,
       "why": "Instrument your poll loop as its own span. That latency is yours, not Genie's — and it gets blamed on Genie."
     },
@@ -587,7 +637,12 @@
   "15": [
     {
       "q": "How much free monthly LLM allowance does a service principal get?",
-      "options": ["None — all its usage is charged", "The same as a user", "Half a user's allowance", "It cannot be billed"],
+      "options": [
+        "None — all its usage is charged",
+        "The same as a user",
+        "Half a user's allowance",
+        "It cannot be billed"
+      ],
       "answer": 0,
       "why": "Critical for integrations: an API client running as a service principal is billed from message one."
     },

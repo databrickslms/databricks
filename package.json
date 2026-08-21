@@ -1,8 +1,10 @@
 {
-  "name": "genie-agents-lms",
+  "name": "lakehouse-academy",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": ">=18.18.0" },
+  "engines": {
+    "node": ">=18.18.0"
+  },
   "scripts": {
     "content": "node scripts/split-content.mjs",
     "dev": "npm run content && next dev",

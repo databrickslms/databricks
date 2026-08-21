@@ -1,0 +1,16 @@
+{
+  "id": "agent-bricks",
+  "order": 2,
+  "status": "planned",
+  "area": "ai-agents",
+  "title": "Agent Bricks",
+  "subtitle": "Knowledge Assistant and Supervisor Agent",
+  "promise": "Build agents over documents, then orchestrate specialists.",
+  "description": "Knowledge Assistant for document Q&A and Supervisor Agent for multi-agent orchestration. Picks up where the Genie Agents course stops at 'what happened' and moves toward 'why'.",
+  "notes": "Scope to Knowledge Assistant and Supervisor Agent only — Information Extraction and Custom LLM are marked legacy in the docs, so do not build curriculum on them. Cover Supervisor Agent's long-running task mode and the Supervisor API (Beta). Reuse the Meridian dataset and its document volume.",
+  "docs": [
+    "/aws/en/generative-ai/agent-bricks/",
+    "/aws/en/generative-ai/agent-bricks/knowledge-assistant",
+    "/aws/en/generative-ai/agent-bricks/multi-agent-supervisor"
+  ]
+}

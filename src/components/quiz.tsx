@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation'
 export type Question = { q: string; options: string[]; answer: number; why: string }
 
 export function Quiz({
+  courseId,
   slug,
   questions,
   signedIn,
   bestScore,
 }: {
+  courseId: string
   slug: string
   questions: Question[]
   signedIn: boolean
@@ -38,6 +40,7 @@ export function Quiz({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'submit-quiz',
+          courseId,
           slug,
           answers: picked.map((p) => p ?? -1),
           score,

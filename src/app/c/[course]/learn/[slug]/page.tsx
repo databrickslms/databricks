@@ -3,38 +3,50 @@ import { notFound, redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { Quiz, type Question } from '@/components/quiz'
 import { CompleteToggle } from '@/components/complete-toggle'
+import { getCourse, isOpen } from '@/lib/courses'
 import { allModules, getDoc, modulesForTrack } from '@/lib/content'
+import { loadQuiz } from '@/lib/quizzes'
 import { getProgress, getTrack, markViewed } from '@/lib/progress'
-import quizzes from '../../../../content/quizzes.json'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const doc = getDoc(slug)
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ course: string; slug: string }>
+}) {
+  const { course, slug } = await params
+  const doc = getDoc(course, slug)
   return { title: doc ? `${String(doc.num).padStart(2, '0')} · ${doc.title}` : 'Module' }
 }
 
-export default async function ModulePage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params
-  const session = await auth()
-  if (!session?.user?.id) redirect(`/login?next=/learn/${slug}`)
+export default async function ModulePage({
+  params,
+}: {
+  params: Promise<{ course: string; slug: string }>
+}) {
+  const { course: id, slug } = await params
+  const course = getCourse(id)
+  if (!isOpen(course)) notFound()
 
-  const doc = getDoc(slug)
+  const session = await auth()
+  if (!session?.user?.id) redirect(`/login?next=/c/${id}/learn/${slug}`)
+
+  const doc = getDoc(id, slug)
   if (!doc || doc.kind !== 'module') notFound()
 
-  await markViewed(session.user.id, slug).catch(() => {})
+  await markViewed(session.user.id, id, slug).catch(() => {})
 
-  const track = await getTrack(session.user.id)
-  const progress = await getProgress(session.user.id)
-  const inTrack = modulesForTrack(track)
-  // Navigate within the track if this module is part of it, otherwise across all modules.
-  const seq = inTrack.some((m) => m.slug === slug) ? inTrack : allModules()
+  const track = await getTrack(session.user.id, id)
+  const progress = await getProgress(session.user.id, id)
+  const inTrack = modulesForTrack(id, track)
+  // Navigate within the track if this module belongs to it, otherwise across all modules.
+  const seq = inTrack.some((m) => m.slug === slug) ? inTrack : allModules(id)
   const idx = seq.findIndex((m) => m.slug === slug)
   const prev = idx > 0 ? seq[idx - 1] : null
   const next = idx >= 0 && idx < seq.length - 1 ? seq[idx + 1] : null
 
-  const questions = (quizzes as Record<string, Question[]>)[String(doc.num)] ?? []
+  const questions: Question[] = loadQuiz(id, doc.num!)
   const p = progress[slug]
 
   return (
@@ -60,7 +72,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
           )}
 
           <div className="mt-6 flex flex-wrap items-center gap-3 border-b pb-6">
-            <CompleteToggle slug={slug} completed={!!p?.completed} signedIn />
+            <CompleteToggle courseId={id} slug={slug} completed={!!p?.completed} />
             {questions.length > 0 && (
               <a href="#knowledge-check" className="btn-ghost">
                 Knowledge check
@@ -78,12 +90,18 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
         <div className="prose-course" dangerouslySetInnerHTML={{ __html: doc.html }} />
 
         {questions.length > 0 && (
-          <Quiz slug={slug} questions={questions} signedIn bestScore={p?.bestScore ?? null} />
+          <Quiz
+            courseId={id}
+            slug={slug}
+            questions={questions}
+            signedIn
+            bestScore={p?.bestScore ?? null}
+          />
         )}
 
         <nav className="mt-14 grid gap-3 border-t pt-8 sm:grid-cols-2">
           {prev ? (
-            <Link href={`/learn/${prev.slug}`} className="card card-hover p-4">
+            <Link href={`/c/${id}/learn/${prev.slug}`} className="card card-hover p-4">
               <div className="text-[0.68rem] uppercase tracking-wider text-faint">Previous</div>
               <div className="mt-1.5 text-[0.875rem] font-medium leading-snug">
                 <span className="font-mono text-[0.72rem] text-faint">
@@ -94,7 +112,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
             </Link>
           ) : <span />}
           {next && (
-            <Link href={`/learn/${next.slug}`} className="card card-hover p-4 sm:text-right">
+            <Link href={`/c/${id}/learn/${next.slug}`} className="card card-hover p-4 sm:text-right">
               <div className="text-[0.68rem] uppercase tracking-wider text-faint">Next</div>
               <div className="mt-1.5 text-[0.875rem] font-medium leading-snug">
                 <span className="font-mono text-[0.72rem] text-faint">
@@ -113,18 +131,16 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
             On this page
           </h2>
           <ul className="space-y-1 border-l">
-            {doc.headings
-              .filter((h) => h.depth === 2)
-              .map((h) => (
-                <li key={h.id}>
-                  <a
-                    href={`#${h.id}`}
-                    className="-ml-px block border-l-2 border-transparent py-0.5 pl-3 text-[0.775rem] leading-snug text-muted transition-colors hover:border-accent hover:text-ink"
-                  >
-                    {h.text}
-                  </a>
-                </li>
-              ))}
+            {doc.headings.filter((h) => h.depth === 2).map((h) => (
+              <li key={h.id}>
+                <a
+                  href={`#${h.id}`}
+                  className="-ml-px block border-l-2 border-transparent py-0.5 pl-3 text-[0.775rem] leading-snug text-muted transition-colors hover:border-accent hover:text-ink"
+                >
+                  {h.text}
+                </a>
+              </li>
+            ))}
             {questions.length > 0 && (
               <li>
                 <a

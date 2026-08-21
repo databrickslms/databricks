@@ -6,13 +6,18 @@ import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import type { Session } from 'next-auth'
 import { ThemeToggle } from './theme-toggle'
+import { SITE, openCourses } from '@/lib/courses'
 
 export function SiteHeader({ session }: { session: Session | null }) {
   const pathname = usePathname()
   const user = session?.user
+  const courses = openCourses()
+  // With a single course, link straight into it rather than via the catalog.
   const nav = [
-    { href: '/learn', label: 'Course' },
-    { href: '/reference', label: 'Reference' },
+    { href: '/', label: 'Courses' },
+    ...(courses.length === 1
+      ? [{ href: `/c/${courses[0].id}/learn`, label: courses[0].title }]
+      : []),
     ...(user?.isInstructor ? [{ href: '/instructor', label: 'Cohort' }] : []),
   ]
 
@@ -22,13 +27,14 @@ export function SiteHeader({ session }: { session: Session | null }) {
         <Link href="/" className="group flex items-center gap-2.5">
           <Mark />
           <span className="font-display text-[1.06rem] leading-none tracking-tight">
-            Genie&nbsp;Agents<span className="text-accent">.</span>
+            {SITE.shortName}<span className="text-accent">.</span>
           </span>
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">
           {nav.map((n) => {
-            const active = pathname === n.href || pathname.startsWith(`${n.href}/`)
+            const active =
+              n.href === '/' ? pathname === '/' : pathname.startsWith(n.href)
             return (
               <Link
                 key={n.href}

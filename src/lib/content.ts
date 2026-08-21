@@ -1,17 +1,16 @@
-import { readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import matter from 'gray-matter'
 import MarkdownIt from 'markdown-it'
 import anchor from 'markdown-it-anchor'
 import hljs from 'highlight.js/lib/common'
 
-export { TRACKS, STAGE_ORDER } from './tracks'
-export type { Track } from './tracks'
-import { STAGE_ORDER, type Track } from './tracks'
+import { getCourse, resolveTrack, trackNames, type Course } from './courses'
 
 export type Heading = { id: string; text: string; depth: number }
 
 export type Doc = {
+  course: string
   kind: 'module' | 'reference'
   slug: string
   title: string
@@ -22,7 +21,7 @@ export type Doc = {
   // modules only
   num?: number
   stage?: string
-  tracks?: Track[]
+  tracks?: string[]
   level?: string
   duration?: string
   audience?: string
@@ -30,7 +29,8 @@ export type Doc = {
   part?: string
 }
 
-const CONTENT_DIR = join(process.cwd(), 'content', 'modules')
+const contentDir = (courseId: string) =>
+  join(process.cwd(), 'content', 'courses', courseId, 'modules')
 
 const md: MarkdownIt = new MarkdownIt({
   html: false,
@@ -85,38 +85,73 @@ function extractHeadings(source: string): Heading[] {
   return out
 }
 
-let cache: Doc[] | null = null
+const cache = new Map<string, Doc[]>()
 
-export function allDocs(): Doc[] {
-  if (cache) return cache
-  const files = readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.md'))
-  const docs = files.map((file) => {
-    const { data, content } = matter(readFileSync(join(CONTENT_DIR, file), 'utf8'))
-    const words = content.split(/\s+/).length
-    return {
-      ...(data as Omit<Doc, 'html' | 'headings' | 'readingMinutes'>),
-      html: md.render(content),
-      headings: extractHeadings(content),
-      readingMinutes: Math.max(2, Math.round(words / 220)),
-    } as Doc
-  })
-  cache = docs.sort((a, b) => {
-    if (a.kind !== b.kind) return a.kind === 'module' ? -1 : 1
-    if (a.kind === 'module') return (a.num ?? 0) - (b.num ?? 0)
-    return (a.part ?? '').localeCompare(b.part ?? '')
-  })
-  return cache
+export function allDocs(courseId: string): Doc[] {
+  const hit = cache.get(courseId)
+  if (hit) return hit
+
+  const dir = contentDir(courseId)
+  if (!existsSync(dir)) return []
+
+  const docs = readdirSync(dir)
+    .filter((f) => f.endsWith('.md'))
+    .map((file) => {
+      const { data, content } = matter(readFileSync(join(dir, file), 'utf8'))
+      const words = content.split(/\s+/).length
+      return {
+        ...(data as Omit<Doc, 'html' | 'headings' | 'readingMinutes'>),
+        html: md.render(content),
+        headings: extractHeadings(content),
+        readingMinutes: Math.max(2, Math.round(words / 220)),
+      } as Doc
+    })
+    .sort((a, b) => {
+      if (a.kind !== b.kind) return a.kind === 'module' ? -1 : 1
+      if (a.kind === 'module') return (a.num ?? 0) - (b.num ?? 0)
+      return (a.part ?? '').localeCompare(b.part ?? '')
+    })
+
+  cache.set(courseId, docs)
+  return docs
 }
 
-export const allModules = () => allDocs().filter((d) => d.kind === 'module')
-export const allReferences = () => allDocs().filter((d) => d.kind === 'reference')
-export const getDoc = (slug: string) => allDocs().find((d) => d.slug === slug)
+export const allModules = (courseId: string) =>
+  allDocs(courseId).filter((d) => d.kind === 'module')
 
-export const modulesForTrack = (track: Track) =>
-  allModules().filter((m) => m.tracks?.includes(track))
+export const allReferences = (courseId: string) =>
+  allDocs(courseId).filter((d) => d.kind === 'reference')
 
-export function byStage(mods: Doc[]) {
-  return STAGE_ORDER
-    .map((stage) => ({ stage, modules: mods.filter((m) => m.stage === stage) }))
-    .filter((g) => g.modules.length > 0)
+export const getDoc = (courseId: string, slug: string) =>
+  allDocs(courseId).find((d) => d.slug === slug)
+
+/** Modules in one track, or every module when the track has no explicit list. */
+export function modulesForTrack(courseId: string, track: string): Doc[] {
+  const mods = allModules(courseId)
+  const course = getCourse(courseId)
+  if (!course) return mods
+  const resolved = resolveTrack(course, track)
+  if (!trackNames(course).length) return mods
+  return mods.filter((m) => m.tracks?.includes(resolved))
+}
+
+/** Groups modules using the course's declared stage order. */
+export function byStage(course: Course | undefined, mods: Doc[]) {
+  const order = course?.stages ?? []
+  const seen = new Set<string>()
+  const groups: { stage: string; modules: Doc[] }[] = []
+
+  for (const stage of order) {
+    const inStage = mods.filter((m) => m.stage === stage)
+    if (inStage.length) { groups.push({ stage, modules: inStage }); seen.add(stage) }
+  }
+  // Anything with a stage the course did not declare still gets shown.
+  for (const m of mods) {
+    const stage = m.stage ?? 'Modules'
+    if (seen.has(stage)) continue
+    const existing = groups.find((g) => g.stage === stage)
+    if (existing) existing.modules.push(m)
+    else groups.push({ stage, modules: [m] })
+  }
+  return groups
 }

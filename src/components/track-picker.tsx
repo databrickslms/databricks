@@ -2,21 +2,29 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { TRACKS, type Track } from '@/lib/tracks'
+import type { TrackDef } from '@/lib/courses'
 
-export function TrackPicker({ current }: { current: Track }) {
+export function TrackPicker({
+  courseId,
+  tracks,
+  current,
+}: {
+  courseId: string
+  tracks: Record<string, TrackDef>
+  current: string
+}) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
-  const [saving, setSaving] = useState<Track | null>(null)
+  const [saving, setSaving] = useState<string | null>(null)
 
-  async function choose(track: Track) {
+  async function choose(track: string) {
     if (track === current) return
     setSaving(track)
     try {
       await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'set-track', track }),
+        body: JSON.stringify({ action: 'set-track', courseId, track }),
       })
       startTransition(() => router.refresh())
     } finally {
@@ -26,8 +34,8 @@ export function TrackPicker({ current }: { current: Track }) {
 
   return (
     <div className="grid gap-3 sm:grid-cols-3">
-      {(Object.keys(TRACKS) as Track[]).map((key) => {
-        const t = TRACKS[key]
+      {Object.keys(tracks).map((key) => {
+        const t = tracks[key]
         const active = key === current
         return (
           <button

@@ -7,7 +7,7 @@
 
 services:
   - type: web
-    name: genie-agents-lms
+    name: lakehouse-academy
     runtime: node
     plan: free # ⚠️ free web services spin down after 15 min idle (~1 min cold start)
     region: oregon

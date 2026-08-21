@@ -50,15 +50,17 @@ export const verificationTokens = pgTable(
 
 /* ─── Course tables ────────────────────────────────────────────────────────── */
 
-/** One row per learner: which track they picked. */
+/** One row per learner per course: which track they picked in that course. */
 export const enrollments = pgTable(
   'enrollment',
   {
-    userId: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
-    track: text('track').notNull().default('author'), // business | author | platform
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    courseId: text('course_id').notNull(),
+    track: text('track').notNull(),
     startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
+  (t) => [primaryKey({ columns: [t.userId, t.courseId] })],
 )
 
 /** One row per learner per module they have opened or finished. */
@@ -67,14 +69,16 @@ export const moduleProgress = pgTable(
   {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    courseId: text('course_id').notNull(),
     moduleSlug: text('module_slug').notNull(),
     completed: boolean('completed').notNull().default(false),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     lastViewedAt: timestamp('last_viewed_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex('module_progress_user_module_idx').on(t.userId, t.moduleSlug),
-    index('module_progress_user_idx').on(t.userId),
+    // Module slugs are only unique within a course, so the course must be in the key.
+    uniqueIndex('module_progress_user_course_module_idx').on(t.userId, t.courseId, t.moduleSlug),
+    index('module_progress_user_course_idx').on(t.userId, t.courseId),
   ],
 )
 
@@ -84,11 +88,12 @@ export const quizAttempts = pgTable(
   {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    courseId: text('course_id').notNull(),
     moduleSlug: text('module_slug').notNull(),
     score: integer('score').notNull(),
     total: integer('total').notNull(),
     answers: jsonb('answers').$type<number[]>().notNull(),
     attemptedAt: timestamp('attempted_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('quiz_attempt_user_idx').on(t.userId, t.moduleSlug)],
+  (t) => [index('quiz_attempt_user_course_idx').on(t.userId, t.courseId, t.moduleSlug)],
 )

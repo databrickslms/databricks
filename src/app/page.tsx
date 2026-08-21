@@ -1,49 +1,45 @@
 import Link from 'next/link'
-import { auth } from '@/auth'
-import { TRACKS, allModules, byStage, type Track } from '@/lib/content'
-import quizzes from '../../content/quizzes.json'
+import { COURSES, SITE, coursesByArea, type Course } from '@/lib/courses'
 
-export default async function Home() {
-  const session = await auth().catch(() => null)
-  const modules = allModules()
-  const stages = byStage(modules)
-  const questionCount = Object.values(quizzes as Record<string, unknown[]>)
-    .reduce((n, q) => n + q.length, 0)
+export default function Home() {
+  const groups = coursesByArea()
+  const live = COURSES.filter((c) => c.status === 'live')
+  const totalUnits = live.reduce((n, c) => n + c.moduleCount, 0)
+  const totalQuestions = live.reduce((n, c) => n + c.questionCount, 0)
 
   return (
     <div>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="grain border-b">
         <div className="mx-auto max-w-[1400px] px-5 py-20 sm:py-28">
           <p className="mb-5 font-mono text-[0.72rem] uppercase tracking-[0.16em] text-accent">
-            Databricks · Financial Services
+            {SITE.tagline}
           </p>
           <h1 className="max-w-4xl font-display text-[2.6rem] leading-[1.07] tracking-[-0.02em] sm:text-[3.9rem]">
-            Build a Genie Agent your business team{' '}
-            <span className="text-accent">actually trusts</span>.
+            Learn the Databricks platform{' '}
+            <span className="text-accent">one feature at a time</span>.
           </h1>
           <p className="mt-6 max-w-2xl text-[1.02rem] leading-relaxed text-muted">
-            Eighteen units, from asking a first question to running an agent in production —
-            on one bank&rsquo;s data with nine flaws planted on purpose. You will be able to prove
-            it&rsquo;s right, explain why it&rsquo;s slow, and know which problems were never yours to fix.
+            {SITE.description}
           </p>
 
-          <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Link href={session ? '/learn' : '/login'} className="btn-primary !px-6 !py-2.5">
-              {session ? 'Continue course' : 'Start with Google'}
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h13M13 6l6 6-6 6" strokeLinecap="round" />
-              </svg>
-            </Link>
-            <Link href="/reference" className="btn-ghost !px-5 !py-2.5">Course design &amp; rationale</Link>
-          </div>
+          {live.length > 0 && (
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <Link href={`/c/${live[0].id}/learn`} className="btn-primary !px-6 !py-2.5">
+                {live.length === 1 ? `Start ${live[0].title}` : 'Start learning'}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h13M13 6l6 6-6 6" strokeLinecap="round" />
+                </svg>
+              </Link>
+              <a href="#catalog" className="btn-ghost !px-5 !py-2.5">Browse the catalog</a>
+            </div>
+          )}
 
           <dl className="mt-14 grid max-w-3xl grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4">
             {[
-              ['18', 'units'],
-              [String(questionCount), 'quiz questions'],
-              ['9', 'planted data flaws'],
-              ['3', 'learner tracks'],
+              [String(live.length), live.length === 1 ? 'course live' : 'courses live'],
+              [String(totalUnits), 'units'],
+              [String(totalQuestions), 'quiz questions'],
+              [String(COURSES.length - live.length), 'in the pipeline'],
             ].map(([n, label]) => (
               <div key={label}>
                 <dt className="font-display text-[2rem] leading-none">{n}</dt>
@@ -54,76 +50,111 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── Tracks ───────────────────────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1400px] px-5 py-16">
-        <h2 className="font-display text-[1.9rem] tracking-tight">Three tracks, one course</h2>
+      <section id="catalog" className="mx-auto max-w-[1400px] scroll-mt-20 px-5 py-16">
+        <h2 className="font-display text-[1.9rem] tracking-tight">Catalog</h2>
         <p className="mt-2 max-w-2xl text-[0.925rem] text-muted">
-          Pick a track after signing in — it filters the outline to what you need. You can switch
-          any time without losing progress.
+          Grouped by Databricks capability area. Every course is built on a real dataset with the
+          traps left in on purpose.
         </p>
-        <div className="mt-7 grid gap-4 md:grid-cols-3">
-          {(Object.keys(TRACKS) as Track[]).map((key) => {
-            const t = TRACKS[key]
-            const count = modules.filter((m) => m.tracks?.includes(key)).length
-            return (
-              <div key={key} className="card p-5">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h3 className="text-[0.95rem] font-semibold">{t.name}</h3>
-                  <span className="font-mono text-[0.72rem] text-faint">{count} units</span>
-                </div>
-                <p className="mt-2 text-[0.855rem] leading-relaxed text-muted">{t.blurb}</p>
-                <p className="mt-3 chip">{t.hours}</p>
-              </div>
-            )
-          })}
-        </div>
-      </section>
 
-      {/* ── Outline ──────────────────────────────────────────────────────── */}
-      <section className="border-t">
-        <div className="mx-auto max-w-[1400px] px-5 py-16">
-          <h2 className="font-display text-[1.9rem] tracking-tight">The full outline</h2>
-          <div className="mt-8 space-y-10">
-            {stages.map(({ stage, modules: mods }) => (
-              <div key={stage} className="grid gap-5 lg:grid-cols-[13rem_1fr]">
-                <h3 className="text-[0.72rem] font-semibold uppercase tracking-[0.09em] text-faint lg:pt-1">
-                  {stage}
-                </h3>
-                <ul className="grid gap-2.5 sm:grid-cols-2">
-                  {mods.map((m) => (
-                    <li key={m.slug}>
-                      <Link href={`/learn/${m.slug}`} className="card card-hover block h-full p-4">
-                        <div className="flex items-start gap-2.5">
-                          <span className="mt-px font-mono text-[0.72rem] text-accent">
-                            {String(m.num).padStart(2, '0')}
-                          </span>
-                          <div className="min-w-0">
-                            <div className="text-[0.885rem] font-medium leading-snug">{m.title}</div>
-                            <div className="mt-1.5 flex flex-wrap gap-1.5 text-[0.7rem] text-faint">
-                              {m.duration && <span>{m.duration}</span>}
-                              {m.level && <span>· {m.level}</span>}
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+        <div className="mt-9 space-y-11">
+          {groups.map(({ area, courses }) => (
+            <div key={area.id} className="grid gap-5 lg:grid-cols-[14rem_1fr]">
+              <div className="lg:pt-1">
+                <h3 className="text-[0.9rem] font-semibold">{area.name}</h3>
+                <p className="mt-1 text-[0.78rem] leading-snug text-faint">{area.blurb}</p>
               </div>
-            ))}
-          </div>
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {courses.map((c) => <li key={c.id}><CourseCard course={c} /></li>)}
+              </ul>
+            </div>
+          ))}
         </div>
+
+        {groups.length < SITE.areas.length && (
+          <div className="mt-14 rounded-2xl border border-dashed p-6">
+            <h3 className="text-[0.9rem] font-semibold">Areas with no courses yet</h3>
+            <p className="mt-1.5 text-[0.85rem] leading-relaxed text-muted">
+              {SITE.areas
+                .filter((a) => !groups.some((g) => g.area.id === a.id))
+                .map((a) => a.name)
+                .join(' · ')}
+            </p>
+            <p className="mt-3 text-[0.8rem] leading-relaxed text-faint">
+              Add a course by creating <code className="font-mono">content/courses/&lt;id&gt;/course.json</code>{' '}
+              with an <code className="font-mono">area</code> and a{' '}
+              <code className="font-mono">plan.md</code>. See the README.
+            </p>
+          </div>
+        )}
       </section>
 
       <footer className="border-t">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-3 px-5 py-8 text-[0.78rem] text-faint">
           <p>
-            Grounded in <code className="font-mono">docs.databricks.com</code> and the internal
-            Genie Performance &amp; Issues Playbook.
+            {SITE.name} — an internal learning site. Content is grounded in{' '}
+            <code className="font-mono">docs.databricks.com</code>; not affiliated with Databricks.
           </p>
-          <Link href="/reference" className="hover:text-ink">Sources &amp; maintenance →</Link>
         </div>
       </footer>
     </div>
+  )
+}
+
+function CourseCard({ course }: { course: Course }) {
+  const planned = course.status === 'planned'
+
+  const body = (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="font-display text-[1.35rem] leading-tight">{course.title}</div>
+          {course.subtitle && (
+            <div className="mt-0.5 text-[0.8rem] text-faint">{course.subtitle}</div>
+          )}
+        </div>
+        {planned ? (
+          <span className="chip shrink-0 !text-faint">Planned</span>
+        ) : course.status === 'draft' ? (
+          <span className="chip shrink-0" style={{ color: 'rgb(var(--amber))', borderColor: 'rgb(var(--amber) / .4)' }}>
+            Draft
+          </span>
+        ) : (
+          <span className="chip shrink-0 !border-accent/45 !text-accent">Live</span>
+        )}
+      </div>
+
+      <p className="mt-2.5 text-[0.855rem] leading-relaxed text-muted">
+        {course.promise ?? course.description}
+      </p>
+
+      <div className="mt-3.5 flex flex-wrap gap-1.5">
+        {course.domain && <span className="chip">{course.domain}</span>}
+        {!planned && <span className="chip">{course.moduleCount} units</span>}
+        {!planned && course.questionCount > 0 && (
+          <span className="chip">{course.questionCount} questions</span>
+        )}
+      </div>
+    </>
+  )
+
+  if (planned) {
+    return (
+      <div className="card h-full border-dashed p-5 opacity-80">
+        {body}
+        {course.notes && (
+          <p className="mt-3 border-t pt-3 text-[0.775rem] leading-relaxed text-faint">
+            <span className="font-medium text-muted">Scoping note: </span>
+            {course.notes}
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <Link href={`/c/${course.id}`} className="card card-hover block h-full p-5">
+      {body}
+    </Link>
   )
 }

@@ -4,13 +4,11 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 export function CompleteToggle({
-  slug, completed, signedIn,
-}: { slug: string; completed: boolean; signedIn: boolean }) {
+  courseId, slug, completed,
+}: { courseId: string; slug: string; completed: boolean }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [busy, setBusy] = useState(false)
-
-  if (!signedIn) return null
 
   async function toggle() {
     setBusy(true)
@@ -18,7 +16,7 @@ export function CompleteToggle({
       await fetch('/api/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'set-completed', slug, completed: !completed }),
+        body: JSON.stringify({ action: 'set-completed', courseId, slug, completed: !completed }),
       })
       startTransition(() => router.refresh())
     } finally {

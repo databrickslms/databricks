@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { saveAttempt, setCompleted, setTrack } from '@/lib/progress'
-import { TRACKS, type Track } from '@/lib/tracks'
+import { getCourse, isOpen, isValidTrack } from '@/lib/courses'
 
 export const runtime = 'nodejs'
 
@@ -20,22 +20,30 @@ export async function POST(req: Request) {
   }
 
   const action = String(body.action ?? '')
+  const courseId = String(body.courseId ?? '')
+  const course = getCourse(courseId)
+  if (!isOpen(course)) {
+    return NextResponse.json({ error: `Unknown or unopened course: ${courseId}` }, { status: 400 })
+  }
 
   try {
     switch (action) {
       case 'set-track': {
         const track = String(body.track ?? '')
-        if (!(track in TRACKS)) {
-          return NextResponse.json({ error: 'Unknown track' }, { status: 400 })
+        if (!isValidTrack(course, track)) {
+          return NextResponse.json(
+            { error: `"${track}" is not a track in ${course.title}` },
+            { status: 400 },
+          )
         }
-        await setTrack(userId, track as Track)
+        await setTrack(userId, courseId, track)
         return NextResponse.json({ ok: true, track })
       }
 
       case 'set-completed': {
         const slug = String(body.slug ?? '')
         if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 })
-        await setCompleted(userId, slug, body.completed !== false)
+        await setCompleted(userId, courseId, slug, body.completed !== false)
         return NextResponse.json({ ok: true })
       }
 
@@ -47,7 +55,7 @@ export async function POST(req: Request) {
         if (!slug || !answers || !Number.isFinite(score) || !Number.isFinite(total)) {
           return NextResponse.json({ error: 'Missing quiz fields' }, { status: 400 })
         }
-        await saveAttempt(userId, slug, score, total, answers)
+        await saveAttempt(userId, courseId, slug, score, total, answers)
         return NextResponse.json({ ok: true, passed: total > 0 && score / total >= 0.7 })
       }
 

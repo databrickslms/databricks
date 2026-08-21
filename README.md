@@ -1,14 +1,19 @@
-# Genie Agents Academy
+# Lakehouse Academy
 
-A full LMS for the **Databricks Genie Agents** course — 18 units, 65 knowledge-check
-questions, Google sign-in, per-learner progress, and an instructor cohort dashboard.
+An LMS for **Databricks features**. Each feature area gets its own course; every course
+is generated from a single markdown plan, so the plan stays the source of truth.
 
-Course content is generated from [`content/course-plan.md`](content/course-plan.md), so the
-plan stays the single source of truth. Edit the plan, run `npm run content`, redeploy.
+**Live now:** Genie Agents — 18 units, 65 knowledge-check questions, on a financial-services
+dataset with nine flaws planted on purpose.
 
 ```
 Next.js 15 · React 19 · Tailwind 3 · Auth.js v5 (Google) · Drizzle ORM · Neon Postgres
 ```
+
+> **On the name.** `content/site.json` holds it — change `name` and `shortName` in that one
+> file. I avoided "Databricks Academy" because that is Databricks' own official training
+> brand and this is an internal site; the footer carries a "not affiliated" line for the
+> same reason.
 
 ---
 
@@ -16,15 +21,18 @@ Next.js 15 · React 19 · Tailwind 3 · Auth.js v5 (Google) · Drizzle ORM · Ne
 
 | Route | What it does | Auth |
 |---|---|---|
-| `/` | Landing page — promise, tracks, full outline | public |
+| `/` | Course catalog, grouped by Databricks capability area | public |
 | `/login` | Google sign-in | public |
-| `/learn` | Dashboard: progress ring, next module, track picker | signed in |
-| `/learn/[slug]` | Module page: content, on-this-page rail, knowledge check | signed in |
-| `/reference` | Course design, assets, maintenance, playbook coverage, sources | public |
-| `/instructor` | Cohort table: completion, checks taken, average score | instructor |
+| `/c/[course]` | Course home — promise, tracks, full outline | public |
+| `/c/[course]/learn` | Dashboard: progress ring, next module, track picker | signed in |
+| `/c/[course]/learn/[slug]` | Module: content, on-this-page rail, knowledge check | signed in |
+| `/c/[course]/reference` | Course design, assets, maintenance, sources | public |
+| `/instructor` | Cohort table, one section per course | instructor |
+| `/learn`, `/reference` | Redirect to the first open course (legacy links) | — |
 
-**Three tracks** filter the outline: Business User (3 units), Agent Author (all 18),
-Platform & Integration (8). Switching tracks never loses progress.
+**Tracks are per course.** Genie Agents declares three — Business User (3 units), Agent
+Author (all 18), Platform & Integration (8). Switching tracks never loses progress, and
+progress is scoped per course, so enrolling in a second course starts clean.
 
 Passing a knowledge check (≥ 70%) marks the module complete automatically. Every
 attempt is stored, so retakes are visible in the cohort view.
@@ -112,45 +120,91 @@ Google Cloud, or sign-in will fail with a redirect-mismatch error.
 
 ---
 
-## 4. Editing course content
+## 4. Courses and content
 
-All content comes from `content/course-plan.md`.
+### 4.1 Layout
 
-```bash
-# 1. edit content/course-plan.md
-npm run content   # re-splits into content/modules/*.md with frontmatter
-npm run dev       # check it
+```
+content/
+  site.json                        site name, tagline, capability areas
+  registry.generated.json          built by npm run content — do not edit
+  courses/
+    genie-agents/
+      course.json                  metadata, tracks, stages          (required)
+      plan.md                      the whole course as one markdown  (required unless planned)
+      quizzes.json                 knowledge checks by module number (optional)
+      modules/*.md                 generated — do not edit
+    agent-bricks/
+      course.json                  status: planned — roadmap card only
 ```
 
-`scripts/split-content.mjs` splits on `## Module N — Title` and `## Part X — Title`
-headings, parses the `**Level:** · **Duration:**` line into metadata chips, and assigns
-each module to a stage and to tracks. Track and stage membership is defined at the top of
-that script — change it there.
+### 4.2 Course status
 
-Knowledge checks live in [`content/quizzes.json`](content/quizzes.json), keyed by module
-number:
+| Status | Behaviour |
+|---|---|
+| `live` | Fully linkable. Needs `plan.md`. |
+| `draft` | Linkable, badged **Draft**. Needs `plan.md`. |
+| `planned` | Roadmap card only — **not linkable, returns 404**. Needs only `course.json`. |
 
-```json
-{ "9": [ { "q": "...", "options": ["a","b","c","d"], "answer": 0, "why": "..." } ] }
-```
+`planned` exists so a course can appear on the catalog as intent without anything
+half-built reaching a learner.
 
-`answer` is the zero-based index of the correct option. `why` is shown after submission —
-it's the teaching moment, so make it explain rather than restate.
+### 4.3 Adding a course
 
----
+1. `mkdir content/courses/<id>` — the folder name must equal `"id"` in `course.json`.
+2. Write `course.json`:
+   ```jsonc
+   {
+     "id": "my-course",
+     "order": 3,
+     "status": "live",
+     "area": "engineering",          // must match an id in site.json areas
+     "title": "My Course",
+     "subtitle": "Short qualifier",
+     "domain": "Financial Services", // optional chip
+     "promise": "One-line outcome.",
+     "description": "A paragraph for the card and course home.",
+     "defaultTrack": "author",
+     "stages": ["Foundations", "Building"],
+     "stageMap": { "Foundations": [1, 2], "Building": [3, 4] },
+     "tracks": {
+       "author": { "name": "Author", "blurb": "...", "hours": "~8 hours", "modules": "all" },
+       "business": { "name": "Business", "blurb": "...", "hours": "~2 hours", "modules": [1, 2] }
+     }
+   }
+   ```
+3. Write `plan.md`. The splitter looks for exactly these heading forms:
+   - `## Module N — Title` → a module page
+   - `## Part X — Title` → a reference page
+   - a `**Level:** … · **Duration:** … · **Audience:** …` line becomes the metadata chips
+4. Optionally add `quizzes.json`, keyed by **module number**:
+   ```json
+   { "3": [ { "q": "...", "options": ["a","b","c","d"], "answer": 0, "why": "..." } ] }
+   ```
+   `answer` is the zero-based index. `why` shows after submission — it is the teaching
+   moment, so make it explain rather than restate.
+5. `npm run content` — it validates and tells you what is wrong in one line if not.
+
+`npm run content` runs automatically on `dev` and `build`, so a stale registry cannot ship.
+
+### 4.4 Editing an existing course
+
+Edit `content/courses/<id>/plan.md`, then `npm run content && npm run dev`. Track and stage
+membership live in `course.json`, not in the splitter.
 
 ## 5. Schema
 
 ```
 user, account, session, verificationToken   Auth.js (Google sign-in)
-enrollment        one row per learner   → chosen track
-module_progress   learner × module      → completed, completedAt, lastViewedAt
-quiz_attempt      every submission      → score, total, answers[], attemptedAt
+enrollment        (user_id, course_id) PK    → chosen track for that course
+module_progress   user × course × module     → completed, completedAt, lastViewedAt
+quiz_attempt      every submission           → course_id, score, total, answers[], attemptedAt
 ```
 
-`npm run db:studio` opens Drizzle Studio against your database.
+Every progress row carries `course_id`. Module slugs are only unique within a course
+(`00-…` exists in each), so the course is part of the key — not an afterthought.
 
----
+`npm run db:studio` opens Drizzle Studio against your database.
 
 ## 6. Troubleshooting
 
@@ -163,15 +217,21 @@ quiz_attempt      every submission      → score, total, answers[], attemptedAt
 | First visit takes ~60 seconds | Free Render web service cold start. Expected — see §1. |
 | `/instructor` says "Instructors only" | Add your email to `INSTRUCTOR_EMAILS` and redeploy. |
 | Access denied for a valid Google account | `ALLOWED_EMAIL_DOMAINS` is set and doesn't include that domain. |
+| A course 404s | Its `status` is `planned`. Give it a `plan.md` and set `status` to `live` or `draft`. |
+| `content build failed` | The message names the course and the problem. Folder name must equal `course.json` `"id"`. |
+| A course is missing from the catalog | Its `area` doesn't match an `id` in `site.json` → it has no group to render in. |
 
 ---
 
 ## 7. What has and hasn't been verified
 
-Verified locally: production build, TypeScript, all public routes, markdown rendering
-(headings, anchors, scrollable tables, code highlighting, callouts), auth redirects on
-protected routes, the API's 401 guard, and the module→quiz join for all 18 modules.
+Verified locally: production build, TypeScript, the catalog page, course home, reference
+pages, markdown rendering (headings, anchors, scrollable tables, code highlighting,
+callouts), auth redirects on protected routes, legacy `/learn` and `/reference` redirects,
+`planned` courses correctly returning 404 rather than a half-built page, the API's 401
+guard and its unknown-course rejection, the content pipeline's failure modes, and the
+module→quiz join for all 18 Genie Agents modules.
 
 **Not verified without live credentials:** the Google OAuth round trip, database writes,
-and the quiz-score save path. These need a real Neon URL and Google client — they're the
-first things to exercise after step 2.4.
+and the quiz-score save path. These need a real Neon URL and Google client — exercise them
+first after your first sign-in.

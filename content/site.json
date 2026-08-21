@@ -1,0 +1,13 @@
+{
+  "name": "Lakehouse Academy",
+  "shortName": "Lakehouse",
+  "tagline": "Practical courses on Databricks features",
+  "description": "Hands-on, example-driven courses on the Databricks platform — one feature area at a time, each built on a real dataset with the traps left in on purpose.",
+  "areas": [
+    { "id": "ai-agents",   "name": "AI & Agents",     "blurb": "Genie, Agent Bricks, MLflow, model serving" },
+    { "id": "governance",  "name": "Governance",       "blurb": "Unity Catalog, lineage, row and column security" },
+    { "id": "warehousing", "name": "Data Warehousing", "blurb": "SQL warehouses, metric views, AI/BI dashboards" },
+    { "id": "engineering", "name": "Data Engineering", "blurb": "Lakeflow, jobs, ingestion, optimisation" },
+    { "id": "platform",    "name": "Platform & Apps",  "blurb": "Databricks Apps, asset bundles, MCP, CI/CD" }
+  ]
+}
