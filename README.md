@@ -42,11 +42,11 @@ attempt is stored, so retakes are visible in the cohort view.
 ## 0. Related: the lab dataset
 
 Course lab environments live in a separate repo,
-[**lakehouse-academy**](https://github.com/databrickslms/lakehouse-academy) — a
+[**dbxdemos**](https://github.com/databrickslms/dbxdemos) — a
 pip-installable provisioner that writes lab notebooks into a Databricks workspace:
 
 ```python
-%pip install git+https://github.com/databrickslms/lakehouse-academy.git
+%pip install git+https://github.com/databrickslms/dbxdemos.git
 dbutils.library.restartPython()
 import lakehouse_academy as academy
 academy.install('genie-agents')
