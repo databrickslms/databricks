@@ -57,7 +57,12 @@ Three published **tracks** from one build:
 ---
 
 ## Module 0 — Build the Meridian Dataset
-**Level:** Setup (Tracks 2–3) · **Duration:** 90 min · **Deliverable:** a working lab environment for every other module
+**Level:** Setup · **Duration:** 90 min · **Audience:** Agent Author and Platform tracks
+
+**Deliverable:** a working lab environment for every other module.
+
+Most of the 90 minutes is the warehouse working, not you. `03_facts` alone takes several
+minutes to generate 20M transactions. Start it, then read §0.1 and §0.2 while it runs.
 
 > **Why this is a module and not an appendix.** Every later module works on one bank's data. Provisioning it yourself — and spending twenty minutes actually looking at it — is what makes the rest of the course concrete rather than theoretical. Instructors may pre-provision it and assign this module as pre-work.
 
@@ -264,7 +269,7 @@ Sort 12 real questions from a shared inbox into four buckets: *Genie Agent* / *d
 ---
 
 ## Module 2 — Asking Questions That Actually Work
-**Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers (Track 1 core)
+**Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers — the whole of the Business User track
 
 ### Learning outcomes
 1. Write questions Genie can answer, and recognise questions it can't.
@@ -633,7 +638,10 @@ Build the MFG **Retail Banking & Deposits** agent for real: the objects from Lab
 ---
 
 ## Module 9 — The Knowledge Store: Teach It Your Business
-**Level:** Intermediate–Advanced · **Duration:** 90 min · *the highest-value module in the course*
+**Level:** Intermediate–Advanced · **Duration:** 90 min · **Audience:** authors
+
+> **The highest-value module in the course.** Everything before it prepares for this, and
+> everything after it measures or operates what you build here.
 
 ### Learning outcomes
 1. Build agent-scoped metadata and synonyms.

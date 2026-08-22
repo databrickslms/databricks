@@ -76,6 +76,9 @@ function splitPlan(id, dir, config) {
 
   const docs = []
 
+  const slugFor = (m) =>
+    m.kind === 'module' ? `Module ${m.num}` : m.part
+
   marks.forEach((mark, idx) => {
     const end = idx + 1 < marks.length ? marks[idx + 1].i : lines.length
     let body = lines.slice(mark.i + 1, end).join('\n')
@@ -89,6 +92,18 @@ function splitPlan(id, dir, config) {
     const level = pick('Level')
     const duration = pick('Duration')
     const audience = pick('Audience')
+    // The whole metadata line is removed, so anything on it beyond these three
+    // fields would vanish silently. Warn rather than lose it.
+    const metaLine = /^\*\*Level:\*\*.*$/m.exec(body)?.[0] ?? ''
+    const extras = metaLine
+      .split('·')
+      .map((part) => part.trim())
+      .filter((part) => part && !/^\*\*(Level|Duration|Audience):\*\*/.test(part))
+    if (extras.length) {
+      console.warn(
+        `  ! ${slugFor(mark)}: content on the metadata line will not render — ${extras.join(' | ')}`,
+      )
+    }
     body = body.replace(/^\*\*Level:\*\*.*\n/m, '').trim()
 
     const summary = (body.split('\n')
