@@ -1,9 +1,10 @@
 # Databricks Genie Agents — LMS Course Plan
-**From Basics to Advanced · Financial Services · Business-First, Example-Driven**
+**From Basics to Advanced · Asset Management · Business-First, Example-Driven**
 
 > Version 3.0 · Planned 2026-08-21
 > Grounded in current `docs.databricks.com` (Genie section) **and** the internal *Genie Performance & Issues Playbook & Health Check*.
-> Domain: **financial services** — retail banking, cards, lending, fraud, wealth.
+> Domain: **asset and wealth management** — AUM and AUA, net flows, investment performance,
+> distribution channels, and the client and advisor relationships behind them.
 > Terminology note: what used to be called **Genie Spaces** is now **Genie Agents**. Use the new naming throughout; mention the old name once (Module 1) so learners recognise older screenshots and blog posts.
 
 ---
@@ -17,7 +18,7 @@
 
 | Persona | What they need | Modules |
 |---|---|---|
-| **Business consumer** (branch manager, credit risk analyst, product owner) | Ask questions, read answers, know when to trust them | 1–3 (the feedback loop is taught in 2) |
+| **Business consumer** (regional sales lead, portfolio manager, product owner) | Ask questions, read answers, know when to trust them | 1–3 (the feedback loop is taught in 2) |
 | **Agent author / analyst** (the main audience) | Build, curate, tune, test, measure, own an agent | all |
 | **Data steward / platform owner** | Governance, PII, cost, latency, portfolio scaling | 0, 1, 6, 7, 12, 13, 15 |
 | **Developer / integrator** | API, embedding, tracing, CI/CD, multi-agent | 0, 1, 4, 13, 14, 16 |
@@ -960,7 +961,7 @@ who correctly sees the firm-wide total. Learners who predict those two have unde
 
 **Start small.** Minimal instructions, a limited question set, then expand from feedback. Do not try to be complete on day one.
 
-**Define purpose.** One audience, one topic. An agent covering AUM reporting *and* trade operations *and* fraud covers all three badly.
+**Define purpose.** One audience, one topic. An agent covering AUM reporting *and* trade operations *and* fee billing covers all three badly.
 
 **Pre-join.** Beyond 30 objects, build views that pre-join related tables. Fewer, richer objects beat many thin ones — and pre-joining is where the AUM definition, the flow netting and the snapshot grain get settled permanently.
 
@@ -1039,26 +1040,67 @@ From the 22 raw MFG objects: choose ≤ 8, write the `mfg_core_vw_aum_reporting`
 5. **Manage data objects** — Configure → Data. Inspect **Overview** and **Sample data** per table; hide columns.
 6. **Configure settings** — title, default warehouse, description, tags, thumbnail, and **common questions**.
 7. **Share** — folder permissions or direct share at CAN MANAGE / EDIT / RUN / VIEW.
-8. **Monitor** — conversation history and the Monitor tab (Modules 10–12).
+8. **Monitor** — conversation history and the Monitor tab (Modules 12–14).
+
+### Reviewing what Genie Code suggests
+
+The bootstrap is genuinely useful and it is confidently wrong about exactly the things that
+matter. It reads schemas and samples; it cannot read your firm's conventions. On the Meridian
+data it reliably proposes two descriptions you must reject:
+
+| Suggestion | Why it's wrong |
+|---|---|
+| `fct_aum_snapshot` — *"total assets under management"* | It's the **daily** market value of a single account, and it excludes held-away assets, which sit in their own column. Accept this and every learner sums it across dates. |
+| `dim_asset_class` — *"asset class of the holding"* | There are **two** hierarchies in that table, `investment_class` and `regulatory_class`, and they disagree. A description naming neither invites Genie to pick either. |
+
+Both readings are defensible from the schema alone. That's the lesson: the bootstrap gives you a
+first draft written by something that has never sat in your reporting meeting.
 
 ### Why "common questions" matter more than they look
-The 4–6 starter chips are the entire onboarding experience for a business user. They must be questions the agent answers **perfectly today**.
 
-MFG Retail Banking starters:
-- "What was net fee revenue by region last fiscal quarter?"
-- "Which 10 branches grew deposits fastest in FY2026?"
-- "What is the 90-day delinquency rate by product as of the latest snapshot?"
-- "Compare net fee revenue this fiscal quarter to the same quarter last fiscal year"
+The 4–6 starter chips are the entire onboarding experience for a business user. They must be
+questions the agent answers **perfectly today**.
 
-**Rule:** if a starter question ever returns a wrong answer, it's a P1 bug. It's the first thing every new user clicks.
+Meridian Wealth & Distribution starters:
+- "What was discretionary AUM by asset class as of 30 June 2026?"
+- "Which ten funds had the largest net inflows in FY2026 Q3, excluding exchanges?"
+- "What were net flows by distribution channel for FY2026 Q3?"
+- "What was the net-of-fees time-weighted return by strategy for the YTD period as of 30 June 2026?"
+- "Compare discretionary AUM at 30 June 2026 with the same date a year earlier"
+
+Read those again and notice what none of them say. Not one asks *"what's our AUM?"* or *"what was
+our return?"* Every starter names which AUM, which return, and which period — because a starter
+question is the one question you are certain about.
+
+> **The starters are a contract, not a demo.** They tell the user what this agent is for, and
+> they model the phrasing that works. A user whose first click returns a defensible number will
+> phrase their second question the same way. A user whose first click returns a plausible wrong
+> number learns nothing — and tells three colleagues.
+
+**Rule:** if a starter question ever returns a wrong answer, it's a P1 bug. It's the first thing
+every new user clicks.
 
 ### Also cover
 - **Clone** an agent (a fast way to spin a regional variant without recurating).
 - **Assign certification** to signal official status.
-- Naming and description conventions — in Genie One the description is how users pick an agent. `"Retail Banking & Deposits — net fee revenue, deposit growth, delinquency for branches and regions. Owner: Retail Analytics. Fiscal calendar (Oct 1)."` beats `"Banking agent"`.
+- Naming and description conventions — in Genie One the description is how users pick an agent
+  from a list, so it has to say what's in scope *and* what the words mean:
+
+  > `"Wealth & Distribution — AUM, net flows and performance by portfolio, fund, channel and`
+  > `region. AUM means discretionary market value excluding held-away assets. Fiscal year starts`
+  > `1 October. Owner: Wealth Analytics."`
+
+  That beats `"Wealth agent"` on every axis that matters: a user can tell whether their question
+  belongs here, and the definition is visible before anyone asks a thing.
 
 ### Lab 8 (35 min) — GRADED, milestone lab
-Build the MFG **Retail Banking & Deposits** agent for real: the objects from Lab 7, review the Genie Code suggestions (documenting at least 2 you **rejected** and why — flaws 1 and 5 are planted in those suggestions), configure settings and 5 common questions, share with a peer group at CAN RUN, and confirm all 5 starters return correct answers.
+Build the Meridian **Wealth & Distribution** agent for real: the objects from Lab 7, review the
+Genie Code suggestions (documenting at least 2 you **rejected** and why — flaws 1 and 5 are
+planted in those suggestions), configure settings and 5 common questions, share with a peer group
+at CAN RUN, and confirm all 5 starters return correct answers.
+
+Then deliberately add a sixth starter that *is* ambiguous — "What was our AUM?" — run it, and keep
+the result. Module 10 comes back to it when you write the clarification instruction that fixes it.
 
 **Docs:** `/genie-agents/set-up`
 
@@ -1317,7 +1359,7 @@ Fails if:  it silently picks one without saying which.
 
 ### Business example — the fix loop
 ```
-1. Branch manager asks "deposit growth for my branch last month" → wrong (includes DECLINED)
+1. Sales lead asks "net flows for my region last month" → wrong (counts CANCELLED)
 2. She clicks "Fix it"
 3. Author opens the response, clicks Show code, sees the missing status filter
 4. Author edits the SQL, verifies the number, and SAVES IT AS AN EXAMPLE QUERY
@@ -1364,12 +1406,12 @@ Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least o
 |---|---|---|
 | "California" returns nothing | tell users to say "CA" | **entity matching** on `state` (Module 9) |
 | Revenue is gross, not net | text instruction "use net revenue" | `net_fee_revenue` **measure expression** + fix the view (Modules 7, 9) |
-| Loan book is 30× too high | re-ask the question | **join cardinality** + `Latest snapshot` filter + EOP view (Modules 7, 9) |
+| AUM is 30× too high | re-ask the question | **join cardinality** + `Latest snapshot` filter + EOP view (Modules 7, 9) |
 | Wrong year | a note in the description | **fiscal calendar instruction** + `dim_date` fiscal columns (Modules 7, 10) |
 | Transaction counts too high | ignore it | **`status = 'POSTED'` filter expression** (Module 9) |
-| "Delinquent" answered inconsistently | more prose | **two named measures** + a **clarification instruction** (Modules 9, 10) |
+| "Net flows" answered inconsistently | more prose | **two named measures** + a **clarification instruction** (Modules 9, 10) |
 | A complex recurring question is always slightly off | more text instructions | **example query** or **UC function** as a trusted asset (Module 10) |
-| Genie asserts a *cause* ("delinquency rose because of the new channel") | forward it to the CRO | it's an **unsupported claim** — tighten context, remove overlapping tables, diagnose with Genie Code. Genie retrieves; it does not diagnose (Module 2). |
+| Genie asserts a *cause* ("outflows rose because of the fee change") | forward it to the CIO | it's an **unsupported claim** — tighten context, remove overlapping tables, diagnose with Genie Code. Genie retrieves; it does not diagnose (Module 2). |
 | Answers pull from `fct_aum_legacy` | delete the table and break downstream | **certify** `fct_transactions`, **deprecate** the legacy table in UC (Modules 6, 7) |
 | PII appeared in an answer | add "never show PII" to instructions | **column masks** in Unity Catalog (Module 6) |
 | Answers are correct but slow | add instructions | measure thinking vs query time first (Module 13) |
@@ -1467,7 +1509,7 @@ typical observed:        ~20+ seconds            ~3–10 seconds
 
 ### Business example — the MFG "Genie is too slow" complaint
 ```
-Complaint: branch managers say it takes 40 seconds.
+Complaint: regional sales leads say it takes 40 seconds.
 
 Measurement:
   execution_duration_ms                 4,100 ms   ← the SQL is fine
@@ -1569,9 +1611,9 @@ Did it hit a documented limit?                 → capacity/design       → Mod
    → PLATFORM. DEADLINE_EXCEEDED. Message ID captured, filed.
      Workaround: fresh chat on a newer model.
 
-3. "I got a 4.1% delinquency rate yesterday and 4.4% today"
-   → EXPECTED VARIATION + a stale thread. Genie had picked 30+ DPD one day
-     and 90+ the other, because 'delinquent' was still ambiguous.
+3. "I got a 7.4% return yesterday and 6.9% today"
+   → EXPECTED VARIATION + a stale thread. Genie had picked twr_gross one day
+     and twr_net the other, because 'return' was still ambiguous.
      Real fix: two named measures + a clarification instruction, then a
      benchmark run proving 96% accuracy — and one honest conversation
      with the CRO about guidance vs guarantee.
@@ -1606,32 +1648,42 @@ Given 8 real symptom reports, classify each (curation / platform bug / performan
 ### Business example — MFG's budget design
 ```
 Shared threshold          $9,000 / month   alert at 50%, 80%; block at 100%
-Per-user threshold        $25 / month      alert only — never block a branch
-                                           manager during month-end close
-Override: Credit Risk      $250 / month    they run agent-mode research
+Per-user threshold        $25 / month      alert only — never block a regional
+                                           sales lead during quarter-end review
+Override: Performance team $250 / month    they run agent-mode research
 Override: svc-genie-portal (service principal, no free tier)
                            $500 / month    blocking ON
 Review: billing system tables, monthly, in the FinOps dashboard
 ```
-**Teaching point:** **block service principals, alert humans.** A runaway integration loop is the real cost risk; a curious branch manager is not.
+**Teaching point:** **block service principals, alert humans.** A runaway integration loop is the real cost risk; a curious sales lead is not.
 
 ### Business example — MFG's agent portfolio
 | Agent | Audience | Objects | Owner |
 |---|---|---|---|
-| Retail Banking & Deposits | 340 branch managers, retail leadership | 7 | Retail Analytics |
-| Cards & Payments | 30 card product and risk | 7 | Cards Analytics |
-| Lending & Credit Risk | 45 credit risk, underwriting | 8 | Credit Risk |
-| Fraud & Financial Crime | 20 FinCrime analysts | 6 | FinCrime |
-| Wealth & Advisory | 25 advisors and managers | 5 | Wealth Analytics |
+| Wealth & Distribution | 340 regional sales leads, distribution leadership | 6 | Wealth Analytics |
+| Investment Performance | 45 portfolio managers, CIO office | 6 | Performance & Attribution |
+| Institutional & Consultant Relations | 30 institutional sales, the RFP desk | 5 | Institutional Analytics |
+| Product & Fund Operations | 25 product managers, fund accounting | 7 | Product Analytics |
+| Client & Advisor Insight | 20 relationship managers | 5 | Client Analytics |
 
-Shared foundation so definitions don't diverge: **metric views** for `net_fee_revenue`, `delinquency_rate_30/90`, `approval_rate` · shared **UC functions** (`delinquency_rate`, `fx_convert`, `fiscal_period_resolver`) · one company-wide fiscal-calendar instruction block reused in every agent.
+Shared foundation so definitions don't diverge: the **`mv_wealth_metrics` metric view**, which
+declares `AUM`, `Assets Under Advisement` and `Held Away Assets` once · shared **UC functions**
+(`aum_by_asset_class`, `net_flows`, `to_usd`, `fiscal_period`) · one company-wide fiscal-calendar
+instruction block reused in every agent.
 
-> **The anti-pattern:** five agents each defining "delinquency rate" slightly differently, one of which feeds a regulatory report. In financial services that isn't a trust problem, it's an audit finding. Metric views exist to prevent exactly this.
+> **The anti-pattern:** five agents each defining "net flows" slightly differently, one of which
+> feeds a client report or a composite that has been GIPS-verified. In asset management that
+> isn't a trust problem — a number that doesn't tie is a finding. Metric views exist to prevent
+> exactly this: `AUM` is defined in one place, and every agent that asks for it gets the same
+> arithmetic.
 
 **Portfolio hygiene:** delete old and unused agents. Too many agents hurts routing for everyone in the workspace.
 
 ### Lab 15 (25 min)
-Design an agent portfolio for a given financial-services profile (learners pick retail bank, insurer, or asset manager): 4–6 agents with audience, objects and owner, plus the shared metric-view foundation and a budget plan with thresholds and blocking decisions.
+Design an agent portfolio for an asset manager (or, if learners prefer, their own firm's shape):
+4–6 agents with audience, objects and owner, plus the shared metric-view foundation and a budget
+plan with thresholds and blocking decisions. Name at least one metric that must be defined once
+and shared, and say which agent would cause the most damage by redefining it.
 
 **Docs:** `/genie/budgets`, `/metric-views/`, `/genie/best-practices`
 
@@ -1684,19 +1736,19 @@ Setup: configure (add agents/tools with **detailed descriptions** — the descri
 
 ### Business example — MFG's "Ask Meridian" supervisor
 ```
-User: "Why did Northeast delinquency rise in Q3, and what did the credit
-       committee say about it?"
+User: "Why did emerging-market equity outflows accelerate in Q3, and what did
+       the investment committee say about it?"
 
 Supervisor routes:
-  → Lending & Credit Risk Genie Agent : DPD migration, vintage curves, FY2026 Q3   (structured)
-  → Retail Banking Genie Agent        : origination mix, channel shift             (structured)
-  → Knowledge Assistant               : Q3 credit committee memos                  (unstructured)
-  → Web search                         : regional unemployment prints               (external)
+  → Wealth & Distribution Genie Agent   : net flows by channel, FY2026 Q3        (structured)
+  → Investment Performance Genie Agent  : return vs benchmark, EQ_EM portfolios  (structured)
+  → Knowledge Assistant                 : Q3 investment committee memos          (unstructured)
+  → Web search                          : EM index drawdown, peer fund flows     (external)
 
-Synthesised answer: 90+ DPD rose 38bps, ~70% concentrated in the FY2026-Q1
-personal loan vintage originated through the new digital channel — matching
-the committee's own flagged concern, and consistent with regional
-unemployment up 40bps.
+Synthesised answer: EQ_EM net outflows were driven by the intermediary
+channel, concentrated in two share classes that had trailed their benchmark
+for three consecutive quarters — matching the committee's own flagged
+concern, and in line with sector-wide EM redemptions over the period.
 ```
 **Teaching point:** Genie Agents answer *"what happened."* A supervisor combining Genie with document and external sources gets closer to *"why."* This is the honest ceiling of Genie alone (Module 2) and the architectural answer to it.
 
@@ -1737,7 +1789,9 @@ unemployment up 40bps.
 **Level:** Advanced · **Duration:** 4–6 hours (or a 1-week project)
 
 ### The brief
-Learners pick a domain — their own real one if available, otherwise a provided financial-services profile (retail bank, commercial lender, insurer, asset manager, payments processor) — and deliver an agent a business team could use on Monday.
+Learners pick a domain — their own real one if available, otherwise one of the provided
+asset-management profiles (distribution, investment performance, institutional relations, product
+and fund operations) — and deliver an agent a business team could use on Monday.
 
 ### Deliverables
 1. **Charter (1 page)** — audience, top 15 questions, business sponsor, owner, success metric
@@ -1773,7 +1827,7 @@ Learners pick a domain — their own real one if available, otherwise a provided
 | Asset | Count | Notes |
 |---|---|---|
 | **Meridian dataset: DDL + seed notebook** | 1 | **build this first — everything depends on it.** Small (20M) and Large (900M) tiers; nine planted flaws; 12-statement validation script |
-| **Synthetic document set for the volume** | 40 PDFs | credit committee memos, branch notes, complaint letters |
+| **Synthetic document set for the volume** | 40 PDFs | investment committee memos, advisor call notes, client complaint letters |
 | **Governance objects** | 1 set | one row filter, four column masks, three personas |
 | Reference agent (fully curated, 7 objects) | 1 | the instructors' answer key |
 | Broken agent (uncurated, 22 objects, 9,400-char prose) | 1 | Lab 4 diagnosis, Module 7 demo, **Module 13 latency lab** |
