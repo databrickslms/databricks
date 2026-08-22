@@ -644,19 +644,48 @@ question is the skill being tested.
 | Trade-off | fast, cheap, easy to verify | slower, more LLM spend, more to review |
 | Availability | broad | Americas & Europe workspaces; elsewhere needs **cross-Geo processing** enabled |
 
+### How to tell which one you need
+
+Module 2 gave you four things a good question names — a measure, a cut, a filter and a point in
+time. That checklist doubles as the mode test:
+
+- **You can name all four → Chat mode.** You already know the shape of the answer; you just need
+  the number.
+- **You can't name the cut → Agent mode.** "Which funds are in trouble" doesn't specify a cut
+  because *finding* the right cut is the actual work. That's research, not retrieval.
+
+The failure this prevents is asking Chat mode a research question. It will answer — one query,
+one table, confidently — and you'll mistake one slice for the whole picture.
+
 ### Business examples
 | Question | Mode | Why |
 |---|---|---|
-| "What was net fee revenue by region last fiscal quarter?" | Chat | one well-defined metric |
-| "Which loan segments are deteriorating, and what's driving it?" | Agent | needs several angles: vintage, DPD migration, channel, income band |
-| "Summarise this quarter's credit committee memos alongside the delinquency trend" | Agent | unstructured volume files + structured data |
-| "What's the balance on account 8841203?" | Chat | one lookup |
+| "What was AUM by asset class as of 30 June 2026?" | Chat | one balance, one as-of date, one cut |
+| "Which funds are losing assets, and what's driving it?" | Agent | needs several angles — net flows by channel, redemptions vs exchanges, return against benchmark, share-class mix |
+| "Summarise the investment committee memos on emerging-market equity alongside the flow trend for those funds" | Agent | unstructured files in a volume, joined to structured tables |
+| "What was the market value of account AC000884120 as of 30 June 2026?" | Chat | one lookup |
+| "Show net flows by channel for FY2026 Q3" | Chat | recurring, well-defined, belongs on a dashboard |
+| "Why are private-client redemptions up, and is it advisors or clients leaving?" | Agent | the question contains a hypothesis to test, not a metric to fetch |
 
 ### Demo (10 min)
-Ask *"Which MFG loan segments are deteriorating and why?"* in both modes side by side. Chat returns one table; Agent returns a five-section report. Then show the time and cost difference — this frames Modules 13 (latency) and 14 (cost).
+Ask *"Which Meridian funds are losing assets, and why?"* in both modes side by side. Chat returns
+one table — probably net flows by fund, ranked. Agent returns a multi-section report that also
+looks at performance against benchmark, channel concentration and whether the outflows are
+redemptions or exchanges.
+
+Then show the clock and the cost. Agent mode did more because it *ran more queries* — and every
+one of them was billed. That framing sets up Module 13 (latency) and Module 15 (cost).
+
+The instructive part is not that Agent mode found more. It's that the Chat answer wasn't wrong —
+it was one true slice, presented with the same confidence as the full picture.
 
 ### Lab 3 (15 min)
-Route 10 MFG questions to Chat or Agent mode with a one-line justification each.
+Route 10 Meridian questions to Chat or Agent mode with a one-line justification each. Two of the
+ten are research questions disguised as metric questions — the phrasing names a measure, but
+answering usefully needs several. Spotting those is the point of the lab.
+
+> **Setup note for instructors:** the Agent-mode exercises read from the `documents` volume that
+> notebook 01 creates. Populate it with the course document pack before running this module.
 
 **Docs:** `/genie/agent-mode`, `/genie-agents/concepts`
 
@@ -700,7 +729,7 @@ It's a **compound AI system**: multiple interacting components. When it answers 
 ```
 STRONGEST  ┌─ Trusted assets (verified query / UC function)     "use this exact logic"
            ├─ Example SQL queries                              "here's a worked answer"
-           ├─ Knowledge store SQL expressions                   "this is what 'net fee revenue' means"
+           ├─ Knowledge store SQL expressions                   "this is what 'net flows' means"
            ├─ Knowledge store metadata (descriptions, synonyms) "this is what this column means"
            ├─ Unity Catalog comments                            "generic table docs"
 WEAKEST    └─ Plain-text instructions                           "please remember to..."
