@@ -475,9 +475,10 @@ project is allowed to exist.
 
 ### Where this course goes
 
-You'll work with Meridian Financial Group throughout — its deposits, cards, lending and wealth
-businesses — and build up to answering exactly the kind of chain the Head of Wealth started
-with:
+You'll work with Meridian Financial Group throughout — a mid-size US investment manager,
+$430B across 4,500 portfolios, sold through intermediary, institutional, retirement and
+private-client channels — and build up to answering exactly the chain the Head of Wealth
+started with:
 
 > *"What was Wealth AUM at the end of Q2?"*
 >
