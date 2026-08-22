@@ -77,7 +77,7 @@ Financial services is the right domain for this course because it forces every h
 |---|---|---|---|
 | `mfg.core.fct_transactions` | one posted/attempted transaction | `txn_id, account_id, txn_date, amount, fee_revenue, interchange, merchant_category, currency, status` | the main fact — fee revenue, volumes |
 | `mfg.core.fct_reversals` | one reversal / chargeback | `txn_id, reversal_date, reversal_amount, reason_code` | **gross vs net** revenue |
-| `mfg.core.fct_loan_balances` | **account × day (daily snapshot)** | `account_id, snapshot_date, principal_balance, interest_accrued, days_past_due, dpd_bucket` | delinquency, balances — and the fan-out trap |
+| `mfg.core.fct_loan_balances` | **account × day (daily snapshot)** | `account_id, snapshot_date, principal_balance, interest_accrued, days_past_due, dpd_bucket, loan_status` | delinquency and balances over time |
 | `mfg.core.fct_applications` | one credit application | `app_id, customer_id, product_id, submitted_ts, decision_ts, funded_ts, decision, channel` | approval rate, funnel, cycle time |
 | `mfg.core.fct_fraud_cases` | one fraud case | `case_id, account_id, opened_date, closed_date, loss_amount, fraud_type, status` | fraud rate, loss rate |
 | `mfg.core.dim_customer` | customer | `customer_id, segment, tenure_months, home_branch_id, ssn_last4, email, dob, annual_income` | segmentation — **and the PII lesson** |
@@ -88,7 +88,7 @@ Financial services is the right domain for this course because it forces every h
 | `mfg.core.dim_fx_rate` | currency × day | `currency, rate_date, usd_rate` | multi-currency conversion |
 | `mfg.ref.documents` *(volume)* | PDFs | credit committee memos, branch manager notes, customer complaint letters | Agent mode over unstructured files; Knowledge Assistant |
 
-### 0.5 Provisioning — one pip install
+### 0.3 Provisioning — one pip install
 
 The lab is installed by a package, not assembled by hand. In a Databricks notebook:
 
@@ -183,7 +183,7 @@ understanding, because they explain a design choice you will meet again in Modul
   benchmark set — and you would only notice when scores stopped making sense.
 - Re-running a notebook reproduces the same rows instead of a fresh random draw.
 
-### 0.6 The three personas (used from Module 5 onward)
+### 0.4 The three personas (used from Module 5 onward)
 | Persona | Role | Access |
 |---|---|---|
 | **Priya Raman** | Regional Manager, Northeast | row filter: `region = 'NE'`; PII masked |
