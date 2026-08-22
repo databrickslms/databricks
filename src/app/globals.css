@@ -16,6 +16,7 @@
     --amber: 176 118 15;
     --rose: 178 46 62;
     --sel: 250 236 230;
+    --code: 244 242 238;
   }
 
   :root:not([data-theme='light']) {
@@ -32,6 +33,7 @@
       --amber: 226 168 62;
       --rose: 240 122 134;
       --sel: 56 30 22;
+      --code: 18 20 25;
     }
   }
 
@@ -48,6 +50,7 @@
     --amber: 226 168 62;
     --rose: 240 122 134;
     --sel: 56 30 22;
+    --code: 18 20 25;
   }
 
   * { border-color: rgb(var(--line)); }
@@ -127,7 +130,7 @@
   /* Code blocks */
   .prose-course :where(pre) {
     @apply rounded-xl border p-4 text-[0.83rem] leading-[1.6] my-6 overflow-x-auto;
-    background: rgb(var(--raised));
+    background: rgb(var(--code));
     border-color: rgb(var(--line));
   }
 
@@ -142,6 +145,90 @@
   .prose-course :where(tbody tr:last-child td) { @apply border-b-0; }
 
   .prose-course :where(hr) { @apply my-12; }
+
+  /* ── Diagrams ───────────────────────────────────────────────────────────────
+     Flow chains and ranked ladders, authored as ```flow / ```ladder fences.
+     See src/lib/diagrams.ts. Everything is driven by the theme tokens, so both
+     colour schemes and the explicit toggle are covered by construction. */
+
+  .flow { @apply my-7 grid gap-3; }
+  .flow-compare { @apply gap-3 sm:grid-cols-2; }
+
+  .flow-group {
+    @apply rounded-xl border p-4;
+    background: rgb(var(--raised));
+    border-color: rgb(var(--line));
+  }
+  .flow-caption {
+    @apply mb-3 mt-0 text-[0.7rem] font-semibold uppercase tracking-[0.09em];
+    color: rgb(var(--muted));
+  }
+  .flow-steps { @apply m-0 flex list-none flex-wrap items-center gap-y-2 p-0; }
+  .flow-steps > li { @apply m-0 p-0; }
+
+  .flow-step {
+    @apply inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[0.8rem] font-medium leading-tight;
+    background: rgb(var(--surface));
+    border-color: rgb(var(--line));
+    color: rgb(var(--ink));
+  }
+  .flow-step code { @apply bg-transparent p-0 text-[0.95em]; }
+
+  /* The terminal step is the outcome — the only place colour is spent. */
+  .flow-step-end {
+    background: rgb(var(--accent-soft));
+    border-color: rgb(var(--accent) / 0.42);
+    color: rgb(var(--accent));
+  }
+
+  .flow-n {
+    @apply grid h-4 w-4 shrink-0 place-items-center rounded-full text-[0.6rem] font-semibold tabular-nums;
+    background: rgb(var(--ink) / 0.07);
+    color: rgb(var(--muted));
+  }
+  .flow-step-end .flow-n { background: rgb(var(--accent) / 0.16); color: rgb(var(--accent)); }
+
+  /* Connector drawn in CSS so it scales with text and needs no glyph font. */
+  .flow-arrow { @apply relative mx-1 h-px w-3.5 shrink-0; background: rgb(var(--line)); }
+  .flow-arrow::after {
+    content: '';
+    @apply absolute -top-[2.5px] right-0 h-[6px] w-[6px] rotate-45 border-r border-t;
+    border-color: rgb(var(--faint));
+  }
+
+  .flow-loop {
+    @apply mb-0 mt-3 flex items-center gap-1.5 text-[0.74rem];
+    color: rgb(var(--muted));
+  }
+  .flow-loop span { color: rgb(var(--accent)); }
+
+  .ladder { @apply relative my-7 pl-3; }
+  .ladder-axis {
+    @apply absolute bottom-2 left-0 top-2 w-px;
+    background: linear-gradient(to bottom, rgb(var(--accent) / 0.55), rgb(var(--line)));
+  }
+  .ladder-rungs { @apply m-0 flex list-none flex-col gap-1 p-0; }
+
+  .ladder-rung {
+    @apply relative m-0 flex items-center gap-3 overflow-hidden rounded-lg border py-2 pl-3 pr-3;
+    background: rgb(var(--raised));
+    border-color: rgb(var(--line));
+  }
+  /* Bar length encodes rank, so the gradient is legible before the words are. */
+  .ladder-bar {
+    @apply absolute inset-y-0 left-0;
+    background: linear-gradient(to right, rgb(var(--accent) / 0.13), transparent);
+  }
+  .ladder-body { @apply relative flex min-w-0 flex-col gap-0.5; }
+  .ladder-label { @apply text-[0.83rem] font-medium; color: rgb(var(--ink)); }
+  .ladder-gloss { @apply text-[0.76rem]; color: rgb(var(--muted)); }
+
+  .ladder-rank {
+    @apply relative w-[4.6rem] shrink-0 text-[0.6rem] font-semibold uppercase tracking-[0.08em];
+    color: rgb(var(--faint));
+  }
+  .ladder-rung-top .ladder-rank { color: rgb(var(--accent)); }
+  .ladder-rung-top { border-color: rgb(var(--accent) / 0.4); }
 
   /* ── Chrome ─────────────────────────────────────────────────────────────── */
   .chip {

@@ -275,26 +275,22 @@ Three days of latency doesn't slow that conversation down. It ends it.
 
 ### Two mental models
 
-Here's how the answer usually travels:
+Put the two shapes side by side, because the difference is the shape and not the speed:
 
-```
+```flow numbered
 Traditional analytics
-  Question → Analyst → SQL → Dashboard → Answer
-```
+Question → Analyst → SQL → Dashboard → Answer
 
-Every arrow is a handoff, and every handoff costs time and loses a little intent. It works
-well for questions you knew you'd need to ask — which is what dashboards are for. It works
-badly for the fourth follow-up nobody anticipated.
-
-Now the other shape:
-
-```
 Genie
-  Question → Answer → Follow-up → Deeper insight
+Question → Answer → Follow-up → Deeper insight → ↻
 ```
 
-Fewer arrows, and crucially it's a **loop**. The value isn't the first answer arriving faster.
-It's that the second, third and fourth questions get asked at all.
+In the first, **every arrow is a handoff**, and every handoff costs time and loses a little
+intent. It works well for questions you knew you'd need to ask — which is exactly what
+dashboards are for. It works badly for the fourth follow-up nobody anticipated.
+
+The second has fewer arrows, and crucially it's a **loop**. The value isn't the first answer
+arriving faster. It's that the second, third and fourth questions get asked at all.
 
 That's what people mean by *having a conversation with your data*. Not a chatbot with a
 friendly tone — a short enough feedback loop that curiosity survives.
@@ -505,7 +501,7 @@ by your definitions, from data you'd defend in a meeting.
 
 Here's the arc of what's coming, and each step is one part of that answer:
 
-```
+```flow numbered
 Data → Context → Instructions → Relationships → Logic → Testing → Governance
 ```
 
@@ -726,13 +722,13 @@ It's a **compound AI system**: multiple interacting components. When it answers 
 > **Drill this distinction:** instructions and examples **change** answers. Benchmarks **grade** them. Learners confuse these constantly.
 
 ### The influence hierarchy (the course's central mental model)
-```
-STRONGEST  ┌─ Trusted assets (verified query / UC function)     "use this exact logic"
-           ├─ Example SQL queries                              "here's a worked answer"
-           ├─ Knowledge store SQL expressions                   "this is what 'net flows' means"
-           ├─ Knowledge store metadata (descriptions, synonyms) "this is what this column means"
-           ├─ Unity Catalog comments                            "generic table docs"
-WEAKEST    └─ Plain-text instructions                           "please remember to..."
+```ladder
+strongest: Trusted assets — a verified query or UC function: *"use this exact logic"*
+Example SQL queries — a worked answer to a real question: *"here's how that's done"*
+Knowledge store SQL expressions — *"this is what 'net flows' means"*
+Knowledge store metadata — descriptions and synonyms: *"this is what this column means"*
+Unity Catalog comments — generic table documentation
+weakest: Plain-text instructions — *"please remember to..."*
 ```
 **Teaching line:** *"Text instructions are the last resort, not the first tool."* Databricks' best-practice guidance says to prioritise SQL expressions and example SQL **over** text instructions. This inverts what most learners instinctively do.
 

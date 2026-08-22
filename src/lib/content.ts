@@ -6,6 +6,7 @@ import anchor from 'markdown-it-anchor'
 import hljs from 'highlight.js/lib/common'
 
 import { getCourse, resolveTrack, trackNames, type Course } from './courses'
+import { renderDiagram } from './diagrams'
 
 export type Heading = { id: string; text: string; depth: number }
 
@@ -50,6 +51,15 @@ const md: MarkdownIt = new MarkdownIt({
     s.toLowerCase().replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 60),
   permalink: anchor.permalink.linkInsideHeader({ symbol: '#', placement: 'after' }),
 })
+
+// Diagram fences (```flow, ```ladder) become laid-out figures rather than
+// monospace panels. Anything else falls through to the normal code path.
+const defaultFence = md.renderer.rules.fence!
+md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+  const [lang = '', ...flags] = tokens[idx].info.trim().split(/\s+/)
+  const diagram = renderDiagram(lang, tokens[idx].content, flags)
+  return diagram ?? defaultFence(tokens, idx, options, env, self)
+}
 
 // Wrap every table so wide content scrolls inside its own box, never the page.
 const defaultTableOpen = md.renderer.rules.table_open
