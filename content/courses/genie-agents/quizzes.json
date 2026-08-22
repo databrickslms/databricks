@@ -1,15 +1,15 @@
 {
   "0": [
     {
-      "q": "Why does the Meridian dataset ship with nine deliberate flaws instead of clean data?",
+      "q": "Why does the seed data derive every value from hash() of the row key rather than rand()?",
       "options": [
-        "So every later module fixes a real failure rather than a hypothetical one",
-        "To keep the seed script small",
-        "Because synthetic data cannot be made clean",
-        "To test whether learners can find data-quality bugs"
+        "So every learner's data is identical, which is what lets later checks compare against a known answer",
+        "Because rand() is slower on a SQL warehouse",
+        "To keep the generated tables smaller",
+        "Because Unity Catalog does not permit rand() in a CREATE TABLE AS SELECT"
       ],
       "answer": 0,
-      "why": "The flaws are the teaching engine. Each one produces a specific wrong answer that a specific Genie feature fixes — so learners see cause and effect instead of being told a rule."
+      "why": "Determinism is why a benchmark can have a known-correct answer. Random seeding would give every learner different numbers, and any comparison against an expected result would be meaningless."
     },
     {
       "q": "What is the grain of mfg.core.fct_loan_balances?",
@@ -34,15 +34,15 @@
       "why": "FY2026 runs 2025-10-01 to 2026-09-30. This is why 'last year' is ambiguous and needs a fiscal-calendar instruction."
     },
     {
-      "q": "Why does the course ship two data tiers (Small 20M and Large 900M)?",
+      "q": "Why does the dataset ship a Small tier (20M transactions) and a Large tier (900M)?",
       "options": [
-        "You cannot teach latency diagnosis on a toy dataset",
-        "To support learners on trial workspaces only",
-        "Because Neon's free tier caps table size",
-        "To compare Chat mode against Agent mode"
+        "Query latency cannot be measured meaningfully on a small dataset, but most work does not need a large one",
+        "The Large tier contains extra tables the Small tier omits",
+        "Small is for SQL warehouses and Large is for clusters",
+        "Large is required for the governance exercises"
       ],
       "answer": 0,
-      "why": "Module 13's performance lab needs real query time, an unclustered fact table and an unmaintained external table. The Small tier exists so the accuracy modules stay fast for everyone."
+      "why": "Small covers almost everything and stays fast. The Large tier exists for the performance work, where a toy dataset would make every query look instant."
     }
   ],
   "1": [

@@ -59,12 +59,12 @@ Three published **tracks** from one build:
 ## Module 0 — Build the Meridian Dataset
 **Level:** Setup (Tracks 2–3) · **Duration:** 90 min · **Deliverable:** a working lab environment for every other module
 
-> **Why this is a module and not an appendix.** Designing a dataset Genie can succeed on *is* the skill. This module builds one company's data with **nine deliberate flaws planted on purpose**, so that every later module has a real failure to fix rather than a hypothetical one. Instructors may pre-provision it and assign this module as pre-work; authors should still read §0.3 and §0.5.
+> **Why this is a module and not an appendix.** Every later module works on one bank's data. Provisioning it yourself — and spending twenty minutes actually looking at it — is what makes the rest of the course concrete rather than theoretical. Instructors may pre-provision it and assign this module as pre-work.
 
 ### Learning outcomes
-1. Provision the full course dataset in Unity Catalog.
-2. Explain what each planted flaw teaches and which module uses it.
-3. Recognise the same flaws in their own organisation's data.
+1. Provision the course dataset in Unity Catalog.
+2. Describe what Meridian's business does and which tables record it.
+3. Read the data closely enough to notice where a question could have more than one honest answer.
 
 ### 0.1 The company — *Meridian Financial Group (MFG)*
 A mid-size US bank: **340 branches**, four lines of business — **Deposits**, **Cards & Payments**, **Lending** (mortgage, auto, personal), and **Wealth**. Roughly 2.1M retail customers and a small commercial book that transacts in USD, CAD and GBP.
@@ -87,57 +87,6 @@ Financial services is the right domain for this course because it forces every h
 | `mfg.core.dim_date` | day | `date_key, fiscal_year, fiscal_quarter, fiscal_month, calendar_year, is_business_day` | **fiscal vs calendar** |
 | `mfg.core.dim_fx_rate` | currency × day | `currency, rate_date, usd_rate` | multi-currency conversion |
 | `mfg.ref.documents` *(volume)* | PDFs | credit committee memos, branch manager notes, customer complaint letters | Agent mode over unstructured files; Knowledge Assistant |
-
-### 0.3 The nine planted flaws — the course's teaching engine
-
-| # | Planted flaw | What breaks without a fix | Taught in |
-|---|---|---|---|
-| **1** | `fct_transactions.fee_revenue` is **gross**; net requires subtracting `fct_reversals` | revenue is overstated by **3.6%** — measured, not estimated — and nobody notices | 7, 9, 11 |
-| **2** | Fiscal year starts **Oct 1** (FY2026 = 2025-10-01 → 2026-09-30) | "last year" silently means calendar year | 5, 10, 11 |
-| **3** | `dim_branch.region` ∈ `NE, SE, MW, WEST`; `state` ∈ `CA, NY, TX…` — users say "Northeast", "West Coast", "California" | confident **zero rows**, or a silently dropped filter | 9, 12 |
-| **4** | `fct_transactions.status` ∈ `POSTED, PENDING, DECLINED, REVERSED` — only `POSTED` is revenue, but `DECLINED` inflates *counts* | 88% posted, **6% declined**: revenue and volume both wrong, in opposite directions | 7, 9, 11 |
-| **5** | `dim_product` carries **two hierarchies**: `product_category` (business) vs `regulatory_product_class` (Basel reporting) | rollups mix reporting frames; two answers to one question | 7, 9 |
-| **6** | `fct_loan_balances` is a **daily snapshot** — summing it returns **$6.0T against a real book of $7.9B**, 757× | **a plausible wrong number.** The scariest failure in the course | 9, 11, 12 |
-| **7** | "Delinquent" / "seriously delinquent" / "default" / "charge-off" are four different things business users use interchangeably | **7.9% at 30+ DPD against 1.9% at 90+** — a 4.2× spread, both defensible | 9, 10, 11 |
-| **8** | `dim_customer` holds real **PII**: `ssn_last4`, `email`, `dob`, `annual_income` | a governance incident, not a data-quality one | 6, 17 |
-| **9** | Commercial transactions in **CAD/GBP** need `dim_fx_rate` joined *as of the transaction date* | currency mixing; totals that don't tie to finance | 9, 10 |
-
-Two more flaws are added to the *agent*, not the data, in Module 8: a bloated 22-object agent and 9,000 characters of prose instructions — the raw material for Module 13's latency lab.
-
-### 0.4 Use-case coverage matrix — every course topic has data behind it
-
-| Course topic | Module | Data that makes it demonstrable |
-|---|---|---|
-| Good vs bad questions | 2 | wide question surface across 5 fact tables |
-| Chat vs Agent mode | 3 | `fct_loan_balances` + `fct_fraud_cases` + `mfg.ref.documents` volume |
-| Unstructured file analysis | 3, 16 | credit committee memos, complaint letters |
-| Compound AI system / diagnosis | 4 | flaws 1–7 each produce a distinct wrong answer |
-| Row filters | 5 | `dim_branch.region` — filter by regional manager |
-| Column masks | 5 | `dim_customer.ssn_last4`, `email`, `dob`, `annual_income` |
-| Per-user credentials | 5 | three personas, three correct answers to one question |
-| 30-object limit / pre-joining | 6 | 11 base objects → curated 7 |
-| Slim views vs wide tables | 6, 13 | a 380-column `fct_transactions_raw` staging table is included on purpose |
-| Metric views | 6, 15 | `net_fee_revenue`, `delinquency_rate_90`, `approval_rate` used by 3+ agents |
-| Certify / deprecate | 6, 12 | two revenue tables ship: `fct_transactions` (certify) and `fct_txn_legacy` (deprecate) |
-| Genie Code bootstrap review | 7 | AI-suggested descriptions get flaws 1 and 5 wrong — learners must catch it |
-| Synonyms | 8 | region, state, "top line", "delinquent", "chargeback" |
-| Entity matching / value dictionaries | 8 | `region`, `state`, `merchant_category`, `dpd_bucket`, `decision` |
-| Join relationships & cardinality | 8 | `fct_transactions → dim_account → dim_customer/dim_branch/dim_product` |
-| The fan-out trap | 8, 13 | flaw 6, the daily snapshot |
-| SQL expressions (filter/measure/field) | 8 | flaws 1, 4, 7 all require one |
-| Example SQL & parameters | 9 | fiscal-period and region parameters |
-| UC functions as trusted assets | 9 | delinquency-rate and FX-conversion functions |
-| Clarification instructions | 9, 10 | flaw 7 (delinquency ambiguity) |
-| Instruction length ceiling | 9, 13 | the planted 9,000-character prose block |
-| Benchmarks & scoring | 10 | ground-truth SQL for all nine flaws |
-| Monitoring & feedback triage | 11 | seeded conversation history with feedback |
-| Nondeterminism expectation-setting | 4, 11, 12 | flaw 7 produces legitimately varying answers |
-| Performance: thinking vs query | 13 | bloated agent + wide staging table + unoptimised external table |
-| Warehouse & table tuning | 13 | an unclustered 900M-row `fct_transactions`, one external table with no upkeep |
-| Errors & escalation | 12 | scripted error scenarios |
-| Cost & budgets | 14 | five-agent portfolio + one service-principal integration |
-| API, tracing, CI/CD | 16 | the whole agent, exported as `serialized_space` |
-| Supervisor / multi-agent | 16 | 5 agents + document volume + external context |
 
 ### 0.5 Provisioning — one pip install
 
@@ -173,25 +122,24 @@ Installed 'genie-agents' → /Workspace/Users/you@company.com/databricks360/geni
 Because it runs *inside* a notebook, it authenticates as you — there is no host, token or CLI
 profile to configure.
 
-**It deliberately does not run the notebooks for you.** Watching a warehouse work through
-20M transactions, and seeing the flaws appear in the data, is the point of this module. It
-also means nothing spends compute without being asked.
+**It does not run the notebooks for you.** Watching a warehouse work through 20M
+transactions is part of the point, and nothing should spend compute without being asked.
 
 #### The notebooks
 
 | # | Notebook | What it builds | Status |
 |---|---|---|---|
 | 01 | `catalog_and_schemas` | the catalog, `core` / `ref` / `staging` schemas, the documents volume | shipped |
-| 02 | `dimensions` | six dimensions — plants flaws **2, 3, 5, 8, 9** | shipped |
-| 03 | `facts` | five fact tables — plants flaws **1, 4, 6, 7**. Slow: several minutes | shipped |
-| 04 | `decoys` | `fct_transactions_raw` (380 columns) and `fct_txn_legacy`, for Modules 7 and 13 | in development |
-| 05 | `governance` | row filter on `dim_branch.region`, column masks on the four PII columns, the three personas (§0.6) | in development |
-| 06 | `curated` | the "after" layer — `vw_transactions_net`, `vw_loan_book_eop`, `dim_customer_safe`, UC functions | in development |
-| 07 | `metric_view` | `mv_banking_metrics` | in development |
-| 99 | `validate` | one assertion per planted flaw — run last | in development |
+| 02 | `dimensions` | dates, branches, products, customers, accounts, FX rates | shipped |
+| 03 | `facts` | transactions, reversals, the daily loan book, applications, fraud cases. Slow: several minutes | shipped |
+| 04 | `staging` | a 380-column raw landing table and a superseded revenue extract | shipped |
+| 05 | `governance` | row filter on branch region, column masks on the customer identifiers, certification tags | shipped |
+| 06 | `curated` | net-revenue and month-end views, a customer view without identifiers, three UC functions | shipped |
+| 07 | `metric_view` | `mv_banking_metrics` — one definition of each headline metric | shipped |
+| 99 | `validate` | twelve checks that the dataset is complete — run last | shipped |
 
-Run 01 → 03 today. The remaining notebooks arrive in later releases; `academy.list_courses()`
-always reports what the installed version actually ships.
+Only **01 → 03** are required; after those you have a working dataset. Run `99` to confirm
+it. The rest are needed when the course reaches them, and `install()` prints which is which.
 
 #### Options
 
@@ -206,24 +154,23 @@ academy.install(
 ```
 
 **Two data tiers.** **Small** (20M transactions) is the default and covers every module except
-13. **Large** (900M, left unclustered on purpose) exists only for Module 13, because you cannot
-measure query latency on a toy dataset. Start small.
+13. **Large** (900M) exists only for Module 13, where query time has to be long enough to
+measure. Start small.
 
-#### Verified against a live warehouse
+#### Confirming the install
 
-The provisioning notebooks end with `99_validate`, twelve checks that confirm each
-property of the dataset is actually present. All twelve pass, and the figures quoted
-in §0.3 are measured from a real run rather than estimated:
+`99_validate` runs twelve checks over the finished dataset — grain, referential integrity,
+row counts, currency coverage, calendar correctness. Every row should read **PASS**.
 
 ```
-gross vs net revenue     3.60% overstated    gross 99.0M   net 95.0M
-loan snapshot grain      757x if summed      real book 7.9B   summed 6.0T
-delinquency definitions  7.9% at 30+         1.9% at 90+   5 buckets, 4 statuses
-row counts               20.0M transactions  36.0M loan snapshots   2.1M customers
+check_name              value_1              value_2                detail                    verdict
+fiscal calendar         730                  2                      first day 2024-10-01      PASS
+referential integrity   0 orphan transactions expected 0            every txn reaches account PASS
+row counts              20.0M transactions   36.0M loan snapshots   2.1M customers            PASS
 ```
 
-Run it yourself after `03_facts`. Read the numbers, not just the verdicts — three of
-those rows are the subject of Modules 9 and 11.
+It prints numbers as well as verdicts. Read them — you will be asked about several of them
+later, and a figure that surprises you now is worth writing down.
 
 #### Why the data is deterministic
 
@@ -245,17 +192,24 @@ understanding, because they explain a design choice you will meet again in Modul
 
 ### Lab 0 (60 min)
 1. `%pip install databricks360`, then `academy.install('genie-agents')`.
-2. Run `01_catalog_and_schemas`. Confirm the catalog, three schemas and the volume exist.
-3. Run `02_dimensions`, then `03_facts`. Check the row counts each notebook prints at the end.
-4. Open `dim_date` and find the row for **1 October 2025**. Note its `fiscal_year`. That single
-   value is flaw #2, and it is why "last year" is ambiguous at Meridian.
-5. Write a one-line prediction for each of the nine flaws: *what wrong answer will an
-   uncurated agent give?* Keep this sheet — you check it against reality in Module 4, and the
-   gap between what you predicted and what actually happened is the most useful thing you will
-   produce today.
+2. Run `01_catalog_and_schemas`. Note which catalog the first cell reports — that is where
+   your lab lives.
+3. Run `02_dimensions`, then `03_facts`. Check the row counts each prints at the end.
+4. Run `99_validate`. All twelve checks should read PASS.
+5. Now **read the data for twenty minutes.** Open each table, look at the column comments,
+   and run whatever occurs to you. Then write down:
+   - three questions a business user might ask that this data could answer **two different
+     ways**, and why
+   - any column whose meaning you had to guess
+   - the total value of the loan book, and how you decided which number that was
+
+   Keep the sheet. You return to it in Module 4, and the gap between what you noticed now
+   and what you know then is the most useful thing you will produce today.
+
+> Step 5 is the module. Steps 1–4 are typing.
 
 ### Knowledge check
-5 questions on the schema, the fiscal calendar, and which flaw causes which class of error.
+5 questions on the schema, the fiscal calendar, and the grain of each fact table.
 
 ---
 
@@ -1460,3 +1414,67 @@ Databricks docs (`docs.databricks.com`, AWS paths; GCP/Azure equivalents exist):
 | Release notes | `/aws/en/ai-bi/release-notes/` |
 
 Internal: *Genie Performance & Issues Playbook & Health Check* — source for Modules 13 and 14, the limits table, and the supervisor stance in 16.4.
+
+---
+
+## Part F — Dataset design (instructor reference)
+
+> **This page contains the answers.** It catalogues what is wrong with the Meridian dataset
+> and which module each problem serves. Module 0 deliberately does not mention any of it, and
+> Lab 0 asks learners to notice things for themselves. If you are taking the course rather
+> than teaching it, stop here and come back after Module 4.
+
+Measured on a live warehouse rather than estimated: revenue overstated by **3.6%**, the loan
+book summing to **$6.0T against a real $7.9B** (757×), and delinquency reading **7.9% at 30+
+DPD against 1.9% at 90+** — a 4.2× spread between two defensible answers.
+
+### F.1 The nine planted flaws
+
+| # | Planted flaw | What breaks without a fix | Taught in |
+|---|---|---|---|
+| **1** | `fct_transactions.fee_revenue` is **gross**; net requires subtracting `fct_reversals` | revenue is overstated by **3.6%** — measured, not estimated — and nobody notices | 7, 9, 11 |
+| **2** | Fiscal year starts **Oct 1** (FY2026 = 2025-10-01 → 2026-09-30) | "last year" silently means calendar year | 5, 10, 11 |
+| **3** | `dim_branch.region` ∈ `NE, SE, MW, WEST`; `state` ∈ `CA, NY, TX…` — users say "Northeast", "West Coast", "California" | confident **zero rows**, or a silently dropped filter | 9, 12 |
+| **4** | `fct_transactions.status` ∈ `POSTED, PENDING, DECLINED, REVERSED` — only `POSTED` is revenue, but `DECLINED` inflates *counts* | 88% posted, **6% declined**: revenue and volume both wrong, in opposite directions | 7, 9, 11 |
+| **5** | `dim_product` carries **two hierarchies**: `product_category` (business) vs `regulatory_product_class` (Basel reporting) | rollups mix reporting frames; two answers to one question | 7, 9 |
+| **6** | `fct_loan_balances` is a **daily snapshot** — summing it returns **$6.0T against a real book of $7.9B**, 757× | **a plausible wrong number.** The scariest failure in the course | 9, 11, 12 |
+| **7** | "Delinquent" / "seriously delinquent" / "default" / "charge-off" are four different things business users use interchangeably | **7.9% at 30+ DPD against 1.9% at 90+** — a 4.2× spread, both defensible | 9, 10, 11 |
+| **8** | `dim_customer` holds real **PII**: `ssn_last4`, `email`, `dob`, `annual_income` | a governance incident, not a data-quality one | 6, 17 |
+| **9** | Commercial transactions in **CAD/GBP** need `dim_fx_rate` joined *as of the transaction date* | currency mixing; totals that don't tie to finance | 9, 10 |
+
+Two more flaws are added to the *agent*, not the data, in Module 8: a bloated 22-object agent and 9,000 characters of prose instructions — the raw material for Module 13's latency lab.
+
+### F.2 Use-case coverage matrix
+
+| Course topic | Module | Data that makes it demonstrable |
+|---|---|---|
+| Good vs bad questions | 2 | wide question surface across 5 fact tables |
+| Chat vs Agent mode | 3 | `fct_loan_balances` + `fct_fraud_cases` + `mfg.ref.documents` volume |
+| Unstructured file analysis | 3, 16 | credit committee memos, complaint letters |
+| Compound AI system / diagnosis | 4 | flaws 1–7 each produce a distinct wrong answer |
+| Row filters | 5 | `dim_branch.region` — filter by regional manager |
+| Column masks | 5 | `dim_customer.ssn_last4`, `email`, `dob`, `annual_income` |
+| Per-user credentials | 5 | three personas, three correct answers to one question |
+| 30-object limit / pre-joining | 6 | 11 base objects → curated 7 |
+| Slim views vs wide tables | 6, 13 | a 380-column `fct_transactions_raw` staging table is included on purpose |
+| Metric views | 6, 15 | `net_fee_revenue`, `delinquency_rate_90`, `approval_rate` used by 3+ agents |
+| Certify / deprecate | 6, 12 | two revenue tables ship: `fct_transactions` (certify) and `fct_txn_legacy` (deprecate) |
+| Genie Code bootstrap review | 7 | AI-suggested descriptions get flaws 1 and 5 wrong — learners must catch it |
+| Synonyms | 8 | region, state, "top line", "delinquent", "chargeback" |
+| Entity matching / value dictionaries | 8 | `region`, `state`, `merchant_category`, `dpd_bucket`, `decision` |
+| Join relationships & cardinality | 8 | `fct_transactions → dim_account → dim_customer/dim_branch/dim_product` |
+| The fan-out trap | 8, 13 | flaw 6, the daily snapshot |
+| SQL expressions (filter/measure/field) | 8 | flaws 1, 4, 7 all require one |
+| Example SQL & parameters | 9 | fiscal-period and region parameters |
+| UC functions as trusted assets | 9 | delinquency-rate and FX-conversion functions |
+| Clarification instructions | 9, 10 | flaw 7 (delinquency ambiguity) |
+| Instruction length ceiling | 9, 13 | the planted 9,000-character prose block |
+| Benchmarks & scoring | 10 | ground-truth SQL for all nine flaws |
+| Monitoring & feedback triage | 11 | seeded conversation history with feedback |
+| Nondeterminism expectation-setting | 4, 11, 12 | flaw 7 produces legitimately varying answers |
+| Performance: thinking vs query | 13 | bloated agent + wide staging table + unoptimised external table |
+| Warehouse & table tuning | 13 | an unclustered 900M-row `fct_transactions`, one external table with no upkeep |
+| Errors & escalation | 12 | scripted error scenarios |
+| Cost & budgets | 14 | five-agent portfolio + one service-principal integration |
+| API, tracing, CI/CD | 16 | the whole agent, exported as `serialized_space` |
+| Supervisor / multi-agent | 16 | 5 agents + document volume + external context |
