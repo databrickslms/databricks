@@ -246,17 +246,16 @@ understanding, because they explain a design choice you will meet again in Modul
 
 ### A question in a Monday meeting
 
-It's the first Monday after quarter-end at **Meridian Financial Group**. The Head of Wealth
-is looking at a slide that doesn't quite match what she remembers, and she asks the obvious
+It's the first Monday after quarter-end at Meridian Financial Group. The Head of Wealth is
+looking at a slide that doesn't quite match what she remembers, and she asks the obvious
 question:
 
 > *"What was our Wealth AUM at the end of last quarter?"*
 
-Somebody says they'll find out. And in most organisations, that's where the interesting part
-stops — because the answer arrives on Thursday, in a spreadsheet, by which point the meeting
-has moved on.
+Somebody says they'll find out. In most organisations that's where the interesting part stops,
+because the answer arrives on Thursday in a spreadsheet, by which point the meeting has moved on.
 
-But notice what she would have asked next, if the answer had arrived in ten seconds:
+It's worth noticing what she would have asked next, if the answer had arrived in ten seconds:
 
 > *"How did that compare with the previous quarter?"*
 >
@@ -268,15 +267,16 @@ But notice what she would have asked next, if the answer had arrived in ten seco
 >
 > *"Show me the trend over the last twelve months."*
 
-That's not five requests. **That's one train of thought.** Each question only exists because
-the previous one was answered, and the useful insight — the one that changes a decision — is
-somewhere around question four.
+Those aren't five separate requests. They're one train of thought, and each question only exists
+because the previous one was answered. The insight worth having, the one that actually changes a
+decision, usually turns up around the fourth.
 
-Three days of latency doesn't slow that conversation down. It ends it.
+A three-day turnaround doesn't slow that sequence down so much as prevent it, because nobody
+files five follow-up requests over a fortnight.
 
 ### Two mental models
 
-Put the two shapes side by side, because the difference is the shape and not the speed:
+Consider how the answer usually travels, alongside how it travels with Genie:
 
 ```flow numbered
 Traditional analytics
@@ -286,87 +286,85 @@ Genie
 Question → Answer → Follow-up → Deeper insight → ↻
 ```
 
-In the first, **every arrow is a handoff**, and every handoff costs time and loses a little
-intent. It works well for questions you knew you'd need to ask — which is exactly what
-dashboards are for. It works badly for the fourth follow-up nobody anticipated.
+In the first, every arrow is a handoff, and each handoff costs time and loses a little of the
+original intent. That works well for questions you knew in advance you'd need to ask, which is
+what dashboards are for, and badly for the fourth follow-up nobody anticipated.
 
-The second has fewer arrows, and crucially it's a **loop**. The value isn't the first answer
-arriving faster. It's that the second, third and fourth questions get asked at all.
+The second has fewer steps, and more importantly it forms a loop. The benefit isn't that the
+first answer arrives faster. It's that the second, third and fourth questions get asked at all.
 
-That's what people mean by *having a conversation with your data*. Not a chatbot with a
-friendly tone — a short enough feedback loop that curiosity survives.
+This is what people mean when they talk about having a conversation with your data. The point
+isn't a friendly tone; it's a feedback loop short enough that curiosity survives it.
 
 ### "Genie" is not one thing
 
-This is where most people get confused, so let's settle it early. Genie is a **family** of
-experiences, and they're aimed at genuinely different people doing genuinely different work.
-
-The easiest way to tell them apart is by the sentence the person would say.
+Most of the early confusion about Genie comes from treating it as a single product. It's a family
+of experiences aimed at different people doing different work, and the quickest way to tell them
+apart is by the sentence each person would say.
 
 ---
 
-### 1. Genie One — *"I have a question about my data."*
+### 1. Genie One: *"I have a question about my data."*
 
-This is where the Head of Wealth lives. She isn't picking tables or thinking about joins. She
-opens one place, asks in plain language, and follows her own train of thought:
+This is where the Head of Wealth works. She isn't choosing tables or thinking about joins. She
+opens one place, asks in plain language, and follows her own line of enquiry:
 
 - *"What is our current Wealth AUM?"*
 - *"Which portfolios had the largest AUM growth?"*
 - *"What percentage of AUM is in equities?"*
 - *"How did AUM change from last quarter?"*
 
-She also sees dashboards and applications in the same place, so she doesn't have to know
-which kind of thing will answer her question before she asks it.
+Dashboards and applications appear in the same place, so she doesn't need to know what kind of
+object will answer her question before she asks it.
 
-**Mental model: Ask → Explore → Understand**
+Mental model: **Ask → Explore → Understand**
 
-Nobody *builds* Genie One. It's the front door.
+Nobody builds Genie One. It's the front door.
 
 ---
 
-### 2. Genie Agents — *"I want Genie to understand my business."*
+### 2. Genie Agents: *"I want Genie to understand my business."*
 
-This is where the data team lives, and it's what most of this course is about.
+This is where the data team works, and it's what most of this course covers.
 
 A **Genie Agent** is a focused, governed conversational experience built around one business
-domain. Someone on the Wealth analytics team decides: *this agent answers questions about AUM,
-portfolios, flows and performance — and nothing else.*
+domain. Someone on the Wealth analytics team decides that this agent will answer questions about
+AUM, portfolios, flows and performance, and nothing else.
 
-Here's the part that surprises people. Building one is **not** mostly about connecting tables.
-Point an agent at Meridian's warehouse and it can already read every column. What it can't do
-is know any of this:
+The part that surprises people is that building one is mostly not about connecting tables. Point
+an agent at Meridian's warehouse and it can already read every column. What it can't do is know
+any of the following:
 
-- What **AUM** actually means here — and which of the three definitions in circulation is the
-  authoritative one
-- What **"quarter-end"** means, given Meridian's fiscal calendar doesn't start in January
-- Which **portfolios** belong in the number — discretionary only, or advisory too? Closed
-  accounts? Held-away assets?
-- How **asset classes** are defined, and which hierarchy to use when two exist
-- How an **AUM change** is calculated — market movement, or net flows, or both
-- Which **source** is trusted, when two tables both look like they hold the answer
+- what AUM means here, and which of the three definitions in circulation is the authoritative one
+- what "quarter-end" means, given that Meridian's fiscal year doesn't start in January
+- which portfolios belong in the number: discretionary only, or advisory too, and what happens to
+  closed accounts and held-away assets
+- how asset classes are defined, and which hierarchy to use when there are two of them
+- how a change in AUM is calculated, whether from market movement, net flows, or both
+- which source is trusted when two tables both appear to hold the answer
 
-None of that is in the data. All of it is in people's heads. Your job when you build an agent
-is to move it out of their heads and into something the agent can use.
+None of that is recorded in the data. It's held in people's heads. Building an agent is largely
+the work of moving it out of their heads into a form the agent can use.
 
-**Mental model: Curate → Teach → Govern → Ask**
+Mental model: **Curate → Teach → Govern → Ask**
 
 ---
 
-### 3. Genie Code — *"Help me build with data."*
+### 3. Genie Code: *"Help me build with data."*
 
-This is where engineers and analysts-who-write-SQL live. It sits in the workspace alongside
-the work:
+This is where engineers and analysts who write SQL work. It sits in the workspace alongside the
+work itself:
 
 - *"Write SQL to calculate quarter-end AUM by portfolio."*
 - *"Why is this query producing duplicate portfolios?"*
 - *"Optimise this Spark transformation."*
 - *"Explain what this SQL is doing."*
 
-It's also where you'll do the hands-on work of tuning an agent later in this course — seeing
-what an agent actually did with a question, and fixing it in place. (The **Genie Workbench**
-is the other surface for that same work.)
+It's also where you'll do the hands-on tuning later in this course, looking at what an agent did
+with a question and correcting it in place. The **Genie Workbench** is the other surface for that
+same work.
 
-**Mental model: Build → Code → Analyze → Develop**
+Mental model: **Build → Code → Analyze → Develop**
 
 ---
 
@@ -378,19 +376,20 @@ is the other surface for that same work.)
 | Build a trusted conversational experience over your domain | **Genie Agent** |
 | Write, debug or explain code | **Genie Code** |
 
-That's the whole map. If you remember one thing from this module, remember that the middle
-row is a **build** activity — and that this course is about doing it well.
+That's the whole map. The row worth remembering is the middle one, because building a Genie Agent
+is an activity rather than a place you visit, and doing it well is what this course is for.
 
-> One naming note so older material makes sense: Genie Agents used to be called **Genie
-> Spaces**. Same thing, renamed. You'll see the old term in blog posts and screenshots.
+> A naming note, so older material makes sense: Genie Agents were previously called **Genie
+> Spaces**. The product is the same one, renamed. You'll see the old term in blog posts and
+> screenshots.
 
-### Genie isn't magic
+### Genie is not magic
 
-Let's go back to the original question and take it seriously:
+Take the original question seriously for a moment:
 
 > *"What was Meridian's Wealth AUM at the end of Q2?"*
 
-To a person, that's one question. To anything trying to answer it, it's **six**:
+To a person that's one question. To anything trying to answer it, it's six:
 
 | The question sounds like | But first you must answer |
 |---|---|
@@ -401,81 +400,74 @@ To a person, that's one question. To anything trying to answer it, it's **six**:
 | implied: which portfolios | Discretionary only? Closed accounts? Accounts funded mid-quarter? |
 | implied: from where | Two tables look authoritative. Which one is? |
 
-Answer those six differently and you get six defensible numbers. **All of them are "right".
-Only one of them is the number the Head of Wealth meant.**
+Answer those six differently and you arrive at six defensible numbers. Each one is arguably
+right, and only one of them is the number the Head of Wealth had in mind.
 
-So here's the principle this whole course rests on:
+Which leads to the principle the rest of the course rests on:
 
-> **Genie doesn't just need access to your data. Genie needs to understand what your data
-> means.**
+> **Genie doesn't only need access to your data. It needs to understand what your data means.**
 
-Access is a permissions problem, and it's mostly solved. Meaning is a curation problem, and
-it's mostly not.
+Access is a permissions problem, and it's largely solved. Meaning is a curation problem, and it
+largely isn't.
 
-### Think of it like a new analyst
+### Think of it as onboarding a new analyst
 
-Imagine a strong analyst joins Meridian on Monday. Sharp, good with SQL, knows finance.
+Suppose a strong analyst joins Meridian on Monday: good with SQL, comfortable with the subject
+matter, and new to the firm.
 
-You would not hand her credentials to four thousand tables and say *"figure out our AUM."*
-You'd sit down and tell her:
+You wouldn't hand her credentials to four thousand tables and ask her to work out the firm's AUM.
+You'd sit down and explain:
 
-- what the business words mean here
-- which sources are trusted, and which are old
+- what the business terms mean in this firm
+- which sources are trusted, and which are historical
 - how the important metrics are actually calculated
-- how the tables relate to each other
-- the exceptions — the fund that's reported differently, the accounts that don't count
+- how the tables relate to one another
+- the exceptions, such as the fund that's reported differently or the accounts that don't count
 - the questions she'll be asked most often
 
-You'd expect that to take a few weeks. You wouldn't consider it wasted time; you'd consider
-it onboarding.
+You'd expect that to take a few weeks, and you wouldn't think of it as wasted time. You'd call it
+onboarding.
 
-**Building a Genie Agent is the same job.** You are onboarding something that reads
-extraordinarily fast and knows nothing about your company. Everything you'd teach the analyst
-is exactly what the agent needs — and the parts you'd forget to mention are exactly where it
-will go wrong.
+Building a Genie Agent is the same job. You're onboarding something that reads very quickly and
+knows nothing about your company. Everything you'd tell the analyst is what the agent needs, and
+the things you'd forget to mention are where it will go wrong.
 
-### A demo and a product are different things
+### A demo and a product are not the same thing
 
-This distinction is worth being blunt about, because it's where most Genie projects quietly
-fail.
+This distinction is where most Genie projects quietly fail, so it's worth stating plainly.
 
-A **demo** asks:
+A demo answers the question *can Genie answer a question?* It nearly always can, on the first
+attempt, and it looks impressive.
 
-> *Can Genie answer a question?*
+A production-quality agent answers a harder question: *can Genie consistently answer the
+questions this business cares about, using trusted data and agreed definitions, and can I
+demonstrate that it does?*
 
-Yes. Almost always, on the first try, impressively. Demos are easy.
-
-A **production-quality agent** asks:
-
-> *Can Genie consistently answer the questions this business actually cares about, using
-> trusted data and trusted definitions — and can I prove it?*
-
-Those are not the same bar. The gap between them is measured in curation, and closing it is
-what the rest of this course teaches.
+The distance between those two bars is measured in curation, and closing it is what the remaining
+modules are about.
 
 ### Four ingredients
 
-Everything you'll build rests on four things. Miss any one and the agent is a demo.
+Everything you build rests on four things, and missing any one of them leaves you with a demo.
 
-**AI** — the reasoning that turns a sentence into a query. This part you get for free, and it
-is not your differentiator.
+**AI** is the reasoning that turns a sentence into a query. You get this as part of the platform,
+and it isn't where your advantage comes from.
 
-**Data** — the tables, views and metrics themselves. Necessary, and nowhere near sufficient.
+**Data** is the tables, views and metrics themselves. Necessary, and a long way from sufficient.
 
-**Business context** — the definitions, synonyms, rules and worked examples that tell the AI
-what your words mean. **This is the work.** It's also the part most teams skip, then wonder
-why the answers drift.
+**Business context** is the definitions, synonyms, rules and worked examples that tell the model
+what your words mean. This is where the effort goes, and it's the part most teams underestimate
+before wondering why their answers drift.
 
-**Governance** — who may see what, which sources are authoritative, and how you know an
-answer is right. In financial services this isn't an afterthought; it's often the reason the
-project is allowed to exist.
+**Governance** covers who may see what, which sources are authoritative, and how you establish
+that an answer is correct. In regulated industries it tends to be the reason a project is
+permitted at all, rather than an afterthought.
 
 ### Where this course goes
 
-You'll work with Meridian Financial Group throughout — a mid-size US investment manager,
-$430B across 4,500 portfolios, sold through intermediary, institutional, retirement and
-private-client channels — and build up to answering exactly the chain the Head of Wealth
-started with:
+You'll work with Meridian Financial Group throughout: a mid-size US investment manager with $430B
+across 4,500 portfolios, sold through intermediary, institutional, retirement and private-client
+channels. The course builds towards answering the sequence the Head of Wealth began with:
 
 > *"What was Wealth AUM at the end of Q2?"*
 >
@@ -487,46 +479,46 @@ started with:
 >
 > *"How does that compare with the same period last year?"*
 
-Not as a demo. As something a real business could rely on.
+The goal isn't a demonstration, but something a business could reasonably depend on.
 
 ### The question to carry with you
 
-Every module from here answers a version of one question. It's worth writing down now,
-because you'll come back to it constantly:
+Every module from here answers a version of the same question, and it's worth writing down
+because you'll return to it constantly:
 
-> **If I were the business user asking this, what would Genie need to know to answer it
+> **If I were the business user asking this, what would Genie need to know in order to answer it
 > correctly?**
 
-Not *"could it produce an answer"* — it almost always can. **Correctly.** For your business,
-by your definitions, from data you'd defend in a meeting.
+The word doing the work is "correctly". Producing an answer is rarely the problem. Producing the
+right answer, by your definitions, from data you'd defend in a meeting, is.
 
-Here's the arc of what's coming, and each step is one part of that answer:
+The arc of the course follows the parts of that answer:
 
 ```flow numbered
 Data → Context → Instructions → Relationships → Logic → Testing → Governance
 ```
 
-- **Data** — choosing the few objects worth exposing, and shaping them
-- **Context** — teaching the agent your vocabulary and your metrics
-- **Instructions** — the rules and worked examples that pin down intent
-- **Relationships** — how things join, and what happens when you get it wrong
-- **Logic** — turning contested definitions into one agreed calculation
-- **Testing** — proving accuracy instead of asserting it
-- **Governance** — who sees what, and which numbers are official
+- **Data**: choosing the few objects worth exposing, and shaping them
+- **Context**: teaching the agent your vocabulary and your metrics
+- **Instructions**: the rules and worked examples that pin down intent
+- **Relationships**: how things join, and what happens when you get it wrong
+- **Logic**: turning contested definitions into one agreed calculation
+- **Testing**: proving accuracy instead of asserting it
+- **Governance**: who sees what, and which numbers are official
 
 ### Lab 1 (15 min)
 
 You're given twelve real questions from a Meridian shared inbox. Sort each into one of four
 buckets:
 
-- **Genie One** — a business question over existing data
-- **Genie Agent** — needs a curated domain built first
-- **Genie Code** — someone needs help writing or fixing code
+- **Genie One**: a business question over existing data
+- **Genie Agent**: needs a curated domain built first
+- **Genie Code**: someone needs help writing or fixing code
 - **Not a data question at all**
 
-Then pick the single hardest one and list every business definition that would have to be
-settled before any tool could answer it correctly. Compare your list with a colleague's — the
-disagreements are the interesting part, and they're a preview of Module 5.
+Then pick the single hardest one and list every business definition that would have to be settled
+before any tool could answer it correctly. Compare your list with a colleague's. The
+disagreements are the interesting part, and they preview Module 5.
 
 ### Knowledge check
 
