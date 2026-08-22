@@ -47,37 +47,81 @@
   ],
   "1": [
     {
-      "q": "A data engineer wants help writing a PySpark backfill job. Which Genie product?",
+      "q": "The Head of Wealth asks for last quarter AUM, then asks four follow-up questions. What does a three-day turnaround actually cost her?",
+      "options": [
+        "The follow-up questions never get asked, so the insight that would have changed a decision is never reached",
+        "The first number is likely to be wrong",
+        "The analyst spends time on low-value work",
+        "The dashboard becomes out of date"
+      ],
+      "answer": 0,
+      "why": "Each question only exists because the previous one was answered. Latency does not slow that chain down, it ends it — usually around question four, which is where the useful insight tends to sit."
+    },
+    {
+      "q": "Which sentence tells you someone needs a Genie Agent built, rather than Genie One?",
+      "options": [
+        "I want Genie to understand my business",
+        "I have a question about my data",
+        "Help me build with data",
+        "Show me last quarter dashboard"
+      ],
+      "answer": 0,
+      "why": "Genie One is the front door for asking. A Genie Agent is a build activity: someone curates a governed domain so the answers can be trusted. Genie Code is for writing and debugging."
+    },
+    {
+      "q": "A data engineer needs help working out why a query returns duplicate portfolios. Which experience?",
       "options": [
         "Genie Code",
         "Genie One",
         "A Genie Agent",
-        "Supervisor Agent"
+        "Genie One with a dashboard"
       ],
       "answer": 0,
-      "why": "Genie Code is the AI coding and data assistant for technical practitioners. Genie Agents answer business questions over curated data."
+      "why": "Genie Code sits in the workspace alongside the work — writing, debugging and explaining SQL and Spark. It is also where you tune an agent later in the course, along with the Genie Workbench."
     },
     {
-      "q": "You find a 2024 blog post about creating a 'Genie Space'. What is that called now?",
+      "q": "Asking for Wealth AUM at the end of Q2 sounds like one question. Why is it really six?",
       "options": [
-        "A Genie Agent",
-        "Genie One",
-        "Genie Code",
-        "A metric view"
+        "Each of Wealth, AUM, end-of, Q2, which portfolios, and which source has more than one defensible reading",
+        "Because the query needs six table joins",
+        "Because AUM must be recalculated for each asset class",
+        "Because quarter-end data arrives in six separate feeds"
       ],
       "answer": 0,
-      "why": "Genie Spaces were renamed Genie Agents. Recognising the old term matters because older screenshots and posts still use it."
+      "why": "Answer those six differently and you get six defensible numbers. All are arguably right; only one is what the asker meant. That gap is a curation problem, not a permissions problem."
     },
     {
-      "q": "Where does hands-on tuning of a Genie Agent actually happen?",
+      "q": "What does the new-analyst analogy tell you about building a Genie Agent?",
       "options": [
-        "Genie Code or the Genie Workbench",
-        "The Unity Catalog explorer",
-        "The SQL editor only",
-        "The account console"
+        "The work is onboarding — definitions, trusted sources, calculations, relationships and exceptions",
+        "The agent should be given access to as many tables as possible",
+        "An agent needs a few weeks of use before it becomes accurate",
+        "Agents learn your business automatically from query history"
       ],
       "answer": 0,
-      "why": "Both surfaces let you see what Genie is doing and iterate on context, instructions and SQL in place. Reading about curation is not curation."
+      "why": "You would not hand a new analyst four thousand tables and tell her to figure out AUM. Everything you would teach a person is what the agent needs — and what you forget to mention is where it goes wrong."
+    },
+    {
+      "q": "Which question separates a demo from a production-quality Genie Agent?",
+      "options": [
+        "Can it consistently answer the questions the business cares about, from trusted data, and can I prove it",
+        "Can Genie answer a question",
+        "How many tables can the agent read",
+        "How fast is the first response"
+      ],
+      "answer": 0,
+      "why": "Demos are easy and almost always succeed on the first try. Consistency, trusted definitions and provable accuracy are the bar that takes real curation to reach."
+    },
+    {
+      "q": "Of the four ingredients — AI, Data, Business Context, Governance — which is described as the actual work, and the one most often skipped?",
+      "options": [
+        "Business Context",
+        "AI",
+        "Data",
+        "Governance"
+      ],
+      "answer": 0,
+      "why": "The AI comes for free and is nobody differentiator. Data is necessary but nowhere near sufficient. Business context — definitions, synonyms, rules, worked examples — is what teams skip, then wonder why answers drift."
     }
   ],
   "2": [
