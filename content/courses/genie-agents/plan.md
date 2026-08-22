@@ -92,13 +92,13 @@ Financial services is the right domain for this course because it forces every h
 
 | # | Planted flaw | What breaks without a fix | Taught in |
 |---|---|---|---|
-| **1** | `fct_transactions.fee_revenue` is **gross**; net requires subtracting `fct_reversals` | "revenue" is overstated by 3–6% and nobody notices | 7, 9, 11 |
+| **1** | `fct_transactions.fee_revenue` is **gross**; net requires subtracting `fct_reversals` | revenue is overstated by **3.6%** — measured, not estimated — and nobody notices | 7, 9, 11 |
 | **2** | Fiscal year starts **Oct 1** (FY2026 = 2025-10-01 → 2026-09-30) | "last year" silently means calendar year | 5, 10, 11 |
 | **3** | `dim_branch.region` ∈ `NE, SE, MW, WEST`; `state` ∈ `CA, NY, TX…` — users say "Northeast", "West Coast", "California" | confident **zero rows**, or a silently dropped filter | 9, 12 |
-| **4** | `fct_transactions.status` ∈ `POSTED, PENDING, DECLINED, REVERSED` — only `POSTED` is revenue, but `DECLINED` inflates *counts* | revenue and volume are both wrong, in opposite directions | 7, 9, 11 |
+| **4** | `fct_transactions.status` ∈ `POSTED, PENDING, DECLINED, REVERSED` — only `POSTED` is revenue, but `DECLINED` inflates *counts* | 88% posted, **6% declined**: revenue and volume both wrong, in opposite directions | 7, 9, 11 |
 | **5** | `dim_product` carries **two hierarchies**: `product_category` (business) vs `regulatory_product_class` (Basel reporting) | rollups mix reporting frames; two answers to one question | 7, 9 |
-| **6** | `fct_loan_balances` is a **daily snapshot** — `SUM(principal_balance)` over a month is ~30× too large | **a plausible wrong number.** The scariest failure in the course | 9, 11, 12 |
-| **7** | "Delinquent" / "seriously delinquent" / "default" / "charge-off" are four different things business users use interchangeably | four defensible answers to one question | 9, 10, 11 |
+| **6** | `fct_loan_balances` is a **daily snapshot** — summing it returns **$6.0T against a real book of $7.9B**, 757× | **a plausible wrong number.** The scariest failure in the course | 9, 11, 12 |
+| **7** | "Delinquent" / "seriously delinquent" / "default" / "charge-off" are four different things business users use interchangeably | **7.9% at 30+ DPD against 1.9% at 90+** — a 4.2× spread, both defensible | 9, 10, 11 |
 | **8** | `dim_customer` holds real **PII**: `ssn_last4`, `email`, `dob`, `annual_income` | a governance incident, not a data-quality one | 6, 17 |
 | **9** | Commercial transactions in **CAD/GBP** need `dim_fx_rate` joined *as of the transaction date* | currency mixing; totals that don't tie to finance | 9, 10 |
 
@@ -208,6 +208,22 @@ academy.install(
 **Two data tiers.** **Small** (20M transactions) is the default and covers every module except
 13. **Large** (900M, left unclustered on purpose) exists only for Module 13, because you cannot
 measure query latency on a toy dataset. Start small.
+
+#### Verified against a live warehouse
+
+The provisioning notebooks end with `99_validate`, twelve checks that confirm each
+property of the dataset is actually present. All twelve pass, and the figures quoted
+in §0.3 are measured from a real run rather than estimated:
+
+```
+gross vs net revenue     3.60% overstated    gross 99.0M   net 95.0M
+loan snapshot grain      757x if summed      real book 7.9B   summed 6.0T
+delinquency definitions  7.9% at 30+         1.9% at 90+   5 buckets, 4 statuses
+row counts               20.0M transactions  36.0M loan snapshots   2.1M customers
+```
+
+Run it yourself after `03_facts`. Read the numbers, not just the verdicts — three of
+those rows are the subject of Modules 9 and 11.
 
 #### Why the data is deterministic
 
