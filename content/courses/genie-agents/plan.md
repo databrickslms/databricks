@@ -62,7 +62,8 @@ Three published **tracks** from one build:
 **Deliverable:** a working lab environment for every other module.
 
 Most of the 90 minutes is the warehouse working, not you. `03_facts` alone takes several
-minutes to generate 20M transactions. Start it, then read §0.1 and §0.2 while it runs.
+minutes to generate 20M flow events and 36M AUM snapshots. Start it, then read §0.1 and §0.2
+while it runs.
 
 > **Why this is a module and not an appendix.** Every later module works on one bank's data. Provisioning it yourself — and spending twenty minutes actually looking at it — is what makes the rest of the course concrete rather than theoretical. Instructors may pre-provision it and assign this module as pre-work.
 
@@ -72,26 +73,41 @@ minutes to generate 20M transactions. Start it, then read §0.1 and §0.2 while 
 3. Read the data closely enough to notice where a question could have more than one honest answer.
 
 ### 0.1 The company — *Meridian Financial Group (MFG)*
-A mid-size US bank: **340 branches**, four lines of business — **Deposits**, **Cards & Payments**, **Lending** (mortgage, auto, personal), and **Wealth**. Roughly 2.1M retail customers and a small commercial book that transacts in USD, CAD and GBP.
+A mid-size US investment manager. Roughly **$430B** under management across **4,500
+portfolios** and **180 fund share classes**, sold through four channels: **Intermediary**
+(advisor-sold funds), **Institutional** (mandates and sub-advisory), **Retirement** (defined
+contribution plans), and **Private Client** (high-net-worth). About 2.1M underlying clients,
+3,400 advisor relationships, and international portfolios reporting in EUR, GBP and JPY as
+well as USD.
 
-Financial services is the right domain for this course because it forces every hard lesson naturally: contested metric definitions, a non-calendar fiscal year, regulated PII, snapshot fact tables, and a regulatory hierarchy that competes with the business one.
+Asset management is the right domain for this course because it forces every hard lesson
+naturally. The headline metric has more than one honest definition. Performance has four.
+Money moving between your own products isn't a sale. The reporting date isn't the last day of
+the month. And the whole business is regulated, so who sees which client is not a detail.
 
 ### 0.2 Schema — one schema, `genie_agent`
 
 | Object | Grain | Key columns | What it powers |
 |---|---|---|---|
-| `genie_agent.mfg_core_fct_transactions` | one posted/attempted transaction | `txn_id, account_id, txn_date, amount, fee_revenue, interchange, merchant_category, currency, status` | the main fact — fee revenue, volumes |
-| `genie_agent.mfg_core_fct_reversals` | one reversal / chargeback | `txn_id, reversal_date, reversal_amount, reason_code` | **gross vs net** revenue |
-| `genie_agent.mfg_core_fct_loan_balances` | **account × day (daily snapshot)** | `account_id, snapshot_date, principal_balance, interest_accrued, days_past_due, dpd_bucket, loan_status` | delinquency and balances over time |
-| `genie_agent.mfg_core_fct_applications` | one credit application | `app_id, customer_id, product_id, submitted_ts, decision_ts, funded_ts, decision, channel` | approval rate, funnel, cycle time |
-| `genie_agent.mfg_core_fct_fraud_cases` | one fraud case | `case_id, account_id, opened_date, closed_date, loss_amount, fraud_type, status` | fraud rate, loss rate |
-| `genie_agent.mfg_core_dim_customer` | customer | `customer_id, segment, tenure_months, home_branch_id, ssn_last4, email, dob, annual_income` | segmentation — **and the PII lesson** |
-| `genie_agent.mfg_core_dim_account` | account | `account_id, customer_id, product_id, branch_id, opened_date, closed_date, status` | the join hub |
-| `genie_agent.mfg_core_dim_product` | product | `product_id, product_name, product_category, regulatory_product_class` | **two competing hierarchies** |
-| `genie_agent.mfg_core_dim_branch` | branch | `branch_id, branch_name, region, state, channel, opened_date` | region/state rollups, row-level security |
-| `genie_agent.mfg_core_dim_date` | day | `date_key, fiscal_year, fiscal_quarter, fiscal_month, calendar_year, is_business_day` | **fiscal vs calendar** |
-| `genie_agent.mfg_core_dim_fx_rate` | currency × day | `currency, rate_date, usd_rate` | multi-currency conversion |
-| `genie_agent.mfg_ref_documents` *(volume)* | PDFs | credit committee memos, branch manager notes, customer complaint letters | Agent mode over unstructured files; Knowledge Assistant |
+| `mfg_core_fct_aum_snapshot` | **account × day (daily snapshot)** | `account_id, portfolio_id, fund_id, snapshot_date, local_currency, market_value_local, held_away_value_local, units` | AUM, allocation, growth |
+| `mfg_core_fct_flows` | one money-movement event | `flow_id, account_id, trade_date, settlement_date, flow_type, amount_local, local_currency, status` | gross sales, redemptions, net flows |
+| `mfg_core_fct_performance` | portfolio × reporting date × period | `portfolio_id, benchmark_id, as_of_date, period_type, twr_gross, twr_net, mwr, benchmark_return` | returns, benchmark-relative performance |
+| `mfg_core_dim_portfolio` | portfolio / mandate | `portfolio_id, asset_class_code, benchmark_id, strategy, is_discretionary, base_currency, inception_date, status` | discretionary vs advisory, strategy rollups |
+| `mfg_core_dim_fund` | fund share class | `fund_id, fund_name, share_class, asset_class_code, vehicle_type, expense_ratio` | pooled vehicles, fee analysis |
+| `mfg_core_dim_asset_class` | asset class | `asset_class_code, asset_class_name, investment_class, regulatory_class` | allocation — and two hierarchies |
+| `mfg_core_dim_benchmark` | benchmark | `benchmark_id, benchmark_name, asset_class_code` | benchmark-relative reporting |
+| `mfg_core_dim_client` | client | `client_id, client_segment, advisor_id, domicile, tenure_months, ssn_last4, email, dob, annual_income` | segmentation — and the PII |
+| `mfg_core_dim_account` | account | `account_id, client_id, portfolio_id, fund_id, opened_date, closed_date, status` | the join hub |
+| `mfg_core_dim_advisor` | advisor relationship | `advisor_id, advisor_name, region, state, channel, onboarded_date` | channel and region rollups, row-level security |
+| `mfg_core_dim_date` | day | `date_key, fiscal_year, fiscal_quarter, calendar_quarter, is_business_day, is_month_end, is_reporting_date` | fiscal vs calendar, reporting dates |
+| `mfg_core_dim_fx_rate` | currency × day | `currency, rate_date, usd_rate` | multi-currency conversion |
+| `mfg_staging_fct_holdings_raw` | position × month end | 380 columns from the custodian feed | scoping and latency exercises |
+| `mfg_staging_fct_aum_legacy` | account × month end | `account_id, report_date, aum, currency` | certify and deprecate |
+| `mfg_ref_documents` *(volume)* | PDFs | investment committee memos, advisor notes, client complaint letters | Agent mode over unstructured files |
+
+An account holds **either** a separately managed portfolio **or** a pooled fund, never both —
+so `portfolio_id` and `fund_id` are each null about two-thirds of the time. That is normal in
+this business and worth noticing early.
 
 ### 0.3 Provisioning — one pip install
 
@@ -127,21 +143,21 @@ Installed 'genie-agents' → /Workspace/Users/you@company.com/databricks360/geni
 Because it runs *inside* a notebook, it authenticates as you — there is no host, token or CLI
 profile to configure.
 
-**It does not run the notebooks for you.** Watching a warehouse work through 20M
-transactions is part of the point, and nothing should spend compute without being asked.
+**It does not run the notebooks for you.** Watching a warehouse work through 20M flow
+events is part of the point, and nothing should spend compute without being asked.
 
 #### The notebooks
 
 | # | Notebook | What it builds | Status |
 |---|---|---|---|
 | 01 | `catalog_and_schemas` | the catalog, `core` / `ref` / `staging` schemas, the documents volume | shipped |
-| 02 | `dimensions` | dates, branches, products, customers, accounts, FX rates | shipped |
-| 03 | `facts` | transactions, reversals, the daily loan book, applications, fraud cases. Slow: several minutes | shipped |
-| 04 | `staging` | a 380-column raw landing table and a superseded revenue extract | shipped |
-| 05 | `governance` | row filter on branch region, column masks on the customer identifiers, certification tags | shipped |
-| 06 | `curated` | net-revenue and month-end views, a customer view without identifiers, three UC functions | shipped |
-| 07 | `metric_view` | `mfg_core_mv_banking_metrics` — one definition of each headline metric | shipped |
-| 99 | `validate` | twelve checks that the dataset is complete — run last | shipped |
+| 02 | `dimensions` | dates, asset classes, benchmarks, portfolios, funds, advisors, clients, accounts, FX rates | shipped |
+| 03 | `facts` | daily AUM snapshots, client flows, portfolio returns. Slow: several minutes | shipped |
+| 04 | `staging` | a 380-column custodian position feed and a superseded AUM extract | shipped |
+| 05 | `governance` | row filter on advisor region, column masks on the client identifiers, certification tags | shipped |
+| 06 | `curated` | month-end AUM and settled-flow views, a client view without identifiers, four UC functions | shipped |
+| 07 | `metric_view` | `mfg_core_mv_wealth_metrics` — one definition of each headline metric | shipped |
+| 99 | `validate` | fourteen checks that the dataset is complete — run last | shipped |
 
 Only **01 → 03** are required; after those you have a working dataset. Run `99` to confirm
 it. The rest are needed when the course reaches them, and `install()` prints which is which.
@@ -158,20 +174,22 @@ academy.install(
 )
 ```
 
-**Two data tiers.** **Small** (20M transactions) is the default and covers every module except
+**Two data tiers.** **Small** (20M flow events) is the default and covers every module except
 13. **Large** (900M) exists only for Module 13, where query time has to be long enough to
 measure. Start small.
 
 #### Confirming the install
 
-`99_validate` runs twelve checks over the finished dataset — grain, referential integrity,
-row counts, currency coverage, calendar correctness. Every row should read **PASS**.
+`99_validate` runs fourteen checks over the finished dataset — grain, referential integrity,
+row counts, currency coverage, calendar and reporting-date correctness. Every row should read
+**PASS**.
 
 ```
-check_name              value_1              value_2                detail                    verdict
-fiscal calendar         730                  2                      first day 2024-10-01      PASS
-referential integrity   0 orphan transactions expected 0            every txn reaches account PASS
-row counts              20.0M transactions   36.0M loan snapshots   2.1M customers            PASS
+check_name              value_1              value_2               detail                       verdict
+fiscal calendar         730                  2                     first day 2024-10-01         PASS
+reporting dates         24 reporting dates   24 month ends         last business day            PASS
+referential integrity   0 orphan snapshots   expected 0            every snapshot has an account PASS
+row counts              20M flows            36M snapshots         2.1M clients                 PASS
 ```
 
 It prints numbers as well as verdicts. Read them — you will be asked about several of them
@@ -206,7 +224,7 @@ understanding, because they explain a design choice you will meet again in Modul
    - three questions a business user might ask that this data could answer **two different
      ways**, and why
    - any column whose meaning you had to guess
-   - the total value of the loan book, and how you decided which number that was
+   - the total value of assets Meridian manages, and how you decided which number that was
 
    Keep the sheet. You return to it in Module 4, and the gap between what you noticed now
    and what you know then is the most useful thing you will produce today.
@@ -669,25 +687,32 @@ Genie can only be as unambiguous as your organisation. Where the business has ne
 ### Business example — four contested terms at MFG
 | Term | Meanings in active use | Decision required |
 |---|---|---|
-| **Revenue** | gross fee revenue · net of reversals · net including interest income | Finance owns it: **"revenue" = net fee revenue** unless qualified |
-| **Last year** | calendar 2025 · FY2025 (Oct 2024–Sep 2025) · trailing 12 months | **fiscal**, unless the user says "calendar" |
-| **Delinquent** | 30+ DPD · 60+ · 90+ ("seriously delinquent") · in default · charged off | **30+ DPD** = delinquent; **90+** = seriously delinquent; default and charge-off are separate measures |
-| **Active customer** | any account open · transacted in 90 days · transacted in 12 months | **transacted in the last 90 days** |
+| **AUM** | discretionary only · all managed assets · managed plus held-away (AUA) | Wealth Analytics owns it: **"AUM" = discretionary managed assets**, USD, excluding held-away. Say "advised" or "AUA" for the wider figure |
+| **Return** | time-weighted gross · time-weighted net of fees · money-weighted · which period | **Net of fees, time-weighted** for client reporting. Money-weighted only when the question is about a specific client's experience |
+| **Net flows** | subscriptions − redemptions · including transfers · including exchanges | **Subscriptions and transfers in, less redemptions and transfers out. Exchanges excluded** — they move money between our own products |
+| **Quarter-end** | last calendar day · last business day · fiscal or calendar quarter | The **last business day of the fiscal quarter**. Meridian's fiscal year starts 1 October |
+
+Notice that three of the four aren't data problems at all. The numbers are sitting there
+correctly. What's missing is a decision nobody has written down.
 
 ### The glossary template (the module's deliverable)
 ```
-TERM              net fee revenue
-OWNER             FP&A (Elena Okafor)
-DEFINITION        SUM(fee_revenue) - SUM(reversal_amount), status = 'POSTED'
-EXCLUDES          PENDING, DECLINED, REVERSED transactions
-GRAIN             transaction line, rolled to any dimension
-SYNONYMS          revenue, top line, fee income, net fees
-IMPLEMENTED AS    measure expression + metric view mfg_core_mv_banking_metrics
+TERM              AUM
+OWNER             Wealth Analytics (Head of Investment Reporting)
+DEFINITION        SUM(managed_value_usd) WHERE is_discretionary
+EXCLUDES          held-away assets; advisory-only mandates; closed accounts
+GRAIN             account at a month-end reporting date
+SYNONYMS          assets under management, managed assets, discretionary AUM
+NOT THE SAME AS   AUA / assets under advisement (adds held-away)
+IMPLEMENTED AS    measure expression + metric view mv_wealth_metrics
 SIGNED OFF        2026-08-14
 ```
 
+The `NOT THE SAME AS` line does more work than any other. Most bad answers come from a term
+being quietly swapped for its near neighbour.
+
 ### Lab 5 (25 min)
-In pairs, build a 10-term glossary for the MFG lending domain using the template. Every term needs a named owner and an implementation route. Disagreements are the point of the exercise.
+In pairs, build a 10-term glossary for the MFG wealth domain using the template — start with AUM, return, net flows, quarter-end, and "client". Every term needs a named owner and an implementation route. Disagreements are the point of the exercise, not a problem with it.
 
 ### Teaching line
 > *"Genie didn't get the answer wrong. Your company has three answers and never picked one."*
@@ -716,7 +741,7 @@ Consequence: Unity Catalog **row filters and column masks are enforced per user*
 
 **Sharing levels:** `CAN MANAGE` · `CAN EDIT` · `CAN RUN` · `CAN VIEW` — set via folder permissions or direct share.
 
-**Also cover:** cloning an agent; **exporting an agent's context as a metric view** (promotes curated semantics into a governed UC object); assigning **certification** to an agent; and **certify/deprecate on the underlying data** so Genie prefers `fct_transactions` over `fct_txn_legacy`.
+**Also cover:** cloning an agent; **exporting an agent's context as a metric view** (promotes curated semantics into a governed UC object); assigning **certification** to an agent; and **certify/deprecate on the underlying data** so Genie prefers `fct_transactions` over `fct_aum_legacy`.
 
 ### Business example — the row-filter demo (run this live)
 ```
@@ -783,60 +808,64 @@ Given the MFG access matrix (3 personas × 11 objects, one row filter, four colu
 
 **Start small.** Minimal instructions, a limited question set, then expand from feedback. Do not try to be complete on day one.
 
-**Define purpose.** One audience, one topic. An agent covering deposits *and* lending *and* fraud covers all three badly.
+**Define purpose.** One audience, one topic. An agent covering AUM reporting *and* trade operations *and* fraud covers all three badly.
 
-**Pre-join.** Beyond 30 objects, build views that pre-join related tables. Fewer, richer objects beat many thin ones — and pre-joining is where you bake in flaws 1, 4 and 6 permanently.
+**Pre-join.** Beyond 30 objects, build views that pre-join related tables. Fewer, richer objects beat many thin ones — and pre-joining is where the AUM definition, the flow netting and the snapshot grain get settled permanently.
 
-**Narrow is *faster*, not just more accurate.** Every table and column is context Genie must read before writing SQL, so a bloated agent is slow **and** wrong. Wide tables are the worst offenders — replace the 380-column `fct_transactions_raw` with a slim view holding only what anyone asks about. Module 13 puts a stopwatch on this.
+**Narrow is *faster*, not just more accurate.** Every table and column is context Genie must read before writing SQL, so a bloated agent is slow **and** wrong. Wide tables are the worst offenders — replace the 380-column `fct_holdings_raw` with a slim view holding only what anyone asks about. Module 13 puts a stopwatch on this.
 
-**Certify and deprecate in Unity Catalog.** Certify `fct_transactions`, deprecate `fct_txn_legacy`. "We have two revenue tables" then stops being the agent's problem and becomes a governance decision made once.
+**Certify and deprecate in Unity Catalog.** Certify `fct_aum_snapshot`, deprecate `fct_aum_legacy`. "We have two AUM tables" then stops being the agent's problem and becomes a governance decision made once.
 
 **Metric views** — Unity Catalog semantics that separate **measures** from **dimensions**, defined in YAML, so a metric is defined once and grouped/filtered any way at runtime. They carry **agent metadata** (synonyms, display names, formatting rules) that directly improves accuracy and keeps formatting consistent across tools.
 
 | Situation | Build |
 |---|---|
 | One team, a handful of metrics, moving fast | curate inside the agent |
-| "Net fee revenue" must mean one thing across 5 agents, 3 dashboards and the regulatory pack | **metric view**, then point agents at it |
+| "AUM" must mean one thing across 5 agents, 3 dashboards and the regulatory filing | **metric view**, then point agents at it |
 | You already curated an agent and want to promote its semantics | **export the agent as a metric view** |
 
-### Business example — scoping the MFG "Retail Banking & Deposits" agent
-**Before (bad):** 22 objects including `fct_transactions_raw` (380 columns), `fct_txn_legacy`, `dim_employee`, `hr_headcount`, both product hierarchies, and `_tmp_reversal_backfill`.
+### Business example — scoping the MFG "Wealth Reporting" agent
+**Before (bad):** 22 objects including `fct_holdings_raw` (380 columns), `fct_aum_legacy`,
+`dim_client` with its identifiers, both asset-class hierarchies, staff and headcount tables,
+and `_tmp_flow_backfill`.
 
-**After (good):** 7 objects
+**After (good):** 6 objects
 ```
-mfg_core_vw_transactions_net   -- fct_transactions LEFT JOIN fct_reversals; PENDING/DECLINED/REVERSED
-                      -- excluded; exposes gross_fee_revenue, net_fee_revenue, txn_count   [flaws 1, 4]
-mfg_core_vw_loan_book_eop      -- fct_loan_balances filtered to end-of-period snapshots only         [flaw 6]
-dim_account           -- the join hub
-mfg_core_dim_customer_safe     -- PII columns dropped; segment, tenure_band                          [flaw 8]
-dim_product           -- regulatory_product_class hidden; product_category renamed          [flaw 5]
-dim_branch            -- region, state, channel
-dim_date              -- fiscal (Oct 1 start) + calendar columns                            [flaw 2]
-mfg_core_mv_banking_metrics    -- metric view: net_fee_revenue, delinquency_rate_30/90,
-                      -- approval_rate, fraud_loss_rate                                     [flaws 1, 7]
+vw_aum_reporting     -- month-end AUM per account, converted to USD, with the
+                     -- discretionary split explicit and held-away separated
+vw_net_flows         -- settled flows only, exchanges kept out of sales
+                     -- and redemptions, trade vs settlement resolved
+dim_client_safe      -- identifiers removed; segment, tenure and age bands
+dim_portfolio        -- strategy, discretionary flag, benchmark
+dim_asset_class      -- regulatory_class hidden; one hierarchy exposed
+dim_date             -- fiscal (Oct 1 start), calendar, and reporting dates
+mv_wealth_metrics    -- metric view: AUM, AUA, held-away, counts, averages
 ```
-> **Note what happened:** five of the nine planted flaws were fixed *in the data layer*, before a single instruction was written. That is the module's whole point.
+> **Note what happened.** Most of the hard problems were solved *in the data layer*, before a
+> single instruction was written. That is the module's whole point.
 
 ### Business example — column descriptions that earn their keep
 | Column | ❌ Weak | ✅ Strong |
 |---|---|---|
-| `fee_revenue` | "the fee amount" | "**Gross** fee revenue in USD for this transaction, before reversals and chargebacks. For net revenue use the `net_fee_revenue` measure — do not sum this column alone." |
-| `status` | "status" | "Transaction status: POSTED, PENDING, DECLINED, REVERSED. **Only POSTED counts as revenue.** DECLINED rows exist and will inflate transaction counts if not excluded." |
-| `region` | "region code" | "Branch region. Values: NE, SE, MW, WEST. Users may say 'Northeast' (NE), 'West Coast' or 'the West' (WEST), 'Midwest' (MW)." |
-| `principal_balance` | "loan balance" | "Principal balance **as of `snapshot_date`** — this table has one row per account per day. **Never SUM across dates**; use end-of-period or average-balance measures." |
-| `dpd_bucket` | "days past due bucket" | "Delinquency bucket: CURRENT, 1-29, 30-59, 60-89, 90+. 'Delinquent' = 30+; 'seriously delinquent' = 90+." |
+| `market_value_local` | "the market value" | "Market value of managed assets in the account's local currency. Convert with `dim_fx_rate` at `snapshot_date` before totalling. Excludes held-away assets — see `held_away_value_local`." |
+| `held_away_value_local` | "held away value" | "Assets Meridian reports on but does not manage. **Excluded from AUM.** Include only when the question says 'advised' or 'AUA'." |
+| `flow_type` | "type of flow" | "SUBSCRIPTION, REDEMPTION, EXCHANGE_IN, EXCHANGE_OUT, TRANSFER_IN, TRANSFER_OUT. **Exchanges move money between Meridian products and are not sales or redemptions.**" |
+| `snapshot_date` | "snapshot date" | "This table holds **one row per account per day**. Never SUM across dates; filter to a reporting date for a point-in-time figure." |
+| `region` | "region code" | "Advisor coverage region. Values: NE, SE, MW, WEST. Users say 'Northeast', 'the West Coast', 'Midwest'." |
+| `twr_net` | "net return" | "Time-weighted return after fees, for the `period_type` on the row. Not the same as `mwr`, which reflects the timing of client cash flows." |
 
 ### Demo (15 min)
-Ask an under-prepared agent *"What was revenue for California last year?"* → it returns **gross** revenue, **calendar** year, and **zero rows** for California (flaws 1, 2, 3 firing at once). Then ask the prepared 7-object agent. Same question, right answer, no prompt tricks.
+Ask an under-prepared agent *"What was our AUM in California at the end of last year?"* → it sums a daily snapshot, includes held-away assets, uses the calendar year, and returns nothing for "California". Four problems in one answer, none of them flagged. Then ask the prepared 6-object agent. Same question, right answer, no prompt tricks.
 
 ### Lab 7 (30 min) — GRADED
-From the 22 raw MFG objects: choose ≤ 8, write the `mfg_core_vw_transactions_net` and `mfg_core_vw_loan_book_eop` view SQL, write descriptions for 10 columns, and list 6 columns to hide with reasons.
+From the 22 raw MFG objects: choose ≤ 8, write the `mfg_core_vw_aum_reporting` and `mfg_core_vw_net_flows` view SQL, write descriptions for 10 columns, and list 6 columns to hide with reasons.
 
 ### Anti-patterns to name explicitly
 - Adding every table "just in case."
-- Accepting **AI-generated column descriptions without verifying them** — the docs call this out, and in this dataset the AI suggestions get flaws 1 and 5 wrong on purpose.
-- Leaving both product hierarchies visible.
+- Accepting **AI-generated column descriptions without verifying them** — the docs call this out, and here the suggested text gets AUM and the asset-class hierarchy wrong.
+- Leaving both asset-class hierarchies visible.
 - Exposing a daily-snapshot table without a warning in its description.
+- Exposing `dim_client` when `dim_client_safe` exists.
 
 **Docs:** `/genie/best-practices`, `/metric-views/`, `/genie-agents/set-up`
 
@@ -903,7 +932,7 @@ Build the MFG **Retail Banking & Deposits** agent for real: the objects from Lab
 | Synonyms | maps business vocabulary onto column names | " |
 | Hidden columns | removes noise and duplicate hierarchies | — |
 | **Prompt matching — format assistance** | supplies representative values automatically; fixes spelling/format drift | automatic |
-| **Prompt matching — entity matching** (also called **example values** / **value dictionaries**) | curated lists of distinct values, so Genie filters on the *real* value (`'CA'`) instead of inventing one (`'California'`) | **120 columns**, **1,024 values** each |
+| **Prompt matching — entity matching** (also called **example values** / **value dictionaries**) | curated lists of distinct values, so Genie filters on the *real* value (`'CA'`, `'MM_CASH'`) instead of inventing one (`'California'`, `'cash'`) | **120 columns**, **1,024 values** each |
 | Join relationships | explicit PK–FK links; Many-to-One / One-to-Many / One-to-One; complex conditions via SQL expression | part of 200 |
 | **SQL expressions** | filters, measures, fields | part of 200 |
 | **Knowledge store snippets total** | descriptions + joins + SQL expressions | **200 per agent** |
@@ -911,9 +940,9 @@ Build the MFG **Retail Banking & Deposits** agent for real: the objects from Lab
 ### The three SQL expression types — MFG examples
 | Type | Purpose | Example |
 |---|---|---|
-| **Filter** | a reusable condition | `Posted transactions only` → `status = 'POSTED'` [flaw 4] · `Latest snapshot` → `snapshot_date = (SELECT MAX(snapshot_date) FROM mfg_core_vw_loan_book_eop)` [flaw 6] · `Commercial book` → `segment = 'COMMERCIAL'` |
-| **Measure** | a KPI | `net_fee_revenue` → `SUM(fee_revenue) - SUM(COALESCE(reversal_amount,0))` [flaw 1] · `delinquency_rate_90` → `SUM(CASE WHEN days_past_due >= 90 THEN principal_balance ELSE 0 END) / NULLIF(SUM(principal_balance),0)` [flaw 7] · `approval_rate` → `COUNT_IF(decision='APPROVED') / NULLIF(COUNT(*),0)` · `fraud_loss_rate` → `SUM(loss_amount) / NULLIF(SUM(fee_revenue),0)` |
-| **Field** | a derived attribute | `tenure_band` → `CASE WHEN tenure_months < 12 THEN 'New' WHEN tenure_months < 60 THEN 'Established' ELSE 'Long-tenured' END` · `is_high_risk` → `days_past_due >= 30 OR fraud_flag` |
+| **Filter** | a reusable condition | `Settled only` → `status = 'SETTLED'` · `Reporting dates only` → `is_reporting_date` · `Discretionary` → `is_discretionary` · `External money` → `flow_type NOT IN ('EXCHANGE_IN','EXCHANGE_OUT')` |
+| **Measure** | a KPI | `aum_usd` → `SUM(CASE WHEN is_discretionary THEN managed_value_usd ELSE 0 END)` · `aua_usd` → `SUM(total_advised_value_usd)` · `net_flows_usd` → `SUM(external_sign * amount_usd)` · `avg_account_value` → `SUM(managed_value_usd)/NULLIF(COUNT(DISTINCT account_id),0)` |
+| **Field** | a derived attribute | `account_size_band` → `CASE WHEN managed_value_usd < 250000 THEN 'Retail' WHEN managed_value_usd < 5000000 THEN 'Affluent' ELSE 'Institutional' END` · `is_international` → `local_currency <> 'USD'` |
 
 ### Business example — synonyms that unblock real users
 | Users actually say | Column / value | Fix |
@@ -921,41 +950,55 @@ Build the MFG **Retail Banking & Deposits** agent for real: the objects from Lab
 | "Northeast", "the East" | `region = 'NE'` | synonym + entity matching |
 | "West Coast", "out west" | `region = 'WEST'` | synonym |
 | "California" | `state = 'CA'` | **entity matching** |
-| "top line", "fee income", "revenue" | `net_fee_revenue` measure | synonyms on the measure |
-| "delinquent" / "seriously delinquent" | `days_past_due >= 30` / `>= 90` | two distinct measures + a clarification instruction |
-| "chargeback", "dispute", "refund" | `fct_reversals` | synonyms on the table |
-| "charged off", "written off" | `status = 'CHARGED_OFF'` | filter expression |
+| "equities", "stocks" | `investment_class = 'EQUITY'` | synonym on the measure's dimension |
+| "cash", "money market" | `asset_class_code = 'MM_CASH'` | synonym + entity matching |
+| "AUM", "managed assets", "book of business" | the `AUM` measure | synonyms on the measure |
+| "AUA", "advised assets", "total assets" | the `Assets Under Advisement` measure | synonyms — and keep them apart from AUM |
+| "net new money", "net sales", "flows" | `net_flows_usd` measure | synonyms |
+| "return", "performance" | ambiguous — four columns | a clarification instruction, not a synonym |
 
-### Business example — entity matching in action (flaw 3)
-Without it: *"How did California branches do last quarter?"* → Genie writes `WHERE state = 'California'`, the table holds `'CA'`, and the answer is a confident **zero** — or the filter is silently dropped and you get the national number labelled as California.
+### Business example — entity matching in action
+Without it: *"How did our California advisors do last quarter?"* → Genie writes
+`WHERE state = 'California'`, the table holds `'CA'`, and the answer is a confident **zero** —
+or the filter is silently dropped and you get the national number labelled as California.
 
-With entity matching on `dim_branch.state` (50 values curated) and `region` (4 values): Genie matches the phrasing to the real value, and handles "Californa" too.
+With entity matching on `dim_advisor.state` (50 values curated), `region` (4) and
+`dim_asset_class.asset_class_code` (12): Genie matches the phrasing to the real value, and
+handles "Californa" too.
 
-**Teaching rule:** turn on entity matching for every low-cardinality categorical column users name out loud — region, state, merchant_category, dpd_bucket, decision, channel, product_category.
+**Teaching rule:** turn on entity matching for every low-cardinality categorical column users
+name out loud — region, state, asset class, flow type, channel, strategy, period.
 
-### Business example — the fan-out trap (flaw 6) — spend real time here
-`fct_loan_balances` has one row per account per day. Ask *"What's our total loan book?"* against the raw table with no cardinality declared, and Genie writes `SUM(principal_balance)` across a month of snapshots: **$1.4 trillion** instead of $47 billion. Roughly 30× too high.
+### Business example — the fan-out trap — spend real time here
+`fct_aum_snapshot` holds one row per account per day. Ask *"What do we manage?"* against the
+raw table with no cardinality declared, and Genie writes `SUM(market_value_local)` across
+every snapshot in the table. The answer is the real book **multiplied by the number of days**.
 
-The number *looks* like a number. The chart *looks* like a chart. Nobody notices until the regulatory pack disagrees.
+The number *looks* like a number. The chart *looks* like a chart. Nobody notices until the
+figure fails to tie to the regulatory filing.
 
 Fix at three layers, in order:
-1. **Data:** `mfg_core_vw_loan_book_eop` exposes end-of-period snapshots only (Module 7).
-2. **Knowledge store:** declare `mfg_core_vw_loan_book_eop.account_id → dim_account.account_id (Many-to-One)`, and a `Latest snapshot` filter expression.
+1. **Data:** `vw_aum_reporting` exposes month-end reporting dates only (Module 7).
+2. **Knowledge store:** declare `fct_aum_snapshot.account_id → dim_account.account_id
+   (Many-to-One)`, and a `Reporting dates only` filter expression.
 3. **Description:** "one row per account per day — never SUM across dates."
 
-> **This is the scariest failure mode in the course: a plausible wrong number.** A missing join or wrong cardinality between `fct_transactions` and `dim_account` produces the same class of error on the revenue side.
+> **This is the scariest failure mode in the course: a plausible wrong number.** It is also
+> the most natural mistake in this domain, because AUM is point-in-time by nature and nothing
+> in the SQL warns you.
 
 ### Knowledge mining
 Genie proposes new joins and SQL expressions by reading Unity Catalog schemas and observing author behaviour — thumbs-up on responses and downloaded queries. Teach authors that **their own upvotes are training signal**, and to review suggestions rather than accept blindly.
 
 ### Lab 9 (40 min) — GRADED, hardest lab
-On the MFG agent: add synonyms for 10 business terms, enable entity matching on 4 categorical columns, declare all 6 join relationships with correct cardinality, and author 8 SQL expressions (3 filters, 4 measures, 1 field). Then re-run the 9 broken questions from Lab 4 and show which now pass.
+On the MFG agent: add synonyms for 10 business terms (start with AUM, AUA, net new money, equities, cash), enable entity matching on 4 categorical columns, declare all 6 join relationships with correct cardinality, and author 8 SQL expressions (3 filters, 4 measures, 1 field). Then re-run the 9 broken questions from Lab 4 and show which now pass.
 
 ### Common mistakes
 - Adding synonyms to the column but not the values (or vice versa).
 - Wrong cardinality (One-to-Many where it's Many-to-One) → fan-out and inflated totals.
 - Encoding a metric in a **text instruction** instead of a **measure expression**.
-- Exposing a snapshot table with no `Latest snapshot` filter.
+- Exposing a snapshot table with no `Reporting dates only` filter.
+- Adding "return" as a synonym for one of the four return columns, instead of asking which.
 - Burning the 200-snippet budget on low-value descriptions.
 
 **Docs:** `/genie-agents/tune-quality`, `/genie/best-practices`
@@ -983,42 +1026,48 @@ On the MFG agent: add synonyms for 10 business terms, enable entity matching on 
 - **Summary formatting** — add a dedicated *"Instructions you must follow when providing summaries"* section for language, citation style and structure.
 
 ### Business example — example query done right
-❌ **Title:** `q_netrev_region_fq`
-✅ **Title:** `What was net fee revenue by region last fiscal quarter?`
+❌ **Title:** `q_aum_ac_fq`
+✅ **Title:** `What was our AUM by asset class at the end of last fiscal quarter?`
 ```sql
-SELECT b.region,
-       SUM(t.fee_revenue) - SUM(COALESCE(t.reversal_amount, 0)) AS net_fee_revenue
-FROM   genie_agent.mfg_core_vw_transactions_net t
-JOIN   genie_agent.mfg_core_dim_account         a ON t.account_id = a.account_id
-JOIN   genie_agent.mfg_core_dim_branch          b ON a.branch_id  = b.branch_id
-JOIN   genie_agent.mfg_core_dim_date            d ON t.txn_date   = d.date_key
-WHERE  d.fiscal_quarter = :fiscal_quarter  -- Format 'FY2026-Q3'. MFG fiscal year starts Oct 1.
-  AND  t.status = 'POSTED'                 -- excludes PENDING, DECLINED, REVERSED
-GROUP BY b.region
-ORDER BY net_fee_revenue DESC
+SELECT ac.asset_class_name,
+       SUM(v.managed_value_usd) AS aum_usd
+FROM   genie_agent.mfg_core_vw_aum_reporting v
+JOIN   genie_agent.mfg_core_dim_asset_class  ac ON ac.asset_class_code = v.asset_class_code
+WHERE  v.fiscal_quarter = :fiscal_quarter   -- Format 'FY2026-Q3'. MFG fiscal year starts Oct 1.
+  AND  v.as_of_date = (                     -- the quarter's last reporting date
+         SELECT max(as_of_date) FROM genie_agent.mfg_core_vw_aum_reporting
+         WHERE fiscal_quarter = :fiscal_quarter)
+  AND  v.is_discretionary                   -- AUM excludes advisory-only mandates
+GROUP BY ac.asset_class_name
+ORDER BY aum_usd DESC
 ```
-Four lessons in one artifact: the title is the user's sentence; the parameter comment explains the format *and* the fiscal quirk; the status filter is baked in; and the join path is demonstrated rather than described.
+Five lessons in one artifact: the title is the user's sentence; the parameter comment explains
+the format *and* the fiscal quirk; the view already handles currency and the snapshot grain;
+the discretionary filter pins down which AUM this is; and the join path is demonstrated rather
+than described.
 
 ### Business example — a UC function as a trusted asset
 ```sql
-CREATE OR REPLACE FUNCTION genie_agent.mfg_core_delinquency_rate(
-  p_dpd_threshold INT COMMENT 'Days past due. Use 30 for delinquent, 90 for seriously delinquent.',
-  p_as_of DATE     COMMENT 'Snapshot date. Defaults to latest available.'
-) RETURNS TABLE (product_category STRING, delinquency_rate DOUBLE)
-COMMENT 'MFG-approved delinquency rate: balance-weighted, latest snapshot only.
-         Owner: Credit Risk. Do not recompute by hand.'
+CREATE OR REPLACE FUNCTION genie_agent.mfg_core_net_flows(
+  from_date DATE COMMENT 'Inclusive start, on settlement date.',
+  to_date   DATE COMMENT 'Inclusive end, on settlement date.'
+) RETURNS TABLE (gross_sales_usd DECIMAL(20,2), redemptions_usd DECIMAL(20,2), net_flows_usd DECIMAL(20,2))
+COMMENT 'Net new money between two settlement dates. Excludes exchanges between Meridian
+         products and anything not settled. Owner: Wealth Analytics. Do not recompute by hand.'
 RETURN ...
 ```
-This resolves flaws 6 and 7 permanently and hides the snapshot logic from users entirely.
+This settles the exchange question permanently and hides the netting logic from users
+entirely — which is the point. Nobody has to remember that exchanges aren't sales.
 
 ### Business example — instruction quality ladder
 | ❌ Vague (the docs call this out) | ✅ Specific |
 |---|---|
-| "Ask clarification questions about delinquency" | "**When** a user says 'delinquent' without a threshold, **ask** which definition they mean **before** running any query. **Example:** 'Do you mean 30+ days past due (delinquent) or 90+ (seriously delinquent)?'" |
-| "Use the right calendar" | "MFG's fiscal year starts October 1. FY2026 = 2025-10-01 to 2026-09-30. 'Last year' always means the prior **fiscal** year unless the user says 'calendar year'." |
-| "Revenue should be accurate" | "'Revenue' with no qualifier means **net fee revenue** (gross minus reversals), POSTED transactions only. Say 'gross' explicitly if the user asks for gross." |
+| "Ask clarification questions about returns" | "**When** a user asks about return or performance without saying which measure, **ask** before running any query. **Example:** 'Do you mean time-weighted net of fees, which is what we report to clients, or money-weighted, which reflects that client's own cash-flow timing?'" |
+| "Use the right calendar" | "MFG's fiscal year starts 1 October. FY2026 = 2025-10-01 to 2026-09-30. 'Last quarter' means the prior **fiscal** quarter unless the user says 'calendar'. A quarter-end figure uses the last **business** day, not the last calendar day." |
+| "AUM should be accurate" | "'AUM' with no qualifier means **discretionary managed assets in USD**, excluding held-away. Use 'AUA' or 'advised assets' for the wider figure, and say which you used in the answer." |
+| "Handle flows carefully" | "Net flows = subscriptions and transfers in, **less** redemptions and transfers out. **Exclude exchanges** — they move money between Meridian products. Count settled instructions only." |
 | "Never show PII" | *(delete this — it does nothing.* Use column masks, Module 6.*)* |
-| "Be helpful in summaries" | "In summaries: report USD with thousands separators, state the fiscal period in every headline number, and cite the branch or account count behind any rate or average." |
+| "Be helpful in summaries" | "In summaries: report USD in millions with thousands separators, state the reporting date in every headline number, and say which AUM definition you used." |
 
 ### The clarification-question template (four required parts)
 ```
@@ -1031,17 +1080,18 @@ EXAMPLE      — the exact question to ask
 ### Business example — budgeting 100 instructions at MFG
 ```
 40  example SQL queries      the top 40 recurring business questions
- 8  UC functions             delinquency_rate, fx_convert, approval_funnel, fiscal_period_resolver,
-                             fraud_loss_rate, deposit_growth, vintage_curve, eop_balance
-12  text instruction blocks  fiscal calendar, revenue terminology, delinquency clarification,
-                             status filtering, currency handling, summary formatting,
-                             data freshness, escalation language, ...
+ 8  UC functions             aum_by_asset_class, net_flows, to_usd, fiscal_period,
+                             benchmark_relative, flows_by_channel, account_growth,
+                             reporting_date_resolver
+12  text instruction blocks  fiscal calendar and reporting dates, AUM terminology,
+                             return clarification, flow netting, settled-only rule,
+                             currency handling, summary formatting, data freshness, ...
 ── 60 used, 40 held in reserve for what monitoring reveals
 ```
 **Teaching point:** deliberately leaving headroom is professional practice. Monitoring *will* surface questions you didn't predict.
 
 ### Lab 10 (40 min) — GRADED
-Add 10 example queries (≥3 parameterised with typed, commented parameters), register 2 UC functions as trusted assets (one must resolve flaw 6 or 7), and write 4 text instruction blocks including one clarification rule using the four-part template. Submit an instruction budget table.
+Add 10 example queries (≥3 parameterised with typed, commented parameters), register 2 UC functions as trusted assets (one must settle the AUM definition, one the flow netting), and write 4 text instruction blocks including one clarification rule for "return" using the four-part template. Submit an instruction budget table.
 
 ### Common mistakes
 - Generic SQL patterns as examples (Genie already knows `GROUP BY`) instead of **organisation-specific logic**.
@@ -1087,23 +1137,30 @@ Because Genie varies by design (Module 4), a single before/after comparison prov
 |---|---|---|---|
 | **Tier 1 — Smoke** | 10 | the common questions + top asks | **100%** before any release |
 | **Tier 2 — Coverage** | 60 | every measure × every major dimension | ≥ 90% |
-| **Tier 3 — Traps** | 30 | **one per planted flaw, minimum** — fiscal vs calendar, gross vs net, declined transactions, snapshot summing, delinquency ambiguity, state/region phrasing, currency mixing, both product hierarchies | ≥ 80%, and every failure gets a ticket |
+| **Tier 3 — Traps** | 30 | **one per planted flaw, minimum** — fiscal vs calendar, reporting vs calendar month end, AUM vs AUA, snapshot summing, exchanges in net flows, unsettled instructions, four return measures, state/region phrasing, currency mixing, both asset-class hierarchies | ≥ 80%, and every failure gets a ticket |
 
 ### Business example — three Tier-3 trap benchmarks
 ```
-Q: "What was revenue last year?"                                            [flaws 1, 2]
-Expected: asks which fiscal period and which revenue definition, OR returns
-          net fee revenue for FY2025 and says so explicitly.
-Fails if:  returns gross, or uses calendar 2025.
+Q: "What was our AUM last quarter?"                                    [flaws 1, 2]
+Expected: asks which AUM definition and which quarter, OR returns discretionary
+          managed AUM at the last reporting date of the prior FISCAL quarter and
+          says so explicitly.
+Fails if:  it includes held-away assets, or uses the calendar quarter.
 
-Q: "What's our total loan book?"                                            [flaw 6]
-Ground truth: SELECT SUM(principal_balance) FROM genie_agent.mfg_core_vw_loan_book_eop
-              WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM ...)
-Fails if:  the result is more than 2× the ground truth (it summed snapshots).
+Q: "What do we manage in total?"                                       [flaw 6]
+Ground truth: SELECT sum(managed_value_usd) FROM ..vw_aum_reporting
+              WHERE as_of_date = (SELECT max(as_of_date) FROM ..vw_aum_reporting)
+                AND is_discretionary
+Fails if:  the result is more than 2x the ground truth (it summed snapshots).
 
-Q: "How many delinquent loans do we have?"                                  [flaw 7]
-Expected: asks 30+ or 90+ DPD before answering.
-Fails if:  it silently picks one threshold without saying which.
+Q: "What were net flows in Q2?"                                        [flaw 4]
+Ground truth: SELECT * FROM ..net_flows('2026-01-01','2026-03-31')
+Fails if:  gross sales exceed ground truth by more than 5% — it counted
+           exchanges as subscriptions.
+
+Q: "What was our return last year?"                                    [flaw 7]
+Expected: asks whether time-weighted net of fees or money-weighted.
+Fails if:  it silently picks one without saying which.
 ```
 
 ### Business example — the fix loop
@@ -1118,7 +1175,7 @@ Fails if:  it silently picks one threshold without saying which.
 **Teaching line:** *every "Fix it" is a free curation task with the answer already attached.*
 
 ### Lab 11 (40 min) — GRADED
-Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least one per planted flaw) with ground-truth SQL. Run it, record the score, fix the top 3 failures via the edit-and-save loop, re-run, report before/after.
+Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least one per planted flaw) with ground-truth SQL. Two of the traps must be questions where the *correct* behaviour is to ask for clarification rather than answer. Run it, record the score, fix the top 3 failures via the edit-and-save loop, re-run, report before/after.
 
 **Docs:** `/genie-agents/monitor`
 
@@ -1161,7 +1218,7 @@ Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least o
 | "Delinquent" answered inconsistently | more prose | **two named measures** + a **clarification instruction** (Modules 9, 10) |
 | A complex recurring question is always slightly off | more text instructions | **example query** or **UC function** as a trusted asset (Module 10) |
 | Genie asserts a *cause* ("delinquency rose because of the new channel") | forward it to the CRO | it's an **unsupported claim** — tighten context, remove overlapping tables, diagnose with Genie Code. Genie retrieves; it does not diagnose (Module 2). |
-| Answers pull from `fct_txn_legacy` | delete the table and break downstream | **certify** `fct_transactions`, **deprecate** the legacy table in UC (Modules 6, 7) |
+| Answers pull from `fct_aum_legacy` | delete the table and break downstream | **certify** `fct_transactions`, **deprecate** the legacy table in UC (Modules 6, 7) |
 | PII appeared in an answer | add "never show PII" to instructions | **column masks** in Unity Catalog (Module 6) |
 | Answers are correct but slow | add instructions | measure thinking vs query time first (Module 13) |
 | Routing is getting worse workspace-wide | tune this agent harder | **delete old and unused agents** — too many hurts routing for everyone |
@@ -1267,7 +1324,7 @@ Measurement:
 Verdict: a thinking problem, plus 3 seconds we added ourselves.
 
 What the agent actually looked like:
-  22 objects, including fct_transactions_raw (380 columns) and fct_txn_legacy
+  22 objects, including fct_holdings_raw (380 columns) and fct_aum_legacy
   9,400 characters of prose instructions  ← over the ~5–7k warning threshold
   no join specs declared
 
@@ -1678,57 +1735,65 @@ Internal: *Genie Performance & Issues Playbook & Health Check* — source for Mo
 > Lab 0 asks learners to notice things for themselves. If you are taking the course rather
 > than teaching it, stop here and come back after Module 4.
 
-Measured on a live warehouse rather than estimated: revenue overstated by **3.6%**, the loan
-book summing to **$6.0T against a real $7.9B** (757×), and delinquency reading **7.9% at 30+
-DPD against 1.9% at 90+** — a 4.2× spread between two defensible answers.
+Every figure the modules quote is measured from a real provisioning run rather than
+estimated. Re-run `99_validate` after any change to the generators and update them if they
+move — a course that quotes stale numbers teaches learners to distrust it.
 
 ### F.1 The nine planted flaws
 
 | # | Planted flaw | What breaks without a fix | Taught in |
 |---|---|---|---|
-| **1** | `fct_transactions.fee_revenue` is **gross**; net requires subtracting `fct_reversals` | revenue is overstated by **3.6%** — measured, not estimated — and nobody notices | 7, 9, 11 |
-| **2** | Fiscal year starts **Oct 1** (FY2026 = 2025-10-01 → 2026-09-30) | "last year" silently means calendar year | 5, 10, 11 |
-| **3** | `dim_branch.region` ∈ `NE, SE, MW, WEST`; `state` ∈ `CA, NY, TX…` — users say "Northeast", "West Coast", "California" | confident **zero rows**, or a silently dropped filter | 9, 12 |
-| **4** | `fct_transactions.status` ∈ `POSTED, PENDING, DECLINED, REVERSED` — only `POSTED` is revenue, but `DECLINED` inflates *counts* | 88% posted, **6% declined**: revenue and volume both wrong, in opposite directions | 7, 9, 11 |
-| **5** | `dim_product` carries **two hierarchies**: `product_category` (business) vs `regulatory_product_class` (Basel reporting) | rollups mix reporting frames; two answers to one question | 7, 9 |
-| **6** | `fct_loan_balances` is a **daily snapshot** — summing it returns **$6.0T against a real book of $7.9B**, 757× | **a plausible wrong number.** The scariest failure in the course | 9, 11, 12 |
-| **7** | "Delinquent" / "seriously delinquent" / "default" / "charge-off" are four different things business users use interchangeably | **7.9% at 30+ DPD against 1.9% at 90+** — a 4.2× spread, both defensible | 9, 10, 11 |
-| **8** | `dim_customer` holds real **PII**: `ssn_last4`, `email`, `dob`, `annual_income` | a governance incident, not a data-quality one | 6, 17 |
-| **9** | Commercial transactions in **CAD/GBP** need `dim_fx_rate` joined *as of the transaction date* | currency mixing; totals that don't tie to finance | 9, 10 |
+| **1** | **AUM has three defensible readings** — discretionary only, all managed, or managed plus held-away. `fct_aum_snapshot` carries `market_value_local` and `held_away_value_local`; `dim_portfolio.is_discretionary` splits the rest | three different headline numbers, each defensible, and no way to tell which one you were given | 5, 7, 9, 11 |
+| **2** | Fiscal year starts **Oct 1** (FY2026 = 2025-10-01 → 2026-09-30), and a **reporting date is the last *business* day**, not the last calendar day | "end of Q2" silently means calendar quarter; month-end totals land on a day the market was shut | 5, 10, 11 |
+| **3** | `dim_advisor.region` ∈ `NE, SE, MW, WEST`; `state` ∈ `CA, NY, TX…`; `dim_asset_class.asset_class_code` ∈ `EQ_US, FI_CORP, MM_CASH…` — users say "Northeast", "California", "equities", "cash" | confident **zero rows**, or a silently dropped filter | 9, 12 |
+| **4** | **Net flows counted naively double-count exchanges.** `fct_flows.flow_type` includes `EXCHANGE_IN`/`EXCHANGE_OUT` — money moving between Meridian products, which should net to zero. `status` also includes `PENDING` and `CANCELLED` | gross sales and redemptions both inflated; net flows unchanged, so the error hides | 7, 9, 11 |
+| **5** | `dim_asset_class` carries **two hierarchies**: `investment_class` (how PMs think) vs `regulatory_class` (how reporting rolls up). An ETF of bonds is `FIXED_INCOME` in one and `POOLED_VEHICLE` in the other | rollups mix reporting frames; two answers to one allocation question | 7, 9 |
+| **6** | `fct_aum_snapshot` is a **daily snapshot** — summing it across dates multiplies the book by the number of days | **a plausible wrong number.** The scariest failure in the course, and the most natural mistake here, because AUM is inherently a point-in-time figure | 9, 11, 12 |
+| **7** | **Return has four defensible readings**: `twr_gross`, `twr_net` (after fees), `mwr` (money weighted), and each of six `period_type` values. All four sit in `fct_performance` | four honest answers to "what was our return?" — the reason GIPS exists | 5, 9, 10, 11 |
+| **8** | `dim_client` holds real **PII**: `ssn_last4`, `email`, `dob`, `annual_income` | a governance incident, not a data-quality one | 6, 17 |
+| **9** | International portfolios report in **EUR, GBP and JPY**, needing `dim_fx_rate` joined *as of the reporting date*. `fct_flows` also separates `trade_date` from `settlement_date` | currency mixing; totals that don't tie to finance; flows landing in the wrong period | 9, 10 |
 
-Two more flaws are added to the *agent*, not the data, in Module 8: a bloated 22-object agent and 9,000 characters of prose instructions — the raw material for Module 13's latency lab.
+Two more flaws are added to the *agent*, not the data, in Module 8: a bloated 22-object agent
+and 9,000 characters of prose instructions — the raw material for Module 13's latency lab.
+
+**Why this set is stronger than a retail-banking one.** Every ambiguity above is an argument
+asset managers genuinely have. AUM versus AUA appears in regulatory filings. The distinction
+between time-weighted and money-weighted return is why performance standards exist at all.
+Exchanges being counted as sales is a real reporting error with a real name. And AUM is
+point-in-time by nature, so the snapshot-summing trap is not a contrived mistake — it is the
+one people actually make.
 
 ### F.2 Use-case coverage matrix
 
 | Course topic | Module | Data that makes it demonstrable |
 |---|---|---|
-| Good vs bad questions | 2 | wide question surface across 5 fact tables |
-| Chat vs Agent mode | 3 | `fct_loan_balances` + `fct_fraud_cases` + `genie_agent.mfg_ref_documents` volume |
-| Unstructured file analysis | 3, 16 | credit committee memos, complaint letters |
+| Good vs bad questions | 2 | wide question surface across AUM, flows and performance |
+| Chat vs Agent mode | 3 | `fct_aum_snapshot` + `fct_performance` + the `mfg_ref_documents` volume |
+| Unstructured file analysis | 3, 16 | investment committee memos, advisor notes, complaint letters |
 | Compound AI system / diagnosis | 4 | flaws 1–7 each produce a distinct wrong answer |
-| Row filters | 5 | `dim_branch.region` — filter by regional manager |
-| Column masks | 5 | `dim_customer.ssn_last4`, `email`, `dob`, `annual_income` |
-| Per-user credentials | 5 | three personas, three correct answers to one question |
-| 30-object limit / pre-joining | 6 | 11 base objects → curated 7 |
-| Slim views vs wide tables | 6, 13 | a 380-column `fct_transactions_raw` staging table is included on purpose |
-| Metric views | 6, 15 | `net_fee_revenue`, `delinquency_rate_90`, `approval_rate` used by 3+ agents |
-| Certify / deprecate | 6, 12 | two revenue tables ship: `fct_transactions` (certify) and `fct_txn_legacy` (deprecate) |
-| Genie Code bootstrap review | 7 | AI-suggested descriptions get flaws 1 and 5 wrong — learners must catch it |
-| Synonyms | 8 | region, state, "top line", "delinquent", "chargeback" |
-| Entity matching / value dictionaries | 8 | `region`, `state`, `merchant_category`, `dpd_bucket`, `decision` |
-| Join relationships & cardinality | 8 | `fct_transactions → dim_account → dim_customer/dim_branch/dim_product` |
-| The fan-out trap | 8, 13 | flaw 6, the daily snapshot |
-| SQL expressions (filter/measure/field) | 8 | flaws 1, 4, 7 all require one |
-| Example SQL & parameters | 9 | fiscal-period and region parameters |
-| UC functions as trusted assets | 9 | delinquency-rate and FX-conversion functions |
-| Clarification instructions | 9, 10 | flaw 7 (delinquency ambiguity) |
-| Instruction length ceiling | 9, 13 | the planted 9,000-character prose block |
-| Benchmarks & scoring | 10 | ground-truth SQL for all nine flaws |
-| Monitoring & feedback triage | 11 | seeded conversation history with feedback |
+| Row filters | 6 | `dim_advisor.region` — filter by regional sales lead |
+| Column masks | 6 | `dim_client.ssn_last4`, `email`, `dob`, `annual_income` |
+| Per-user credentials | 6 | three personas, three correct answers to one question |
+| 30-object limit / pre-joining | 7 | 14 base objects → curated 6 |
+| Slim views vs wide tables | 7, 13 | a 380-column `fct_holdings_raw` custodian feed is included |
+| Metric views | 7, 15 | `AUM`, `Assets Under Advisement`, `Held Away Assets` used by 3+ agents |
+| Certify / deprecate | 6, 12 | two AUM tables ship: `fct_aum_snapshot` (certify) and `fct_aum_legacy` (deprecate) |
+| Genie Code bootstrap review | 8 | AI-suggested descriptions get flaws 1 and 5 wrong — learners must catch it |
+| Synonyms | 9 | region, state, "equities", "cash", "net new money", "AUA" |
+| Entity matching / value dictionaries | 9 | `region`, `state`, `asset_class_code`, `flow_type`, `period_type` |
+| Join relationships & cardinality | 9 | `fct_aum_snapshot → dim_account → dim_client → dim_advisor`, plus portfolio/fund |
+| The fan-out trap | 9, 13 | flaw 6, the daily AUM snapshot |
+| SQL expressions (filter/measure/field) | 9 | flaws 1, 4, 7 all require one |
+| Example SQL & parameters | 10 | fiscal-period and asset-class parameters |
+| UC functions as trusted assets | 10 | `aum_by_asset_class`, `net_flows`, `to_usd`, `fiscal_period` |
+| Clarification instructions | 10 | flaws 1 and 7 — which AUM, and which return |
+| Instruction length ceiling | 10, 13 | the planted 9,000-character prose block |
+| Benchmarks & scoring | 11 | ground-truth SQL for all nine flaws |
+| Monitoring & feedback triage | 12 | seeded conversation history with feedback |
 | Nondeterminism expectation-setting | 4, 11, 12 | flaw 7 produces legitimately varying answers |
-| Performance: thinking vs query | 13 | bloated agent + wide staging table + unoptimised external table |
-| Warehouse & table tuning | 13 | an unclustered 900M-row `fct_transactions`, one external table with no upkeep |
-| Errors & escalation | 12 | scripted error scenarios |
-| Cost & budgets | 14 | five-agent portfolio + one service-principal integration |
+| Performance: thinking vs query | 13 | bloated agent + the 380-column feed + an unclustered fact table |
+| Warehouse & table tuning | 13 | an unclustered 900M-row `fct_flows`, plus the 380-column feed |
+| Errors & escalation | 14 | scripted error scenarios |
+| Cost & budgets | 15 | five-agent portfolio + one service-principal integration |
 | API, tracing, CI/CD | 16 | the whole agent, exported as `serialized_space` |
 | Supervisor / multi-agent | 16 | 5 agents + document volume + external context |
