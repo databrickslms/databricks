@@ -72,6 +72,20 @@ export async function GET() {
     modules: COURSES.reduce((n, c) => n + c.moduleCount, 0),
   }
 
+  // Which commit is actually serving. Render injects RENDER_GIT_COMMIT into the
+  // build environment; Next inlines it at build time, so this is the deployed
+  // revision rather than whatever is running locally. Without it, "did my push
+  // deploy?" is unanswerable from outside — the lesson pages are behind auth,
+  // so there is nothing else to compare.
+  // RENDER_GIT_COMMIT is set by Render at runtime; NEXT_PUBLIC_BUILD_COMMIT is
+  // inlined by the build script from the same value, and covers the case where
+  // only the build environment has it.
+  const commit = process.env.RENDER_GIT_COMMIT ?? process.env.NEXT_PUBLIC_BUILD_COMMIT
+  const build = {
+    commit: commit ? commit.slice(0, 7) : 'unknown',
+    branch: process.env.RENDER_GIT_BRANCH ?? process.env.NEXT_PUBLIC_BUILD_BRANCH ?? 'unknown',
+  }
+
   const missingEnv = Object.entries(env)
     .filter(([k, v]) => !v && k !== 'DATABASE_URL_is_pooled')
     .map(([k]) => k)
@@ -79,7 +93,7 @@ export async function GET() {
   const ok = database.reachable === true && database.migrated === true && missingEnv.length === 0
 
   return NextResponse.json(
-    { ok, env, missingEnv, database, content, nodeVersion: process.version },
+    { ok, build, env, missingEnv, database, content, nodeVersion: process.version },
     { status: ok ? 200 : 503, headers: { 'Cache-Control': 'no-store' } },
   )
 }
