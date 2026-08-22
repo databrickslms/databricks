@@ -71,22 +71,22 @@ A mid-size US bank: **340 branches**, four lines of business — **Deposits**, *
 
 Financial services is the right domain for this course because it forces every hard lesson naturally: contested metric definitions, a non-calendar fiscal year, regulated PII, snapshot fact tables, and a regulatory hierarchy that competes with the business one.
 
-### 0.2 Schema — `mfg.core` (10 tables + 1 volume)
+### 0.2 Schema — one schema, `genie_agent`
 
 | Object | Grain | Key columns | What it powers |
 |---|---|---|---|
-| `mfg.core.fct_transactions` | one posted/attempted transaction | `txn_id, account_id, txn_date, amount, fee_revenue, interchange, merchant_category, currency, status` | the main fact — fee revenue, volumes |
-| `mfg.core.fct_reversals` | one reversal / chargeback | `txn_id, reversal_date, reversal_amount, reason_code` | **gross vs net** revenue |
-| `mfg.core.fct_loan_balances` | **account × day (daily snapshot)** | `account_id, snapshot_date, principal_balance, interest_accrued, days_past_due, dpd_bucket, loan_status` | delinquency and balances over time |
-| `mfg.core.fct_applications` | one credit application | `app_id, customer_id, product_id, submitted_ts, decision_ts, funded_ts, decision, channel` | approval rate, funnel, cycle time |
-| `mfg.core.fct_fraud_cases` | one fraud case | `case_id, account_id, opened_date, closed_date, loss_amount, fraud_type, status` | fraud rate, loss rate |
-| `mfg.core.dim_customer` | customer | `customer_id, segment, tenure_months, home_branch_id, ssn_last4, email, dob, annual_income` | segmentation — **and the PII lesson** |
-| `mfg.core.dim_account` | account | `account_id, customer_id, product_id, branch_id, opened_date, closed_date, status` | the join hub |
-| `mfg.core.dim_product` | product | `product_id, product_name, product_category, regulatory_product_class` | **two competing hierarchies** |
-| `mfg.core.dim_branch` | branch | `branch_id, branch_name, region, state, channel, opened_date` | region/state rollups, row-level security |
-| `mfg.core.dim_date` | day | `date_key, fiscal_year, fiscal_quarter, fiscal_month, calendar_year, is_business_day` | **fiscal vs calendar** |
-| `mfg.core.dim_fx_rate` | currency × day | `currency, rate_date, usd_rate` | multi-currency conversion |
-| `mfg.ref.documents` *(volume)* | PDFs | credit committee memos, branch manager notes, customer complaint letters | Agent mode over unstructured files; Knowledge Assistant |
+| `genie_agent.mfg_core_fct_transactions` | one posted/attempted transaction | `txn_id, account_id, txn_date, amount, fee_revenue, interchange, merchant_category, currency, status` | the main fact — fee revenue, volumes |
+| `genie_agent.mfg_core_fct_reversals` | one reversal / chargeback | `txn_id, reversal_date, reversal_amount, reason_code` | **gross vs net** revenue |
+| `genie_agent.mfg_core_fct_loan_balances` | **account × day (daily snapshot)** | `account_id, snapshot_date, principal_balance, interest_accrued, days_past_due, dpd_bucket, loan_status` | delinquency and balances over time |
+| `genie_agent.mfg_core_fct_applications` | one credit application | `app_id, customer_id, product_id, submitted_ts, decision_ts, funded_ts, decision, channel` | approval rate, funnel, cycle time |
+| `genie_agent.mfg_core_fct_fraud_cases` | one fraud case | `case_id, account_id, opened_date, closed_date, loss_amount, fraud_type, status` | fraud rate, loss rate |
+| `genie_agent.mfg_core_dim_customer` | customer | `customer_id, segment, tenure_months, home_branch_id, ssn_last4, email, dob, annual_income` | segmentation — **and the PII lesson** |
+| `genie_agent.mfg_core_dim_account` | account | `account_id, customer_id, product_id, branch_id, opened_date, closed_date, status` | the join hub |
+| `genie_agent.mfg_core_dim_product` | product | `product_id, product_name, product_category, regulatory_product_class` | **two competing hierarchies** |
+| `genie_agent.mfg_core_dim_branch` | branch | `branch_id, branch_name, region, state, channel, opened_date` | region/state rollups, row-level security |
+| `genie_agent.mfg_core_dim_date` | day | `date_key, fiscal_year, fiscal_quarter, fiscal_month, calendar_year, is_business_day` | **fiscal vs calendar** |
+| `genie_agent.mfg_core_dim_fx_rate` | currency × day | `currency, rate_date, usd_rate` | multi-currency conversion |
+| `genie_agent.mfg_ref_documents` *(volume)* | PDFs | credit committee memos, branch manager notes, customer complaint letters | Agent mode over unstructured files; Knowledge Assistant |
 
 ### 0.3 Provisioning — one pip install
 
@@ -135,7 +135,7 @@ transactions is part of the point, and nothing should spend compute without bein
 | 04 | `staging` | a 380-column raw landing table and a superseded revenue extract | shipped |
 | 05 | `governance` | row filter on branch region, column masks on the customer identifiers, certification tags | shipped |
 | 06 | `curated` | net-revenue and month-end views, a customer view without identifiers, three UC functions | shipped |
-| 07 | `metric_view` | `mv_banking_metrics` — one definition of each headline metric | shipped |
+| 07 | `metric_view` | `mfg_core_mv_banking_metrics` — one definition of each headline metric | shipped |
 | 99 | `validate` | twelve checks that the dataset is complete — run last | shipped |
 
 Only **01 → 03** are required; after those you have a working dataset. Run `99` to confirm
@@ -431,7 +431,7 @@ DEFINITION        SUM(fee_revenue) - SUM(reversal_amount), status = 'POSTED'
 EXCLUDES          PENDING, DECLINED, REVERSED transactions
 GRAIN             transaction line, rolled to any dimension
 SYNONYMS          revenue, top line, fee income, net fees
-IMPLEMENTED AS    measure expression + metric view mv_banking_metrics
+IMPLEMENTED AS    measure expression + metric view mfg_core_mv_banking_metrics
 SIGNED OFF        2026-08-14
 ```
 
@@ -553,15 +553,15 @@ Given the MFG access matrix (3 personas × 11 objects, one row filter, four colu
 
 **After (good):** 7 objects
 ```
-vw_transactions_net   -- fct_transactions LEFT JOIN fct_reversals; PENDING/DECLINED/REVERSED
+mfg_core_vw_transactions_net   -- fct_transactions LEFT JOIN fct_reversals; PENDING/DECLINED/REVERSED
                       -- excluded; exposes gross_fee_revenue, net_fee_revenue, txn_count   [flaws 1, 4]
-vw_loan_book_eop      -- fct_loan_balances filtered to end-of-period snapshots only         [flaw 6]
+mfg_core_vw_loan_book_eop      -- fct_loan_balances filtered to end-of-period snapshots only         [flaw 6]
 dim_account           -- the join hub
-dim_customer_safe     -- PII columns dropped; segment, tenure_band                          [flaw 8]
+mfg_core_dim_customer_safe     -- PII columns dropped; segment, tenure_band                          [flaw 8]
 dim_product           -- regulatory_product_class hidden; product_category renamed          [flaw 5]
 dim_branch            -- region, state, channel
 dim_date              -- fiscal (Oct 1 start) + calendar columns                            [flaw 2]
-mv_banking_metrics    -- metric view: net_fee_revenue, delinquency_rate_30/90,
+mfg_core_mv_banking_metrics    -- metric view: net_fee_revenue, delinquency_rate_30/90,
                       -- approval_rate, fraud_loss_rate                                     [flaws 1, 7]
 ```
 > **Note what happened:** five of the nine planted flaws were fixed *in the data layer*, before a single instruction was written. That is the module's whole point.
@@ -579,7 +579,7 @@ mv_banking_metrics    -- metric view: net_fee_revenue, delinquency_rate_30/90,
 Ask an under-prepared agent *"What was revenue for California last year?"* → it returns **gross** revenue, **calendar** year, and **zero rows** for California (flaws 1, 2, 3 firing at once). Then ask the prepared 7-object agent. Same question, right answer, no prompt tricks.
 
 ### Lab 7 (30 min) — GRADED
-From the 22 raw MFG objects: choose ≤ 8, write the `vw_transactions_net` and `vw_loan_book_eop` view SQL, write descriptions for 10 columns, and list 6 columns to hide with reasons.
+From the 22 raw MFG objects: choose ≤ 8, write the `mfg_core_vw_transactions_net` and `mfg_core_vw_loan_book_eop` view SQL, write descriptions for 10 columns, and list 6 columns to hide with reasons.
 
 ### Anti-patterns to name explicitly
 - Adding every table "just in case."
@@ -657,7 +657,7 @@ Build the MFG **Retail Banking & Deposits** agent for real: the objects from Lab
 ### The three SQL expression types — MFG examples
 | Type | Purpose | Example |
 |---|---|---|
-| **Filter** | a reusable condition | `Posted transactions only` → `status = 'POSTED'` [flaw 4] · `Latest snapshot` → `snapshot_date = (SELECT MAX(snapshot_date) FROM vw_loan_book_eop)` [flaw 6] · `Commercial book` → `segment = 'COMMERCIAL'` |
+| **Filter** | a reusable condition | `Posted transactions only` → `status = 'POSTED'` [flaw 4] · `Latest snapshot` → `snapshot_date = (SELECT MAX(snapshot_date) FROM mfg_core_vw_loan_book_eop)` [flaw 6] · `Commercial book` → `segment = 'COMMERCIAL'` |
 | **Measure** | a KPI | `net_fee_revenue` → `SUM(fee_revenue) - SUM(COALESCE(reversal_amount,0))` [flaw 1] · `delinquency_rate_90` → `SUM(CASE WHEN days_past_due >= 90 THEN principal_balance ELSE 0 END) / NULLIF(SUM(principal_balance),0)` [flaw 7] · `approval_rate` → `COUNT_IF(decision='APPROVED') / NULLIF(COUNT(*),0)` · `fraud_loss_rate` → `SUM(loss_amount) / NULLIF(SUM(fee_revenue),0)` |
 | **Field** | a derived attribute | `tenure_band` → `CASE WHEN tenure_months < 12 THEN 'New' WHEN tenure_months < 60 THEN 'Established' ELSE 'Long-tenured' END` · `is_high_risk` → `days_past_due >= 30 OR fraud_flag` |
 
@@ -685,8 +685,8 @@ With entity matching on `dim_branch.state` (50 values curated) and `region` (4 v
 The number *looks* like a number. The chart *looks* like a chart. Nobody notices until the regulatory pack disagrees.
 
 Fix at three layers, in order:
-1. **Data:** `vw_loan_book_eop` exposes end-of-period snapshots only (Module 7).
-2. **Knowledge store:** declare `vw_loan_book_eop.account_id → dim_account.account_id (Many-to-One)`, and a `Latest snapshot` filter expression.
+1. **Data:** `mfg_core_vw_loan_book_eop` exposes end-of-period snapshots only (Module 7).
+2. **Knowledge store:** declare `mfg_core_vw_loan_book_eop.account_id → dim_account.account_id (Many-to-One)`, and a `Latest snapshot` filter expression.
 3. **Description:** "one row per account per day — never SUM across dates."
 
 > **This is the scariest failure mode in the course: a plausible wrong number.** A missing join or wrong cardinality between `fct_transactions` and `dim_account` produces the same class of error on the revenue side.
@@ -734,10 +734,10 @@ On the MFG agent: add synonyms for 10 business terms, enable entity matching on 
 ```sql
 SELECT b.region,
        SUM(t.fee_revenue) - SUM(COALESCE(t.reversal_amount, 0)) AS net_fee_revenue
-FROM   mfg.core.vw_transactions_net t
-JOIN   mfg.core.dim_account         a ON t.account_id = a.account_id
-JOIN   mfg.core.dim_branch          b ON a.branch_id  = b.branch_id
-JOIN   mfg.core.dim_date            d ON t.txn_date   = d.date_key
+FROM   genie_agent.mfg_core_vw_transactions_net t
+JOIN   genie_agent.mfg_core_dim_account         a ON t.account_id = a.account_id
+JOIN   genie_agent.mfg_core_dim_branch          b ON a.branch_id  = b.branch_id
+JOIN   genie_agent.mfg_core_dim_date            d ON t.txn_date   = d.date_key
 WHERE  d.fiscal_quarter = :fiscal_quarter  -- Format 'FY2026-Q3'. MFG fiscal year starts Oct 1.
   AND  t.status = 'POSTED'                 -- excludes PENDING, DECLINED, REVERSED
 GROUP BY b.region
@@ -747,7 +747,7 @@ Four lessons in one artifact: the title is the user's sentence; the parameter co
 
 ### Business example — a UC function as a trusted asset
 ```sql
-CREATE OR REPLACE FUNCTION mfg.core.delinquency_rate(
+CREATE OR REPLACE FUNCTION genie_agent.mfg_core_delinquency_rate(
   p_dpd_threshold INT COMMENT 'Days past due. Use 30 for delinquent, 90 for seriously delinquent.',
   p_as_of DATE     COMMENT 'Snapshot date. Defaults to latest available.'
 ) RETURNS TABLE (product_category STRING, delinquency_rate DOUBLE)
@@ -843,7 +843,7 @@ Expected: asks which fiscal period and which revenue definition, OR returns
 Fails if:  returns gross, or uses calendar 2025.
 
 Q: "What's our total loan book?"                                            [flaw 6]
-Ground truth: SELECT SUM(principal_balance) FROM mfg.core.vw_loan_book_eop
+Ground truth: SELECT SUM(principal_balance) FROM genie_agent.mfg_core_vw_loan_book_eop
               WHERE snapshot_date = (SELECT MAX(snapshot_date) FROM ...)
 Fails if:  the result is more than 2× the ground truth (it summed snapshots).
 
@@ -1449,7 +1449,7 @@ Two more flaws are added to the *agent*, not the data, in Module 8: a bloated 22
 | Course topic | Module | Data that makes it demonstrable |
 |---|---|---|
 | Good vs bad questions | 2 | wide question surface across 5 fact tables |
-| Chat vs Agent mode | 3 | `fct_loan_balances` + `fct_fraud_cases` + `mfg.ref.documents` volume |
+| Chat vs Agent mode | 3 | `fct_loan_balances` + `fct_fraud_cases` + `genie_agent.mfg_ref_documents` volume |
 | Unstructured file analysis | 3, 16 | credit committee memos, complaint letters |
 | Compound AI system / diagnosis | 4 | flaws 1–7 each produce a distinct wrong answer |
 | Row filters | 5 | `dim_branch.region` — filter by regional manager |
