@@ -807,59 +807,134 @@ In pairs, build a 10-term glossary for the MFG wealth domain using the template 
 
 ### Learning outcomes
 1. Explain the two credential types and their security implications.
-2. Predict what three different users see from the same question.
-3. Handle PII in a regulated dataset.
-4. Assign the right sharing level and pass the permissions checklist.
+2. Predict what four different users see from the same question.
+3. Know **which table** a row filter actually protects — and which it doesn't.
+4. Handle PII in a regulated dataset.
+5. Assign the right sharing level and pass the permissions checklist.
 
 ### Key concepts
 **Two credential types** — the most important governance idea in the course:
 - **Compute credentials** — embedded by the agent author (which warehouse runs the query)
 - **Data credentials** — **the asking user's own identity**
 
-Consequence: Unity Catalog **row filters and column masks are enforced per user**. Two people ask the identical question and correctly get different numbers.
+Consequence: Unity Catalog **row filters and column masks are enforced per user**. Two people ask
+the identical question and correctly get different numbers.
 
-**Required permissions to author:** Databricks SQL workspace entitlement · `CAN USE` on a **Pro or serverless** SQL warehouse · `SELECT` on every object in the agent · `CAN EDIT` on the agent. An account admin must first enable partner-powered AI features at **account and workspace** level.
+**Required permissions to author:** Databricks SQL workspace entitlement · `CAN USE` on a **Pro or
+serverless** SQL warehouse · `SELECT` on every object in the agent · `CAN EDIT` on the agent. An
+account admin must first enable partner-powered AI features at **account and workspace** level.
 
-**Sharing levels:** `CAN MANAGE` · `CAN EDIT` · `CAN RUN` · `CAN VIEW` — set via folder permissions or direct share.
+**Sharing levels:** `CAN MANAGE` · `CAN EDIT` · `CAN RUN` · `CAN VIEW` — set via folder
+permissions or direct share.
 
-**Also cover:** cloning an agent; **exporting an agent's context as a metric view** (promotes curated semantics into a governed UC object); assigning **certification** to an agent; and **certify/deprecate on the underlying data** so Genie prefers `fct_transactions` over `fct_aum_legacy`.
+**Also cover:** cloning an agent; **exporting an agent's context as a metric view** (promotes
+curated semantics into a governed UC object); assigning **certification** to an agent; and
+**certify/deprecate on the underlying data**, so Genie prefers the certified `fct_aum_snapshot`
+over `fct_aum_legacy`, which ships tagged `deprecated = true` and
+`superseded_by = fct_aum_snapshot`.
+
+### The Meridian groups
+Notebook 05 builds the whole demo on six account groups. Everything below follows from them:
+
+| Group | Who | Effect |
+|---|---|---|
+| `mfg_region_ne` / `_se` / `_mw` / `_west` | regional sales leads | sees advisors in that region only |
+| `mfg_finance` | finance and the CFO's office | the only group that can see `annual_income` |
+| `mfg_unrestricted` | data stewards | no row filter, no masking |
 
 ### Business example — the row-filter demo (run this live)
 ```
-Question (identical for all three): "What was net fee revenue last fiscal quarter?"
+Question (identical for all four): "Show AUM by advisor region as of 30 June 2026"
 
-Priya  (Regional Manager, Northeast) → $41.2M
-Marcus (Regional Manager, West)      → $28.7M
-Elena  (CFO, unrestricted)           → $186.4M
+Priya   (regional sales lead, mfg_region_ne)   → one row:   NE
+Marcus  (regional sales lead, mfg_region_west) → one row:   WEST
+Elena   (CFO, mfg_finance)                     → no rows at all
+Dev     (data steward, mfg_unrestricted)       → four rows: NE, SE, MW, WEST
 ```
-Same agent. Same question. Three correct answers. **Genie leaked nothing.**
+Same agent. Same question. Four different results, all correct. **Genie leaked nothing.**
+
+Two of those deserve a pause.
+
+**Elena, the CFO, sees nothing.** She is in `mfg_finance`, which the row filter never mentions.
+The filter's default branch denies, so she gets **zero rows — not an error**. This is the single
+most common governance support ticket in the course, and it is not a bug: an empty answer from a
+correctly-configured filter looks exactly like "we have no business in that region". Teach
+learners to check group membership *first* when a confident answer comes back empty.
+
+**Roughly 30% of advisors are NE and 30% WEST**, with 20% each in SE and MW. So Priya's and
+Marcus's slices are comparable in size, while an SE lead sees a genuinely smaller book. Nobody
+can tell from their own answer how much of the firm they're missing.
+
+### The trap: a row filter protects the table it's on
+
+Notebook 05 puts the filter on `dim_advisor`, not on `fct_aum_snapshot`. That means:
+
+| Question | Joins `dim_advisor`? | Priya sees |
+|---|---|---|
+| "AUM by advisor region as of 30 June 2026" | yes | her region only |
+| "Total AUM as of 30 June 2026" | **no** | **the entire firm** |
+
+Nothing is broken. The filter did exactly what it was configured to do — it just wasn't reached.
+A regional lead asking a question that never touches the advisor dimension gets the firm-wide
+number.
+
+> **The principle:** a row filter constrains *rows of the table it is attached to*. It does not
+> follow joins backwards into facts. If regional users must never see firm-wide totals, the
+> filter belongs on the fact table too — or the fact must only be reachable through a view that
+> forces the join.
+
+This is the most valuable thing in the module, because it is the mistake that survives review.
+The demo looks convincing, everyone signs off, and the hole is one question wide.
 
 ### Business example — PII in a regulated dataset (flaw 8)
 ```
-Question: "Give me the contact details for our top 20 depositors"
+Question: "Give me contact details for our top 20 clients by AUM"
 
-Priya  → names and account IDs; email masked, ssn_last4 masked, dob masked
-Elena  → same masking; annual_income visible (CFO exception)
-Neither → can retrieve a usable PII export from Genie at all
+Priya (regional lead) → names and IDs; ssn_last4 → '****'
+                        email → '***@example.com'   (domain kept)
+                        dob   → truncated to 1 January of the birth year
+                        annual_income → NULL
+Elena (CFO)          → identical, except annual_income is visible
+Dev   (steward)      → everything unmasked
 ```
-**Teaching point:** the right answer to "can Genie leak PII?" is *"only what Unity Catalog already lets that person see."* Curating an agent is not a security control — masks and filters are. Authors who try to prevent PII exposure with a **text instruction** ("never show email addresses") have built nothing. Demonstrate that instruction failing.
 
-### Business example — sharing levels at MFG
+Note that the masks are **graded, not binary**. The email mask keeps the domain because a domain
+supports segmentation and leaks little on its own; the date-of-birth mask truncates to the year
+because age analysis is legitimate and a birth date is not. A good mask preserves the analytic
+value and removes the identifying detail. Masking everything to `NULL` is easy and quietly
+destroys half the questions the business needs to ask.
+
+**Teaching point:** the right answer to "can Genie leak PII?" is *"only what Unity Catalog already
+lets that person see."* Curating an agent is not a security control — masks and filters are.
+Authors who try to prevent PII exposure with a **text instruction** ("never show email
+addresses") have built nothing. Demonstrate that instruction failing.
+
+### Business example — sharing levels at Meridian
 | Person | Level | Rationale |
 |---|---|---|
-| Retail analytics lead (owner) | CAN MANAGE | owns definitions, manages sharing |
+| Wealth analytics lead (owner) | CAN MANAGE | owns definitions, manages sharing |
 | Two analysts on the team | CAN EDIT | add examples, fix bad SQL, see source queries |
-| 340 branch managers | CAN RUN | ask questions, give feedback, can't change logic |
+| 340 regional sales leads and relationship managers | CAN RUN | ask questions, give feedback, can't change logic |
 | Exec assistant | CAN VIEW | read shared threads only |
 
 ### Lab 6 (25 min) — GRADED
-Given the MFG access matrix (3 personas × 11 objects, one row filter, four column masks), predict for 8 questions whether each user gets an answer, a masked answer, a partial answer, or a permission error. Then verify in the workspace.
+Given the Meridian access matrix (4 personas × the core objects, one row filter, four column
+masks), predict for 8 questions whether each user gets a full answer, a masked answer, an empty
+answer, or a permission error. Then verify in the workspace.
+
+Two of the eight are the cases above: the CFO who correctly sees zero rows, and the regional lead
+who correctly sees the firm-wide total. Learners who predict those two have understood the module.
 
 ### Common mistakes
 - Assuming the author's permissions apply to consumers (they don't).
+- **Reading an empty answer as an empty business.** Check group membership before believing a zero.
+- **Assuming a filter on a dimension protects the facts behind it.** It doesn't — it protects rows
+  of that dimension, and only when the query reaches it.
 - Granting `CAN EDIT` broadly "so people can help" — editors change business logic for everyone.
 - **Trying to enforce PII rules with instructions instead of column masks.**
-- Building on a table the consumer group has no `SELECT` on, then debugging the agent instead of the grant.
+- Masking a column to `NULL` when a partial mask would have preserved a legitimate use.
+- Building on a table the consumer group has no `SELECT` on, then debugging the agent instead of
+  the grant.
 
 **Docs:** `/genie-agents/concepts` (permissions), `/genie-agents/set-up`
 
