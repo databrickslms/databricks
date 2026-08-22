@@ -537,39 +537,90 @@ disagreements are the interesting part, and they're a preview of Module 5.
 **Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers — the whole of the Business User track
 
 ### Learning outcomes
-1. Write questions Genie can answer, and recognise questions it can't.
-2. Use follow-ups and threads instead of re-asking.
-3. Read the **Analysis** panel to sanity-check an answer before acting on it.
-4. Give feedback that improves the agent.
+1. Write questions Genie can answer, and recognise the ones it can't.
+2. Name the four things every answerable question needs.
+3. Use follow-ups and threads instead of re-asking.
+4. Read the **Analysis** panel to sanity-check an answer before you act on it.
+5. Give feedback that actually improves the agent.
 
 ### Key concepts
 - Genie uses **chain-of-thought reasoning**: it breaks the question into steps, picks columns, plans SQL, runs it.
 - The **Analysis / thinking steps** panel shows how the question was interpreted, which sources were used, and a **Show code** button for the generated SQL.
 - **Threads carry context; separate chats do not.**
-- Outputs: auto-generated chart (editable, savable to a dashboard, downloadable as PNG), CSV download (~1 GB), copy to clipboard.
+- Outputs: an auto-generated chart (editable, savable to a dashboard, downloadable as PNG), CSV download (~1 GB), copy to clipboard.
 - **Feedback is a product feature.** Rate a response **Yes** / **Fix it** / **Request review**. A thumbs-up on an answer that joins tables or uses a SQL expression can prompt Genie to *suggest a new reusable snippet* to the author. Rating is not a formality — it trains the agent.
 
+### The four things a good question names
+
+Most questions that fail are missing one of four things. Before you send a question, check that
+it names:
+
+| | | Example |
+|---|---|---|
+| **A measure** | the number you want | AUM, net flows, time-weighted return |
+| **A cut** | how to break it up | by asset class, by channel, by fund |
+| **A filter** | which slice counts | discretionary only, settled flows only |
+| **A point in time** | when | as of 30 June 2026, or FY2026 Q3 |
+
+The last one trips people up most, because two different kinds of number need two different
+kinds of time. **AUM is a balance** — it exists at a moment, so it needs an *as-of date*.
+**Flows and returns are periods** — they accumulate, so they need a *date range*. Asking for
+"AUM in June" invites Genie to add up thirty daily snapshots and hand you a number thirty
+times too large. Ask for "AUM as of 30 June" and there is nothing to add up.
+
 ### The question quality ladder (core artifact — distribute widely)
+
 | ❌ Genie will struggle | ✅ Rewrite | Why |
 |---|---|---|
-| "Why did delinquency go up?" | "What was the 90-day delinquency rate by product, by month, for the last 8 months?" | Genie retrieves and computes; it does not diagnose causes. |
-| "How do we reduce fraud losses?" | "Which fraud types had the highest loss per case last fiscal quarter?" | No recommendations — ask for the evidence, decide yourself. |
-| "Tell me about the Northeast and also compare branches and what about chargebacks" | three questions in one thread | One question at a time. |
-| "Show me our best products" | "Show the top 10 products by net fee revenue for FY2026 Q3" | "Best" is undefined; no metric, no period, no ranking size. |
-| "Revenue last year" | "Net fee revenue for fiscal year 2025" | At MFG both "revenue" and "last year" are ambiguous (flaws 1 and 2). |
-| "How many delinquent loans?" | "How many loans are 90+ days past due as of the latest snapshot?" | "Delinquent" has four meanings at MFG (flaw 7). |
+| "Why did AUM fall last quarter?" | "What was total AUM by asset class at each month-end for the last eight months?" | Genie retrieves and computes; it does not diagnose causes. Get the shape of the movement, then form your own hypothesis and test *that*. |
+| "Which funds should we close?" | "Which funds had net outflows in each of the last four quarters, and what is their AUM as of the latest reporting date?" | Genie doesn't make recommendations. Ask for the evidence and decide yourself. |
+| "Tell me about the Northeast, and compare advisors, and what about outflows" | three questions, one thread | One question at a time. Genie answers the last thing it understood, not all three. |
+| "Show me our best funds" | "Show the ten funds with the largest net flows in FY2026 Q3" | "Best" is undefined — largest by AUM, by net flows, by return? And which return? No metric, no period, no ranking size. |
+| "What's our AUM?" | "What was discretionary AUM, excluding held-away assets, as of 30 June 2026?" | AUM has three defensible readings at Meridian, and it's a point-in-time balance — it needs an as-of date, not a period. |
+| "What was our return last year?" | "What was the net-of-fees time-weighted return by strategy for the YTD period as of 30 June 2026?" | Three ways to measure your own return sit in one table — plus a fourth column holding the *benchmark's* return, which is not yours — each across six period types. And "last year" is ambiguous when the fiscal year starts 1 October. |
+| "How much did we sell in Q2?" | "What were gross subscriptions, excluding exchanges, for settled flows with a trade date in FY2026 Q3?" | Exchanges between Meridian funds are not sales. Pending and cancelled flows are not money. And trade date is not settlement date. |
+| "AUM for California" | "AUM as of 30 June 2026 for advisors in CA" | The data stores `CA`, not "California". A human reads through it; a filter doesn't. |
+
+Note what the good column has in common: it is *longer*, and it is *boring*. Precision reads as
+pedantic and produces answers you can defend in a meeting. That trade is always worth it.
 
 ### Business example — the follow-up pattern
+
 ```
-Q1: "Show net fee revenue by product category for FY2026 Q3"
-Q2: "Only for the Northeast"          ← follow-up, inherits Q1 context
-Q3: "Now split that by branch"         ← keeps narrowing
-Q4: "Compare to the same quarter last fiscal year"
+Q1: "Show AUM by asset class as of 30 June 2026"
+Q2: "Only the intermediary channel"        ← follow-up, inherits Q1's context
+Q3: "Now split that by region"             ← keeps narrowing
+Q4: "How does that compare with 31 March 2026?"
 ```
-Anti-pattern: four separate chats, four different answers.
+
+Four questions, one thread, one consistent definition of AUM running through all of them.
+
+The anti-pattern is four separate chats. You will get four answers that each look reasonable and
+don't reconcile, because nothing carried the "discretionary only" decision from the first chat
+into the fourth.
+
+### Reading the Analysis panel — three checks before you act
+
+Open **Analysis** and **Show code** on any answer you plan to put in front of someone. You do not
+need to read SQL fluently. You need to check three things:
+
+1. **Which tables did it use?** Meridian ships two tables that both look like they hold AUM. If
+   the answer came from the wrong one, nothing downstream is worth anything. The certified table
+   is the one to expect.
+2. **Did the filter you asked for actually appear?** A dropped filter is the most common silent
+   failure. If you said "discretionary only" and no condition on discretion appears in the code,
+   you got the whole book.
+3. **Was a balance summed instead of filtered?** For AUM, look for a single date, not a range. A
+   `SUM` over many dates is the wrong-number-that-looks-right failure.
+
+If any check fails, don't re-ask the same question louder. Rate it **Fix it** and say what was
+wrong — that routes to the agent's author, who can fix it once for everyone.
 
 ### Lab 2 (20 min) — GRADED
-Rewrite 8 badly-written questions from MFG stakeholders, run each against a pre-built Retail Banking agent, and paste the generated SQL. Graded on rewrite quality, not SQL.
+Rewrite 8 badly-written questions from Meridian stakeholders, run each against the pre-built
+Wealth agent, and paste the generated SQL. Graded on rewrite quality, not SQL. Two of the eight
+cannot be rescued by rewriting at all — say so and explain why. Recognising an unanswerable
+question is the skill being tested.
 
 **Docs:** `/genie-agents/talk-to-genie`, `/genie-one/chat`
 
@@ -999,7 +1050,7 @@ On the MFG agent: add synonyms for 10 business terms (start with AUM, AUA, net n
 - Wrong cardinality (One-to-Many where it's Many-to-One) → fan-out and inflated totals.
 - Encoding a metric in a **text instruction** instead of a **measure expression**.
 - Exposing a snapshot table with no `Reporting dates only` filter.
-- Adding "return" as a synonym for one of the four return columns, instead of asking which.
+- Adding "return" as a synonym for one of the return columns, instead of asking which one is meant.
 - Burning the 200-snippet budget on low-value descriptions.
 
 **Docs:** `/genie-agents/tune-quality`, `/genie/best-practices`
@@ -1138,7 +1189,7 @@ Because Genie varies by design (Module 4), a single before/after comparison prov
 |---|---|---|---|
 | **Tier 1 — Smoke** | 10 | the common questions + top asks | **100%** before any release |
 | **Tier 2 — Coverage** | 60 | every measure × every major dimension | ≥ 90% |
-| **Tier 3 — Traps** | 30 | **one per planted flaw, minimum** — fiscal vs calendar, reporting vs calendar month end, AUM vs AUA, snapshot summing, exchanges in net flows, unsettled instructions, four return measures, state/region phrasing, currency mixing, both asset-class hierarchies | ≥ 80%, and every failure gets a ticket |
+| **Tier 3 — Traps** | 30 | **one per planted flaw, minimum** — fiscal vs calendar, reporting vs calendar month end, AUM vs AUA, snapshot summing, exchanges in net flows, unsettled instructions, gross vs net vs money-weighted return, portfolio return vs benchmark return, state/region phrasing, currency mixing, both asset-class hierarchies | ≥ 80%, and every failure gets a ticket |
 
 ### Business example — three Tier-3 trap benchmarks
 ```
@@ -1750,7 +1801,7 @@ move — a course that quotes stale numbers teaches learners to distrust it.
 | **4** | **Net flows counted naively double-count exchanges.** `fct_flows.flow_type` includes `EXCHANGE_IN`/`EXCHANGE_OUT` — money moving between Meridian products, which should net to zero. `status` also includes `PENDING` and `CANCELLED` | gross sales and redemptions both inflated; net flows unchanged, so the error hides | 7, 9, 11 |
 | **5** | `dim_asset_class` carries **two hierarchies**: `investment_class` (how PMs think) vs `regulatory_class` (how reporting rolls up). An ETF of bonds is `FIXED_INCOME` in one and `POOLED_VEHICLE` in the other | rollups mix reporting frames; two answers to one allocation question | 7, 9 |
 | **6** | `fct_aum_snapshot` is a **daily snapshot** — summing it across dates multiplies the book by the number of days | **a plausible wrong number.** The scariest failure in the course, and the most natural mistake here, because AUM is inherently a point-in-time figure | 9, 11, 12 |
-| **7** | **Return has four defensible readings**: `twr_gross`, `twr_net` (after fees), `mwr` (money weighted), and each of six `period_type` values. All four sit in `fct_performance` | four honest answers to "what was our return?" — the reason GIPS exists | 5, 9, 10, 11 |
+| **7** | **Return has three defensible readings** — `twr_gross`, `twr_net` (after fees) and `mwr` (money weighted) — each across six `period_type` values. `fct_performance` also carries `benchmark_return`, which is *not* the portfolio's return at all | several honest answers to "what was our return?" — the reason GIPS exists — plus a fourth column that silently answers a different question | 5, 9, 10, 11 |
 | **8** | `dim_client` holds real **PII**: `ssn_last4`, `email`, `dob`, `annual_income` | a governance incident, not a data-quality one | 6, 17 |
 | **9** | International portfolios report in **EUR, GBP and JPY**, needing `dim_fx_rate` joined *as of the reporting date*. `fct_flows` also separates `trade_date` from `settlement_date` | currency mixing; totals that don't tie to finance; flows landing in the wrong period | 9, 10 |
 
