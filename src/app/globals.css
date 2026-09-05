@@ -235,6 +235,53 @@
   .ladder-rung-top .ladder-rank { color: rgb(var(--accent)); }
   .ladder-rung-top { border-color: rgb(var(--accent) / 0.4); }
 
+  /* ── Video ──────────────────────────────────────────────────────────────
+     Authored as a ```video fence; see src/lib/media.ts. The pending state
+     reserves the same box the player will occupy, so adding the recording
+     later does not reflow the lesson. */
+
+  .video { @apply my-7; }
+  .video-frame {
+    @apply block aspect-video w-full rounded-xl border;
+    background: rgb(var(--code));
+    border-color: rgb(var(--line));
+  }
+  video.video-frame, iframe.video-frame { @apply bg-black; }
+
+  .video-pending .video-frame {
+    @apply grid place-items-center gap-3;
+    background:
+      repeating-linear-gradient(
+        45deg,
+        rgb(var(--ink) / 0.022) 0 10px,
+        transparent 10px 20px
+      ),
+      rgb(var(--code));
+  }
+  .video-play {
+    @apply grid h-12 w-12 place-items-center rounded-full border;
+    border-color: rgb(var(--accent) / 0.4);
+    background: rgb(var(--accent) / 0.1);
+  }
+  .video-play::after {
+    content: '';
+    @apply ml-1 block h-0 w-0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 13px solid rgb(var(--accent));
+  }
+  .video-pending-note {
+    @apply text-[0.75rem] font-medium uppercase tracking-[0.09em];
+    color: rgb(var(--faint));
+  }
+
+  .video-meta { @apply mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1; }
+  .video-title { @apply text-[0.83rem] font-medium; color: rgb(var(--ink)); }
+  .video-duration {
+    @apply text-[0.75rem] tabular-nums;
+    color: rgb(var(--faint));
+  }
+
   /* ── Chrome ─────────────────────────────────────────────────────────────── */
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.7rem] font-medium;

@@ -60,15 +60,22 @@ Three published **tracks** from one build:
 ---
 
 ## Module 0 — Build the Meridian Dataset
-**Level:** Setup · **Duration:** 90 min · **Audience:** Agent Author and Platform tracks
+**Level:** Setup · **Duration:** 45 min · **Audience:** Agent Author and Platform tracks
 
 **Summary:** Provision the course dataset in your own workspace, then read it closely enough to find the places where one question has more than one honest answer.
 
 **Deliverable:** a working lab environment for every other module.
 
-Most of the 90 minutes is the warehouse working rather than you. `03_facts` alone takes several
-minutes to generate 20M flow events and roughly 36M AUM snapshots. Start it, then read §0.1 and
-§0.2 while it runs.
+Provisioning is quick. On a Databricks Free Edition warehouse the three required notebooks took
+**2 minutes 16 seconds** end to end, so start them and read §0.1 and §0.2 while they run. Most of
+this module is the twenty minutes you spend reading the data afterwards, which is the part that
+matters.
+
+```video
+title: Provisioning the Meridian dataset
+duration: to be confirmed
+src: tbd
+```
 
 > **Why this is a module and not an appendix.** Every later module works on one firm's data.
 > Provisioning it yourself, and spending twenty minutes actually looking at it, is what makes the
@@ -166,8 +173,7 @@ will be created, and `e.g.` shows a fully qualified name you can paste straight 
 Because the install runs *inside* a notebook, it authenticates as you. There is no host, token or
 CLI profile to configure.
 
-**It does not run the notebooks for you.** Watching a warehouse work through 20M flow events is
-part of the point, and nothing should spend compute without being asked.
+**It does not run the notebooks for you.** Nothing should spend compute without being asked.
 
 #### Built for restricted workspaces
 
@@ -179,18 +185,34 @@ That default exists because most regulated workspaces do not grant `CREATE CATAL
 that assumes otherwise fails on its first statement. If you do hold the privilege, or you have
 been given a catalog, you can say so.
 
+**On Databricks Free Edition** the current catalog is `workspace`, so everything lands in
+`workspace.genie_agent.mfg_core_*` with no configuration at all. Free Edition is a perfectly good
+way to take this course: the whole dataset provisions in a couple of minutes, and every module
+except 13 works on it.
+
+Notebook 05 is the one to think about. Its row filter and column masks key off account groups
+such as `mfg_region_ne`, and if those groups do not exist you belong to none of them. The
+statements still run; you simply land in the most restricted view, seeing no advisor rows and
+fully masked client identifiers. That is not a broken install. It is precisely the case Module 6
+warns about, and it is worth seeing from the inside before you read that module.
+
 #### The notebooks
 
-| # | Notebook | What it builds | Required |
-|---|---|---|---|
-| 01 | `catalog_and_schemas` | the schema, and the documents volume | yes |
-| 02 | `dimensions` | dates, asset classes, benchmarks, portfolios, funds, advisors, clients, accounts, FX rates | yes |
-| 03 | `facts` | daily AUM snapshots, client flows, portfolio returns. Slow: several minutes | yes |
-| 04 | `staging` | a 380-column custodian position feed and a superseded AUM extract | Modules 6, 7, 12, 13 |
-| 05 | `governance` | row filter on advisor region, column masks on the client identifiers, certification tags | Module 6 |
-| 06 | `curated` | month-end AUM and settled-flow views, a client view without identifiers, four UC functions | Modules 7, 15 |
-| 07 | `metric_view` | `mfg_core_mv_wealth_metrics`, one definition of each headline metric | Modules 7, 15 |
-| 99 | `validate` | fourteen checks that the dataset is complete. Run last | recommended |
+| # | Notebook | What it builds | Measured | Required |
+|---|---|---|---|---|
+| 01 | `catalog_and_schemas` | the schema, and the documents volume | 21s | yes |
+| 02 | `dimensions` | dates, asset classes, benchmarks, portfolios, funds, advisors, clients, accounts, FX rates | 1m 21s | yes |
+| 03 | `facts` | daily AUM snapshots, client flows, portfolio returns | 34s | yes |
+| 04 | `staging` | a 380-column custodian position feed and a superseded AUM extract | | Modules 6, 7, 12, 13 |
+| 05 | `governance` | row filter on advisor region, column masks on the client identifiers, certification tags | | Module 6 |
+| 06 | `curated` | month-end AUM and settled-flow views, a client view without identifiers, four UC functions | | Modules 7, 15 |
+| 07 | `metric_view` | `mfg_core_mv_wealth_metrics`, one definition of each headline metric | | Modules 7, 15 |
+| 99 | `validate` | fourteen checks that the dataset is complete. Run last | | recommended |
+
+Timings are from a single run on Databricks Free Edition, which is serverless. A warehouse that
+has gone cold will be slower on the first notebook. Notice that `02_dimensions` is the long pole
+rather than `03_facts`, even though `03` generates far more rows: `02` builds 2.9M accounts and
+2.1M clients, and by the time `03` runs the warehouse is warm.
 
 Only **01 to 03** are required. After those you have a working dataset; run `99` to confirm it.
 The rest are needed when the course reaches them, and `install()` prints which is which so you do

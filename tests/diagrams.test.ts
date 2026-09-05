@@ -9,6 +9,7 @@
  * nearly shipped.
  */
 import { renderFlow, renderLadder } from '../src/lib/diagrams'
+import { renderVideo } from '../src/lib/media'
 
 let passed = 0
 const failures: string[] = []
@@ -107,6 +108,36 @@ function check(name: string, cond: boolean, detail = '') {
   const html = renderLadder('Only one rung', [])
   check('ladder: single rung does not divide by zero', html.includes('width:100%'))
   check('ladder: no-axis flag honoured', !renderLadder('a\nb', ['no-axis']).includes('ladder-axis'))
+}
+
+// ── video ───────────────────────────────────────────────────────────────────
+{
+  const html = renderVideo('title: Provisioning walkthrough\nduration: 6 min\nsrc: tbd', [])
+  check('video: pending state when src is a placeholder', html.includes('video-pending'))
+  check('video: title kept', html.includes('Provisioning walkthrough'))
+  check('video: duration kept', html.includes('6 min'))
+  check('video: reserves the player box', html.includes('video-frame'))
+  check('video: no empty media element emitted', !html.includes('<video') && !html.includes('<iframe'))
+}
+
+{
+  const html = renderVideo('title: T\nsrc: /media/x.mp4\nposter: /media/x.jpg', [])
+  check('video: local file becomes a <video>', html.includes('<video') && html.includes('/media/x.mp4'))
+  check('video: poster applied', html.includes('poster="/media/x.jpg"'))
+  check('video: not pending once src is set', !html.includes('video-pending'))
+}
+
+{
+  const yt = renderVideo('title: T\nsrc: https://www.youtube.com/watch?v=dQw4w9WgXcQ', [])
+  check('video: youtube uses the no-cookie host',
+    yt.includes('youtube-nocookie.com/embed/dQw4w9WgXcQ'))
+  const vm = renderVideo('title: T\nsrc: https://vimeo.com/76979871', [])
+  check('video: vimeo embed', vm.includes('player.vimeo.com/video/76979871'))
+}
+
+{
+  const html = renderVideo('title: <script>x</script>\nsrc: tbd', [])
+  check('video: title escaped', !html.includes('<script>'))
 }
 
 // ── report ──────────────────────────────────────────────────────────────────

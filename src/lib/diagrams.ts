@@ -26,6 +26,8 @@
  * side, which is what makes a before/after comparison read as a comparison.
  */
 
+import { renderVideo } from './media'
+
 const ARROW = /\s*(?:→|->|➔)\s*/
 
 function esc(s: string): string {
@@ -164,10 +166,11 @@ export function renderLadder(body: string, flags: string[]): string {
   return `<figure class="ladder">${axis}<ol class="ladder-rungs">${items}</ol></figure>`
 }
 
-export const DIAGRAM_LANGS = ['flow', 'ladder'] as const
+export const DIAGRAM_LANGS = ['flow', 'ladder', 'video'] as const
 
 export function renderDiagram(lang: string, body: string, flags: string[]): string | null {
   if (lang === 'flow') return renderFlow(body, flags)
   if (lang === 'ladder') return renderLadder(body, flags)
+  if (lang === 'video') return renderVideo(body, flags)
   return null
 }
