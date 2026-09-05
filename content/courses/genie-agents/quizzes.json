@@ -1,50 +1,4 @@
 {
-  "0": [
-    {
-      "q": "Why does the seed data derive every value from hash() of the row key rather than rand()?",
-      "options": [
-        "So every learner's data is identical, which is what lets later checks compare against a known answer",
-        "Because rand() is slower on a SQL warehouse",
-        "To keep the generated tables smaller",
-        "Because Unity Catalog does not permit rand() in a CREATE TABLE AS SELECT"
-      ],
-      "answer": 0,
-      "why": "Determinism is why a benchmark can have a known-correct answer. Random seeding would give every learner different numbers, and any comparison against an expected result would be meaningless."
-    },
-    {
-      "q": "What is the grain of mfg.core.fct_loan_balances?",
-      "options": [
-        "One row per account per day (a daily snapshot)",
-        "One row per account",
-        "One row per loan payment",
-        "One row per account per month"
-      ],
-      "answer": 0,
-      "why": "It is a daily snapshot. SUM(principal_balance) across a month is roughly 30× too large — the 'plausible wrong number' trap taught in Module 9."
-    },
-    {
-      "q": "When does Meridian's fiscal year start?",
-      "options": [
-        "October 1",
-        "January 1",
-        "February 1",
-        "April 1"
-      ],
-      "answer": 0,
-      "why": "FY2026 runs 2025-10-01 to 2026-09-30. This is why 'last year' is ambiguous and needs a fiscal-calendar instruction."
-    },
-    {
-      "q": "Why does the dataset ship a Small tier (20M transactions) and a Large tier (900M)?",
-      "options": [
-        "Query latency cannot be measured meaningfully on a small dataset, but most work does not need a large one",
-        "The Large tier contains extra tables the Small tier omits",
-        "Small is for SQL warehouses and Large is for clusters",
-        "Large is required for the governance exercises"
-      ],
-      "answer": 0,
-      "why": "Small covers almost everything and stays fast. The Large tier exists for the performance work, where a toy dataset would make every query look instant."
-    }
-  ],
   "1": [
     {
       "q": "The Head of Wealth asks for last quarter AUM, then asks four follow-up questions. What does a three-day turnaround actually cost her?",
@@ -55,7 +9,7 @@
         "The dashboard becomes out of date"
       ],
       "answer": 0,
-      "why": "Each question only exists because the previous one was answered. Latency does not slow that chain down, it ends it — usually around question four, which is where the useful insight tends to sit."
+      "why": "Each question only exists because the previous one was answered. Latency does not slow that chain down, it ends it \u2014 usually around question four, which is where the useful insight tends to sit."
     },
     {
       "q": "Which sentence tells you someone needs a Genie Agent built, rather than Genie One?",
@@ -77,7 +31,7 @@
         "Genie One with a dashboard"
       ],
       "answer": 0,
-      "why": "Genie Code sits in the workspace alongside the work — writing, debugging and explaining SQL and Spark. It is also where you tune an agent later in the course, along with the Genie Workbench."
+      "why": "Genie Code sits in the workspace alongside the work \u2014 writing, debugging and explaining SQL and Spark. It is also where you tune an agent later in the course, along with the Genie Workbench."
     },
     {
       "q": "Asking for Wealth AUM at the end of Q2 sounds like one question. Why is it really six?",
@@ -93,13 +47,13 @@
     {
       "q": "What does the new-analyst analogy tell you about building a Genie Agent?",
       "options": [
-        "The work is onboarding — definitions, trusted sources, calculations, relationships and exceptions",
+        "The work is onboarding \u2014 definitions, trusted sources, calculations, relationships and exceptions",
         "The agent should be given access to as many tables as possible",
         "An agent needs a few weeks of use before it becomes accurate",
         "Agents learn your business automatically from query history"
       ],
       "answer": 0,
-      "why": "You would not hand a new analyst four thousand tables and tell her to figure out AUM. Everything you would teach a person is what the agent needs — and what you forget to mention is where it goes wrong."
+      "why": "You would not hand a new analyst four thousand tables and tell her to figure out AUM. Everything you would teach a person is what the agent needs \u2014 and what you forget to mention is where it goes wrong."
     },
     {
       "q": "Which question separates a demo from a production-quality Genie Agent?",
@@ -113,7 +67,7 @@
       "why": "Demos are easy and almost always succeed on the first try. Consistency, trusted definitions and provable accuracy are the bar that takes real curation to reach."
     },
     {
-      "q": "Of the four ingredients — AI, Data, Business Context, Governance — which is described as the actual work, and the one most often skipped?",
+      "q": "Of the four ingredients \u2014 AI, Data, Business Context, Governance \u2014 which is described as the actual work, and the one most often skipped?",
       "options": [
         "Business Context",
         "AI",
@@ -121,7 +75,7 @@
         "Governance"
       ],
       "answer": 0,
-      "why": "The AI comes for free and is nobody differentiator. Data is necessary but nowhere near sufficient. Business context — definitions, synonyms, rules, worked examples — is what teams skip, then wonder why answers drift."
+      "why": "The AI comes for free and is nobody differentiator. Data is necessary but nowhere near sufficient. Business context \u2014 definitions, synonyms, rules, worked examples \u2014 is what teams skip, then wonder why answers drift."
     }
   ],
   "2": [
@@ -134,7 +88,7 @@
         "Show net fee revenue by region for FY2026 Q3"
       ],
       "answer": 0,
-      "why": "Genie retrieves and computes; it does not diagnose causes. Ask for the evidence — the trend, the breakdown — and draw the conclusion yourself."
+      "why": "Genie retrieves and computes; it does not diagnose causes. Ask for the evidence \u2014 the trend, the breakdown \u2014 and draw the conclusion yourself."
     },
     {
       "q": "You ask a question, then follow up with 'only for the Northeast'. When does that context apply?",
@@ -156,7 +110,7 @@
         "It reports a bug to Databricks support"
       ],
       "answer": 0,
-      "why": "Feedback is how authors find problems. A thumbs-up can even prompt Genie to suggest a new reusable snippet — so rating is not a formality."
+      "why": "Feedback is how authors find problems. A thumbs-up can even prompt Genie to suggest a new reusable snippet \u2014 so rating is not a formality."
     }
   ],
   "3": [
@@ -204,12 +158,12 @@
         "Chat history"
       ],
       "answer": 0,
-      "why": "Trusted assets say 'use this exact logic'. Plain-text instructions rank weakest — they are the last resort, not the first tool."
+      "why": "Trusted assets say 'use this exact logic'. Plain-text instructions rank weakest \u2014 they are the last resort, not the first tool."
     },
     {
       "q": "Do benchmarks improve Genie's answers?",
       "options": [
-        "No — they only measure accuracy",
+        "No \u2014 they only measure accuracy",
         "Yes, they act as extra examples",
         "Yes, but only in Agent mode",
         "Only if they include ground-truth SQL"
@@ -220,7 +174,7 @@
     {
       "q": "Which layer is the only real guarantee of Genie's behaviour?",
       "options": [
-        "Unity Catalog — row filters, column masks and grants",
+        "Unity Catalog \u2014 row filters, column masks and grants",
         "The knowledge store",
         "Trusted assets",
         "The benchmark set"
@@ -244,10 +198,10 @@
     {
       "q": "At Meridian, how many distinct meanings does 'delinquent' carry in active business use?",
       "options": [
-        "Four — 30+ DPD, 90+ DPD, default, and charge-off",
-        "Two — current and past due",
+        "Four \u2014 30+ DPD, 90+ DPD, default, and charge-off",
+        "Two \u2014 current and past due",
         "One, defined by Credit Risk",
-        "Three — 30, 60 and 90 days"
+        "Three \u2014 30, 60 and 90 days"
       ],
       "answer": 0,
       "why": "Business users use all four interchangeably. Until someone decides, no amount of curation produces a consistent answer."
@@ -266,7 +220,7 @@
     {
       "q": "Which statement best captures this module's teaching line?",
       "options": [
-        "Genie didn't get it wrong — your company has three answers and never picked one",
+        "Genie didn't get it wrong \u2014 your company has three answers and never picked one",
         "Genie needs more example queries",
         "Business users ask badly formed questions",
         "Metric views solve definition problems automatically"
@@ -279,7 +233,7 @@
     {
       "q": "Which credential type determines what data a user can see?",
       "options": [
-        "Data credentials — the asking user's own identity",
+        "Data credentials \u2014 the asking user's own identity",
         "Compute credentials embedded by the author",
         "The agent's service principal",
         "The warehouse owner's identity"
@@ -296,7 +250,7 @@
         "Restricting the agent to CAN VIEW"
       ],
       "answer": 0,
-      "why": "An instruction is guidance, not a control — demonstrate it failing. Masks and row filters are the only enforcement."
+      "why": "An instruction is guidance, not a control \u2014 demonstrate it failing. Masks and row filters are the only enforcement."
     },
     {
       "q": "340 branch managers need to ask questions and give feedback but must not change business logic. Which level?",
@@ -318,7 +272,7 @@
         "The agent has a join error"
       ],
       "answer": 0,
-      "why": "Same agent, same question, three correct answers. Genie leaked nothing — this is the governance model working."
+      "why": "Same agent, same question, three correct answers. Genie leaked nothing \u2014 this is the governance model working."
     }
   ],
   "7": [
@@ -348,7 +302,7 @@
       "q": "When should you build a metric view instead of curating the metric inside the agent?",
       "options": [
         "When the metric must mean the same thing across several agents, dashboards and reports",
-        "Always — agents should contain no metrics",
+        "Always \u2014 agents should contain no metrics",
         "Only when you exceed 30 tables",
         "Only for metrics used in Agent mode"
       ],
@@ -359,7 +313,7 @@
       "q": "Genie Code suggests a description for fee_revenue. What should you do?",
       "options": [
         "Verify it against the business definition before accepting",
-        "Accept it — it read the data",
+        "Accept it \u2014 it read the data",
         "Bulk-accept all suggestions, then fix failures later",
         "Reject all AI suggestions on principle"
       ],
@@ -382,7 +336,7 @@
     {
       "q": "A 'common question' starter chip returns a wrong answer. How should this be treated?",
       "options": [
-        "As a P1 bug — it is the first thing every new user clicks",
+        "As a P1 bug \u2014 it is the first thing every new user clicks",
         "As low priority, since starters are just examples",
         "As expected variation",
         "As a benchmark failure only"
@@ -393,7 +347,7 @@
     {
       "q": "Which agent description is more useful to a business user in Genie One?",
       "options": [
-        "'Retail Banking & Deposits — net fee revenue, deposit growth, delinquency for branches and regions. Owner: Retail Analytics. Fiscal calendar (Oct 1).'",
+        "'Retail Banking & Deposits \u2014 net fee revenue, deposit growth, delinquency for branches and regions. Owner: Retail Analytics. Fiscal calendar (Oct 1).'",
         "'Banking agent'",
         "'Agent built on mfg.core'",
         "'Retail Banking v2 (final)'"
@@ -423,12 +377,12 @@
         "Unlimited columns, 100 values each"
       ],
       "answer": 0,
-      "why": "Enable it for every low-cardinality categorical column users name out loud — region, state, status, channel, category."
+      "why": "Enable it for every low-cardinality categorical column users name out loud \u2014 region, state, status, channel, category."
     },
     {
       "q": "Genie reports the loan book as $1.4 trillion instead of $47 billion. What is the root cause?",
       "options": [
-        "It summed a daily snapshot across dates — no cardinality declared and no latest-snapshot filter",
+        "It summed a daily snapshot across dates \u2014 no cardinality declared and no latest-snapshot filter",
         "The warehouse was too small",
         "A currency conversion error",
         "It used gross rather than net figures"
@@ -461,7 +415,7 @@
       "why": "It is separate from the 200 knowledge-store snippets. Leaving headroom for what monitoring reveals is professional practice."
     },
     {
-      "q": "What happens when a text instruction block grows past roughly 5,000–7,000 characters?",
+      "q": "What happens when a text instruction block grows past roughly 5,000\u20137,000 characters?",
       "options": [
         "A warning appears and Genie may silently ignore parts of it",
         "The save is rejected",
@@ -469,7 +423,7 @@
         "It is truncated with a visible marker"
       ],
       "answer": 0,
-      "why": "Prose does not just rank lowest in the influence hierarchy — past a certain length it can be dropped without telling you."
+      "why": "Prose does not just rank lowest in the influence hierarchy \u2014 past a certain length it can be dropped without telling you."
     },
     {
       "q": "How should you title an example SQL query?",
@@ -515,7 +469,7 @@
         "Agent mode cannot be benchmarked"
       ],
       "answer": 0,
-      "why": "Because the two scores are produced differently, they are not comparable — never average them."
+      "why": "Because the two scores are produced differently, they are not comparable \u2014 never average them."
     },
     {
       "q": "You correct Genie's bad SQL in a response. What is the highest-value next step?",
@@ -526,7 +480,7 @@
         "Delete the conversation"
       ],
       "answer": 0,
-      "why": "Every 'Fix it' is a free curation task with the answer already attached — that is what makes the fix permanent."
+      "why": "Every 'Fix it' is a free curation task with the answer already attached \u2014 that is what makes the fix permanent."
     },
     {
       "q": "Why is a single before/after comparison insufficient evidence that a change helped?",
@@ -579,13 +533,13 @@
     {
       "q": "In a typical slow Genie response, where does most of the time go?",
       "options": [
-        "Thinking — routing, reading context and writing SQL (~20s+)",
+        "Thinking \u2014 routing, reading context and writing SQL (~20s+)",
         "Query execution (~20s+)",
         "Rendering the visualisation",
         "Fetching results from the warehouse"
       ],
       "answer": 0,
-      "why": "Query execution is usually only 3–10 seconds. This is why doubling the warehouse so often changes nothing."
+      "why": "Query execution is usually only 3\u201310 seconds. This is why doubling the warehouse so often changes nothing."
     },
     {
       "q": "What is the SQL query time limit, and can it be raised?",
@@ -612,18 +566,18 @@
     {
       "q": "A naive polling loop in your own integration was measured adding how much delay?",
       "options": [
-        "About 6–8 seconds",
+        "About 6\u20138 seconds",
         "Under 1 second",
         "About 30 seconds",
         "It adds none"
       ],
       "answer": 0,
-      "why": "Instrument your poll loop as its own span. That latency is yours, not Genie's — and it gets blamed on Genie."
+      "why": "Instrument your poll loop as its own span. That latency is yours, not Genie's \u2014 and it gets blamed on Genie."
     },
     {
       "q": "query.history shows a high waiting_at_capacity_duration_ms. What does that point to?",
       "options": [
-        "Warehouse queueing or overload — scale up, use auto mode, or dedicate a warehouse",
+        "Warehouse queueing or overload \u2014 scale up, use auto mode, or dedicate a warehouse",
         "Too much context for the model to read",
         "A cold start",
         "A slow federated join"
@@ -636,7 +590,7 @@
     {
       "q": "Which piece of evidence matters most when filing a Genie issue?",
       "options": [
-        "The message ID — captured before starting a fresh chat",
+        "The message ID \u2014 captured before starting a fresh chat",
         "A screenshot of the answer",
         "The warehouse size",
         "The number of tables in the agent"
@@ -658,8 +612,8 @@
     {
       "q": "The SQL ran correctly but the response says 'AI service did not respond with a valid answer'. What is this?",
       "options": [
-        "A platform bug in the answer-assembly step — file it with the message ID",
-        "A curation problem — add more examples",
+        "A platform bug in the answer-assembly step \u2014 file it with the message ID",
+        "A curation problem \u2014 add more examples",
         "A permissions error",
         "Expected variation"
       ],
@@ -669,7 +623,7 @@
     {
       "q": "A customer demands guaranteed identical answers every time. Where does that requirement land?",
       "options": [
-        "On Unity Catalog — row and column security",
+        "On Unity Catalog \u2014 row and column security",
         "On the knowledge store",
         "On the benchmark set",
         "On Agent mode"
@@ -682,7 +636,7 @@
     {
       "q": "How much free monthly LLM allowance does a service principal get?",
       "options": [
-        "None — all its usage is charged",
+        "None \u2014 all its usage is charged",
         "The same as a user",
         "Half a user's allowance",
         "It cannot be billed"
@@ -715,7 +669,7 @@
   ],
   "16": [
     {
-      "q": "What is the default architectural choice — a Supervisor Agent or calling Genie directly?",
+      "q": "What is the default architectural choice \u2014 a Supervisor Agent or calling Genie directly?",
       "options": [
         "Call Genie directly; add a supervisor only for what Genie structurally lacks",
         "Always use a supervisor for production",
@@ -745,7 +699,7 @@
         "Sequential integers"
       ],
       "answer": 0,
-      "why": "Collections must also be alphabetically sorted, and join_specs.sql needs exactly two elements — the condition and a relationship-type annotation."
+      "why": "Collections must also be alphabetically sorted, and join_specs.sql needs exactly two elements \u2014 the condition and a relationship-type annotation."
     },
     {
       "q": "What do you lose by collapsing an integration to a single service principal?",
@@ -753,7 +707,7 @@
         "Per-user row filters and column masks, plus the free LLM allowance",
         "Only the free LLM allowance",
         "Only Agent mode support",
-        "Nothing — it is the recommended pattern"
+        "Nothing \u2014 it is the recommended pattern"
       ],
       "answer": 0,
       "why": "In a bank that is a control failure, not an optimisation. Preserve user identity."
@@ -780,7 +734,7 @@
         "Include a Supervisor Agent"
       ],
       "answer": 0,
-      "why": "Stating limits is a graded requirement — it is what makes an agent trustworthy in production."
+      "why": "Stating limits is a graded requirement \u2014 it is what makes an agent trustworthy in production."
     },
     {
       "q": "The capstone requires a performance baseline. What must it show?",

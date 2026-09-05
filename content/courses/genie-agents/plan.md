@@ -66,10 +66,6 @@ Three published **tracks** from one build:
 
 **Deliverable:** a working lab environment for every other module.
 
-Setup is quick. The three notebooks took **2 minutes 16 seconds** end to end on Databricks Free
-Edition. The rest of this module is the twenty minutes you spend reading the data afterwards,
-which is the part that matters.
-
 > **Why this is a module and not an appendix.** Every later module works on this data.
 > Provisioning it yourself, and actually looking at it, is what makes the rest of the course
 > concrete rather than theoretical.
@@ -99,38 +95,10 @@ metric has more than one honest definition, and so does performance. Money movin
 own products isn't a sale. The reporting date isn't the last day of the month. And the business
 is regulated, so who can see which client is not a detail.
 
-### 0.2 Schema: one schema, `genie_agent`
-
-Twelve tables and one volume, all in a single schema.
-
-| Object | Grain | What it powers |
-|---|---|---|
-| `mfg_core_fct_aum_snapshot` | **account × day** | AUM, allocation, growth |
-| `mfg_core_fct_flows` | one money movement | sales, redemptions, net flows |
-| `mfg_core_fct_performance` | portfolio × date × period | returns against benchmark |
-| `mfg_core_dim_portfolio` | portfolio / mandate | discretionary vs advisory, strategy |
-| `mfg_core_dim_fund` | fund share class | pooled vehicles, fees |
-| `mfg_core_dim_asset_class` | asset class | allocation |
-| `mfg_core_dim_benchmark` | benchmark | benchmark-relative reporting |
-| `mfg_core_dim_client` | client | segmentation, and the PII |
-| `mfg_core_dim_account` | account | the join hub |
-| `mfg_core_dim_advisor` | advisor relationship | channel and region rollups |
-| `mfg_core_dim_date` | day | fiscal vs calendar, reporting dates |
-| `mfg_core_dim_fx_rate` | currency × day | multi-currency conversion |
-| `mfg_ref_documents` *(volume)* | files | Agent mode over unstructured files |
-
-Two things to notice before you start.
-
-An account holds **either** a separately managed portfolio **or** a pooled fund, never both, so
-`portfolio_id` and `fund_id` are each null about two-thirds of the time. That is normal here.
-
-The volume is created empty. It holds a document pack the course supplies later, and nothing you
-do today depends on it.
-
-### 0.3 Getting a workspace
+### 0.2 Getting a workspace
 
 You need a Databricks workspace with Unity Catalog and a SQL warehouse. If your firm has given
-you one, use it and skip to §0.4.
+you one, use it and skip to §0.3.
 
 Otherwise **Databricks Free Edition** is enough for this course. Sign up at
 `databricks.com/learn/free-edition` with an email address. There is no credit card and no cloud
@@ -149,7 +117,7 @@ Three things about Free Edition matter later:
 
 Once you can run `SELECT current_catalog()`, you are ready.
 
-### 0.4 Provisioning: one pip install
+### 0.3 Provisioning: one pip install
 
 The lab is installed by a package rather than assembled by hand. In a Databricks notebook:
 
@@ -178,27 +146,15 @@ Installed 'genie-agents' → /Workspace/Users/you@company.com/databricks360/geni
   Run these — the dataset is not usable without them:
     1. 01_catalog_and_schemas
     2. 02_dimensions
-    3. 03_facts   (slow)
+    3. 03_facts
+    99. 99_validate
 ```
 
-Read the third and fourth lines before running anything. They tell you exactly where your tables
-will be created, and `e.g.` shows a name you can paste into a query.
+Run those four in order. On Free Edition they take about two and a half minutes in total, most of
+it in `02_dimensions`, which builds 2.9M accounts and 2.1M clients.
 
 Because the install runs *inside* a notebook it authenticates as you, so there is no host, token
 or CLI profile to configure. It does not run the notebooks for you.
-
-#### The notebooks
-
-| # | Notebook | What it builds | Measured |
-|---|---|---|---|
-| 01 | `catalog_and_schemas` | the schema and the volume | 21s |
-| 02 | `dimensions` | dates, asset classes, benchmarks, portfolios, funds, advisors, clients, accounts, FX rates | 1m 21s |
-| 03 | `facts` | AUM snapshots, flows, performance | 34s |
-| 99 | `validate` | fourteen checks that the dataset is complete | seconds |
-
-Run 01, 02 and 03 in order, then 99. Notice that `02` is the long pole rather than `03`, even
-though `03` generates far more rows: `02` builds 2.9M accounts and 2.1M clients, and by the time
-`03` runs the warehouse is warm.
 
 `install()` also lists a few further notebooks. Ignore them for now; the modules that need them
 introduce them.
@@ -237,28 +193,27 @@ from 01, because each notebook is idempotent and will happily rebuild what alrea
 
 `99_validate` runs fourteen checks over the finished dataset. Every row should read **PASS**.
 
-```
-check_name                value_1                value_2                   detail
-fiscal calendar           730                    2                         first day 2024-10-01
-reporting dates           24 reporting dates     24 month ends             last business day
-asset class hierarchies   5 investment           3 regulatory              the two do not align
-advisor region codes      4 regions              16 states                 4 channels
-discretionary split       72.0% discretionary    28.0% advisory only       AUM and AUA differ by this
-aum snapshot grain        682x if summed         real book 98.5B           summed 67.2T
-held away assets          20.2% of rows          5.3% of managed value     the gap between AUM and AUA
-flow types and status     6 flow types           24.0% exchanges           7.0% not settled
-return definitions        2.99% avg gross        2.44% avg net             2.99% avg money weighted
-client identifiers        2.1M clients           10000 distinct ssn_last4  masking has something to protect
-multi-currency            4 currencies           EUR, GBP, JPY, USD        conversion needs an as-of-date join
-referential integrity     0 orphan snapshots     expected 0                every snapshot reaches an account
-determinism               1 value for PF000001   hash-derived, not rand()  identical for every learner
-row counts                20.0M flows            35.0M snapshots           2.1M clients
-```
+| Check | Result | Detail |
+|---|---|---|
+| fiscal calendar | 730 days, 2 fiscal years | first day 2024-10-01 |
+| reporting dates | 24 reporting dates, 24 month ends | last business day, not last calendar day |
+| asset class hierarchies | 5 investment, 3 regulatory | the two do not align |
+| advisor region codes | 4 regions, 16 states | 4 channels |
+| discretionary split | 72.0% discretionary, 28.0% advisory only | AUM and AUA differ by this |
+| aum snapshot grain | **682× if summed**, real book $98.5B | summed $67.2T |
+| held away assets | 20.2% of rows, 5.3% of managed value | the gap between AUM and AUA |
+| flow types and status | 6 flow types, 24.0% exchanges | 7.0% not settled |
+| return definitions | 2.99% gross, 2.44% net, 2.99% money weighted | three answers, same period |
+| client identifiers | 2.1M clients, 10,000 distinct `ssn_last4` | masking has something to protect |
+| multi-currency | 4 currencies | conversion needs an as-of-date join |
+| referential integrity | 0 orphan snapshots | every snapshot reaches an account |
+| determinism | 1 value for `PF000001` | identical for every learner |
+| row counts | 20.0M flows, 35.0M snapshots, 2.1M clients | |
 
-It prints numbers as well as verdicts, and the numbers are the point. Three of them are worth
-sitting with:
+It prints numbers as well as verdicts, and the numbers are the point. Three are worth sitting
+with:
 
-- **682x if summed.** The AUM table is a daily snapshot, so adding it up across dates turns a
+- **682× if summed.** The AUM table is a daily snapshot, so adding it up across dates turns a
   $98.5B book into $67.2T. Nothing errors. You simply get a confident, catastrophic number.
 - **72% discretionary, 28% advisory only.** Whether the advisory portfolios belong in "AUM"
   changes the headline by more than a quarter, and reasonable people answer that differently.
@@ -266,18 +221,45 @@ sitting with:
 
 You will meet all three again.
 
-#### Why the data is deterministic
+### 0.4 Schema: one schema, `genie_agent`
 
-Every value derives from `hash()` of the row key rather than `rand()`, and ages anchor to a fixed
-date rather than `current_date`. So your data is byte-identical to every other learner's, which
-is what lets a benchmark's ground-truth SQL return the same answer for everyone. Random seeding
-would silently invalidate an entire benchmark set, and you would only notice when the scores
-stopped making sense.
+Now that the tables exist, here is what each one is for. Twelve tables and one volume, all in a
+single schema.
+
+| Object | Grain | What it powers |
+|---|---|---|
+| `mfg_core_fct_aum_snapshot` | **account × day** | AUM, allocation, growth |
+| `mfg_core_fct_flows` | one money movement | sales, redemptions, net flows |
+| `mfg_core_fct_performance` | portfolio × date × period | returns against benchmark |
+| `mfg_core_dim_portfolio` | portfolio / mandate | discretionary vs advisory, strategy |
+| `mfg_core_dim_fund` | fund share class | pooled vehicles, fees |
+| `mfg_core_dim_asset_class` | asset class | allocation |
+| `mfg_core_dim_benchmark` | benchmark | benchmark-relative reporting |
+| `mfg_core_dim_client` | client | segmentation, and the PII |
+| `mfg_core_dim_account` | account | the join hub |
+| `mfg_core_dim_advisor` | advisor relationship | channel and region rollups |
+| `mfg_core_dim_date` | day | fiscal vs calendar, reporting dates |
+| `mfg_core_dim_fx_rate` | currency × day | multi-currency conversion |
+| `mfg_ref_documents` *(volume)* | files | Agent mode over unstructured files |
+
+Two things to notice as you browse them.
+
+An account holds **either** a separately managed portfolio **or** a pooled fund, never both, so
+`portfolio_id` and `fund_id` are each null about two-thirds of the time. That is normal here.
+
+The volume is empty. It holds a document pack the course supplies later, and nothing you do today
+depends on it.
+
+**Why the data is deterministic.** Every value derives from `hash()` of the row key rather than
+`rand()`, and ages anchor to a fixed date rather than `current_date`. So your data is
+byte-identical to every other learner's, which is what lets a benchmark's ground-truth SQL return
+the same answer for everyone. Random seeding would silently invalidate an entire benchmark set,
+and you would only notice when the scores stopped making sense.
 
 ### Lab 0 (60 min)
 
-1. Install the package and run `01`, `02` and `03` in order.
-2. Run `99_validate`. All fourteen checks should read PASS.
+1. Install the package and run `01`, `02`, `03` and `99` in order.
+2. Check that all fourteen validate rows read PASS.
 3. Now **read the data for twenty minutes.** Open each table, look at the column comments, and run
    whatever occurs to you. Then write down:
    - three questions a business user might ask that this data could answer **two different ways**,
@@ -297,8 +279,6 @@ title: Set up Databricks Free Edition and install the Meridian dataset
 duration: to be confirmed
 src: tbd
 ```
-
-### Knowledge check
 
 ## Module 1 — What Is Genie, and Which Genie Do You Need?
 **Level:** Beginner · **Duration:** 45 min · **Audience:** everyone
