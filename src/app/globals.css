@@ -90,6 +90,11 @@
     --tw-prose-th-borders: rgb(var(--line));
     --tw-prose-td-borders: rgb(var(--line));
     --tw-prose-code: rgb(var(--ink));
+    /* Tailwind Typography styles `pre` for a dark panel: --tw-prose-pre-code
+       defaults to neutral-200, which is unreadable once the panel is light.
+       Both halves have to be reclaimed or the text stays washed out. */
+    --tw-prose-pre-code: rgb(var(--ink));
+    --tw-prose-pre-bg: rgb(var(--code));
   }
 
   .prose-course :where(h2) {
