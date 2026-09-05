@@ -62,31 +62,34 @@ Three published **tracks** from one build:
 
 **Deliverable:** a working lab environment for every other module.
 
-Most of the 90 minutes is the warehouse working, not you. `03_facts` alone takes several
-minutes to generate 20M flow events and 36M AUM snapshots. Start it, then read §0.1 and §0.2
-while it runs.
+Most of the 90 minutes is the warehouse working rather than you. `03_facts` alone takes several
+minutes to generate 20M flow events and roughly 36M AUM snapshots. Start it, then read §0.1 and
+§0.2 while it runs.
 
-> **Why this is a module and not an appendix.** Every later module works on one bank's data. Provisioning it yourself — and spending twenty minutes actually looking at it — is what makes the rest of the course concrete rather than theoretical. Instructors may pre-provision it and assign this module as pre-work.
+> **Why this is a module and not an appendix.** Every later module works on one firm's data.
+> Provisioning it yourself, and spending twenty minutes actually looking at it, is what makes the
+> rest of the course concrete rather than theoretical. Instructors may pre-provision it and
+> assign this module as pre-work.
 
 ### Learning outcomes
 1. Provision the course dataset in Unity Catalog.
 2. Describe what Meridian's business does and which tables record it.
 3. Read the data closely enough to notice where a question could have more than one honest answer.
 
-### 0.1 The company — *Meridian Financial Group (MFG)*
-A mid-size US investment manager. Roughly **$430B** under management across **4,500
-portfolios** and **180 fund share classes**, sold through four channels: **Intermediary**
-(advisor-sold funds), **Institutional** (mandates and sub-advisory), **Retirement** (defined
-contribution plans), and **Private Client** (high-net-worth). About 2.1M underlying clients,
-3,400 advisor relationships, and international portfolios reporting in EUR, GBP and JPY as
-well as USD.
+### 0.1 The company: Meridian Financial Group (MFG)
 
-Asset management is the right domain for this course because it forces every hard lesson
-naturally. The headline metric has more than one honest definition. Performance has four.
-Money moving between your own products isn't a sale. The reporting date isn't the last day of
-the month. And the whole business is regulated, so who sees which client is not a detail.
+A mid-size US investment manager. Roughly **$430B** under management across **4,500 portfolios**
+and **180 fund share classes**, sold through four channels: **Intermediary** (advisor-sold
+funds), **Institutional** (mandates and sub-advisory), **Retirement** (defined contribution
+plans), and **Private Client** (high-net-worth). Behind those sit about 2.1M clients, 3,400
+advisor relationships, and international portfolios reporting in EUR, GBP and JPY as well as USD.
 
-### 0.2 Schema — one schema, `genie_agent`
+Asset management suits this course because it forces every hard lesson naturally. The headline
+metric has more than one honest definition, and so does performance. Money moving between your
+own products isn't a sale. The reporting date isn't the last day of the month. And the business
+is regulated, so who can see which client is not a detail.
+
+### 0.2 Schema: one schema, `genie_agent`
 
 | Object | Grain | Key columns | What it powers |
 |---|---|---|---|
@@ -95,31 +98,34 @@ the month. And the whole business is regulated, so who sees which client is not 
 | `mfg_core_fct_performance` | portfolio × reporting date × period | `portfolio_id, benchmark_id, as_of_date, period_type, twr_gross, twr_net, mwr, benchmark_return` | returns, benchmark-relative performance |
 | `mfg_core_dim_portfolio` | portfolio / mandate | `portfolio_id, asset_class_code, benchmark_id, strategy, is_discretionary, base_currency, inception_date, status` | discretionary vs advisory, strategy rollups |
 | `mfg_core_dim_fund` | fund share class | `fund_id, fund_name, share_class, asset_class_code, vehicle_type, expense_ratio` | pooled vehicles, fee analysis |
-| `mfg_core_dim_asset_class` | asset class | `asset_class_code, asset_class_name, investment_class, regulatory_class` | allocation — and two hierarchies |
+| `mfg_core_dim_asset_class` | asset class | `asset_class_code, asset_class_name, investment_class, regulatory_class` | allocation, and two hierarchies |
 | `mfg_core_dim_benchmark` | benchmark | `benchmark_id, benchmark_name, asset_class_code` | benchmark-relative reporting |
-| `mfg_core_dim_client` | client | `client_id, client_segment, advisor_id, domicile, tenure_months, ssn_last4, email, dob, annual_income` | segmentation — and the PII |
+| `mfg_core_dim_client` | client | `client_id, client_segment, advisor_id, domicile, tenure_months, ssn_last4, email, dob, annual_income` | segmentation, and the PII |
 | `mfg_core_dim_account` | account | `account_id, client_id, portfolio_id, fund_id, opened_date, closed_date, status` | the join hub |
 | `mfg_core_dim_advisor` | advisor relationship | `advisor_id, advisor_name, region, state, channel, onboarded_date` | channel and region rollups, row-level security |
 | `mfg_core_dim_date` | day | `date_key, fiscal_year, fiscal_quarter, calendar_quarter, is_business_day, is_month_end, is_reporting_date` | fiscal vs calendar, reporting dates |
 | `mfg_core_dim_fx_rate` | currency × day | `currency, rate_date, usd_rate` | multi-currency conversion |
 | `mfg_staging_fct_holdings_raw` | position × month end | 380 columns from the custodian feed | scoping and latency exercises |
 | `mfg_staging_fct_aum_legacy` | account × month end | `account_id, report_date, aum, currency` | certify and deprecate |
-| `mfg_ref_documents` *(volume)* | PDFs | investment committee memos, advisor notes, client complaint letters | Agent mode over unstructured files |
+| `mfg_ref_documents` *(volume)* | files | investment committee memos, advisor notes, client complaint letters | Agent mode over unstructured files |
 
-An account holds **either** a separately managed portfolio **or** a pooled fund, never both —
-so `portfolio_id` and `fund_id` are each null about two-thirds of the time. That is normal in
-this business and worth noticing early.
+An account holds **either** a separately managed portfolio **or** a pooled fund, never both, so
+`portfolio_id` and `fund_id` are each null about two-thirds of the time. That is normal in this
+business and worth noticing early.
 
-### 0.3 Provisioning — one pip install
+The volume is created empty. Your instructor supplies the document pack that Modules 3 and 16
+use; nothing before those modules depends on it.
 
-The lab is installed by a package, not assembled by hand. In a Databricks notebook:
+### 0.3 Provisioning: one pip install
+
+The lab is installed by a package rather than assembled by hand. In a Databricks notebook:
 
 ```python
 %pip install databricks360
 dbutils.library.restartPython()
 ```
 
-Then in a **new cell** — `restartPython()` clears everything, so the import cannot share a
+Then in a **new cell**, because `restartPython()` clears everything and the import cannot share a
 cell with the install:
 
 ```python
@@ -129,39 +135,65 @@ academy.list_courses()
 academy.install('genie-agents')
 ```
 
-That writes the lab notebooks into your workspace and prints the run order:
+That writes the lab notebooks into your workspace and prints where everything will land:
 
 ```
 Installed 'genie-agents' → /Workspace/Users/you@company.com/databricks360/genie-agents
-  catalog: mfg    tier: small
+  tier: small
+  single schema: current_catalog().genie_agent    table prefix: mfg_<group>_
+  e.g. genie_agent.mfg_core_dim_date
 
-  Run these in order:
+  Run these — the dataset is not usable without them:
     1. 01_catalog_and_schemas
     2. 02_dimensions
     3. 03_facts   (slow)
+
+  Then, as the course needs them:
+    4. 04_staging  — Modules 6, 7, 12, 13
+    5. 05_governance   (needs admin)  — Module 6
+    6. 06_curated  — Modules 7, 15
+    7. 07_metric_view   (after 06_curated)  — Modules 7, 15
+    99. 99_validate  — checking your install
 ```
 
-Because it runs *inside* a notebook, it authenticates as you — there is no host, token or CLI
-profile to configure.
+Read the third and fourth lines before you run anything. They tell you exactly where your tables
+will be created, and `e.g.` shows a fully qualified name you can paste straight into a query.
 
-**It does not run the notebooks for you.** Watching a warehouse work through 20M flow
-events is part of the point, and nothing should spend compute without being asked.
+Because the install runs *inside* a notebook, it authenticates as you. There is no host, token or
+CLI profile to configure.
+
+**It does not run the notebooks for you.** Watching a warehouse work through 20M flow events is
+part of the point, and nothing should spend compute without being asked.
+
+#### Built for restricted workspaces
+
+By default the lab creates **no catalog**. It lands in whatever `SELECT current_catalog()`
+returns, in a single schema called `genie_agent`, with table names prefixed by group:
+`genie_agent.mfg_core_dim_date`, `genie_agent.mfg_staging_fct_aum_legacy`, and so on.
+
+That default exists because most regulated workspaces do not grant `CREATE CATALOG`, and a lab
+that assumes otherwise fails on its first statement. If you do hold the privilege, or you have
+been given a catalog, you can say so.
 
 #### The notebooks
 
-| # | Notebook | What it builds | Status |
+| # | Notebook | What it builds | Required |
 |---|---|---|---|
-| 01 | `catalog_and_schemas` | the catalog, `core` / `ref` / `staging` schemas, the documents volume | shipped |
-| 02 | `dimensions` | dates, asset classes, benchmarks, portfolios, funds, advisors, clients, accounts, FX rates | shipped |
-| 03 | `facts` | daily AUM snapshots, client flows, portfolio returns. Slow: several minutes | shipped |
-| 04 | `staging` | a 380-column custodian position feed and a superseded AUM extract | shipped |
-| 05 | `governance` | row filter on advisor region, column masks on the client identifiers, certification tags | shipped |
-| 06 | `curated` | month-end AUM and settled-flow views, a client view without identifiers, four UC functions | shipped |
-| 07 | `metric_view` | `mfg_core_mv_wealth_metrics` — one definition of each headline metric | shipped |
-| 99 | `validate` | fourteen checks that the dataset is complete — run last | shipped |
+| 01 | `catalog_and_schemas` | the schema, and the documents volume | yes |
+| 02 | `dimensions` | dates, asset classes, benchmarks, portfolios, funds, advisors, clients, accounts, FX rates | yes |
+| 03 | `facts` | daily AUM snapshots, client flows, portfolio returns. Slow: several minutes | yes |
+| 04 | `staging` | a 380-column custodian position feed and a superseded AUM extract | Modules 6, 7, 12, 13 |
+| 05 | `governance` | row filter on advisor region, column masks on the client identifiers, certification tags | Module 6 |
+| 06 | `curated` | month-end AUM and settled-flow views, a client view without identifiers, four UC functions | Modules 7, 15 |
+| 07 | `metric_view` | `mfg_core_mv_wealth_metrics`, one definition of each headline metric | Modules 7, 15 |
+| 99 | `validate` | fourteen checks that the dataset is complete. Run last | recommended |
 
-Only **01 → 03** are required; after those you have a working dataset. Run `99` to confirm
-it. The rest are needed when the course reaches them, and `install()` prints which is which.
+Only **01 to 03** are required. After those you have a working dataset; run `99` to confirm it.
+The rest are needed when the course reaches them, and `install()` prints which is which so you do
+not have to remember.
+
+Notebook 05 needs workspace admin rights, because row filters and column masks are account-level
+objects. If you do not have them, skip it and read Module 6 rather than running it.
 
 #### Options
 
@@ -169,68 +201,85 @@ it. The rest are needed when the course reaches them, and `install()` prints whi
 academy.install(
     'genie-agents',
     path='/Workspace/Shared/labs',   # default: your home folder
-    catalog='training_v2',           # default: mfg
+    catalog='training_v2',           # default: current_catalog(), whatever that is for you
+    schema='my_sandbox',             # default: genie_agent
     tier='large',                    # default: small
+    create_catalog=True,             # default: False, and rarely permitted
     overwrite=True,                  # replace notebooks from a previous install
 )
 ```
 
-**Two data tiers.** **Small** (20M flow events) is the default and covers every module except
-13. **Large** (900M) exists only for Module 13, where query time has to be long enough to
-measure. Start small.
+The schema and the table prefix are a pair. Override neither and you get
+`genie_agent.mfg_core_dim_date`; name a schema of your own and the prefix drops away, giving
+`my_sandbox.dim_date`. That is deliberate, because the prefix only exists to keep three groups of
+tables apart inside one shared schema, and it is redundant once the schema is yours.
+
+**Two data tiers.** **Small** (20M flow events) is the default and covers every module except 13.
+**Large** (900M) exists only for Module 13, where query time has to be long enough to measure.
+Start small; you can install the large tier later into a different schema.
 
 #### Confirming the install
 
-`99_validate` runs fourteen checks over the finished dataset — grain, referential integrity,
-row counts, currency coverage, calendar and reporting-date correctness. Every row should read
-**PASS**.
+`99_validate` runs fourteen checks over the finished dataset, covering grain, referential
+integrity, row counts, currency coverage, and calendar and reporting-date correctness. Every row
+should read **PASS**.
 
 ```
-check_name              value_1              value_2               detail                       verdict
-fiscal calendar         730                  2                     first day 2024-10-01         PASS
-reporting dates         24 reporting dates   24 month ends         last business day            PASS
-referential integrity   0 orphan snapshots   expected 0            every snapshot has an account PASS
-row counts              20M flows            36M snapshots         2.1M clients                 PASS
+check_name              value_1               value_2         detail                              verdict
+fiscal calendar         730                   2               first day 2024-10-01                PASS
+reporting dates         24 reporting dates    24 month ends   last business day, not last cal…    PASS
+referential integrity   0 orphan snapshots    expected 0      every snapshot reaches an account   PASS
+determinism             1 value for PF000001  hash-derived    identical for every learner         PASS
+row counts              20M flows             36M snapshots   2.1M clients                        PASS
 ```
 
-It prints numbers as well as verdicts. Read them — you will be asked about several of them
+It prints numbers as well as verdicts. Read them, because you will be asked about several of them
 later, and a figure that surprises you now is worth writing down.
 
 #### Why the data is deterministic
 
 Every generated value derives from `hash()` of the row key rather than `rand()`, and ages and
-tenures anchor to a fixed 2026-09-30 rather than `current_date`. Two consequences worth
-understanding, because they explain a design choice you will meet again in Module 11:
+tenures anchor to a fixed 2026-09-30 rather than `current_date`. There are two consequences worth
+understanding, because they explain a design choice you meet again in Module 11:
 
 - Your data is **byte-identical** to every other learner's, so a benchmark's ground-truth SQL
   returns the same answer for everyone. Random seeding would silently invalidate the entire
-  benchmark set — and you would only notice when scores stopped making sense.
+  benchmark set, and you would only notice when scores stopped making sense.
 - Re-running a notebook reproduces the same rows instead of a fresh random draw.
 
-### 0.4 The three personas (used from Module 5 onward)
-| Persona | Role | Access |
-|---|---|---|
-| **Priya Raman** | Regional Manager, Northeast | row filter: `region = 'NE'`; PII masked |
-| **Marcus Chen** | Regional Manager, West | row filter: `region = 'WEST'`; PII masked |
-| **Elena Okafor** | CFO | unrestricted; PII masked except `annual_income` |
+### 0.4 The personas (used from Module 6 onward)
+
+Notebook 05 creates the account groups these personas belong to. The point of having four is that
+one question produces four different correct answers.
+
+| Persona | Role | Group | What they see |
+|---|---|---|---|
+| **Priya Raman** | Regional sales lead, Northeast | `mfg_region_ne` | advisors in NE only; client identifiers masked |
+| **Marcus Chen** | Regional sales lead, West | `mfg_region_west` | advisors in WEST only; client identifiers masked |
+| **Elena Okafor** | CFO | `mfg_finance` | no advisor rows at all, but `annual_income` is visible |
+| **Dev Anand** | Data steward | `mfg_unrestricted` | everything, unmasked |
+
+Elena's row is the interesting one, and Module 6 explains it: the region filter never mentions
+`mfg_finance`, so a question that joins the advisor dimension returns her nothing. An empty
+answer from a correctly configured filter looks exactly like a business with no activity.
 
 ### Lab 0 (60 min)
 1. `%pip install databricks360`, then `academy.install('genie-agents')`.
-2. Run `01_catalog_and_schemas`. Note which catalog the first cell reports — that is where
-   your lab lives.
+2. Run `01_catalog_and_schemas`. Note the catalog and schema the first cell reports, because that
+   is where your lab lives for the rest of the course.
 3. Run `02_dimensions`, then `03_facts`. Check the row counts each prints at the end.
-4. Run `99_validate`. All twelve checks should read PASS.
-5. Now **read the data for twenty minutes.** Open each table, look at the column comments,
-   and run whatever occurs to you. Then write down:
-   - three questions a business user might ask that this data could answer **two different
-     ways**, and why
+4. Run `99_validate`. All fourteen checks should read PASS.
+5. Now **read the data for twenty minutes.** Open each table, look at the column comments, and run
+   whatever occurs to you. Then write down:
+   - three questions a business user might ask that this data could answer **two different ways**,
+     and why
    - any column whose meaning you had to guess
    - the total value of assets Meridian manages, and how you decided which number that was
 
-   Keep the sheet. You return to it in Module 4, and the gap between what you noticed now
-   and what you know then is the most useful thing you will produce today.
+   Keep the sheet. You return to it in Module 4, and the gap between what you noticed now and what
+   you know then is the most useful thing you produce today.
 
-> Step 5 is the module. Steps 1–4 are typing.
+> Step 5 is the module. Steps 1 to 4 are typing.
 
 ### Knowledge check
 5 questions on the schema, the fiscal calendar, and the grain of each fact table.
