@@ -94,7 +94,7 @@ Everything in the video is written out below, so you can follow either one.
 
 ### 0.1 The company: Meridian Financial Group (MFG)
 
-A mid-size US investment manager. Roughly **$430B** under management across **4,500 portfolios**
+A mid-size US investment manager. Close to **$100B** under management across **4,500 portfolios**
 and **180 fund share classes**, sold through four channels: **Intermediary** (advisor-sold
 funds), **Institutional** (mandates and sub-advisory), **Retirement** (defined contribution
 plans), and **Private Client** (high-net-worth). Behind those sit about 2.1M clients, 3,400
@@ -295,13 +295,24 @@ integrity, row counts, currency coverage, and calendar and reporting-date correc
 should read **PASS**.
 
 ```
-check_name              value_1               value_2         detail                              verdict
-fiscal calendar         730                   2               first day 2024-10-01                PASS
-reporting dates         24 reporting dates    24 month ends   last business day, not last cal…    PASS
-referential integrity   0 orphan snapshots    expected 0      every snapshot reaches an account   PASS
-determinism             1 value for PF000001  hash-derived    identical for every learner         PASS
-row counts              20M flows             36M snapshots   2.1M clients                        PASS
+check_name                value_1                 value_2                  verdict
+fiscal calendar           730                     2                        PASS
+reporting dates           24 reporting dates      24 month ends            PASS
+asset class hierarchies   5 investment            3 regulatory             PASS
+advisor region codes      4 regions               16 states                PASS
+discretionary split       72.0% discretionary     28.0% advisory only      PASS
+aum snapshot grain        682x if summed          real book 98.5B          PASS
+held away assets          20.2% of rows           5.3% of managed value    PASS
+flow types and status     6 flow types            24.0% exchanges          PASS
+return definitions        2.99% avg gross         2.44% avg net            PASS
+client identifiers        2.1M clients            10000 distinct ssn_last4 PASS
+multi-currency            4 currencies            EUR, GBP, JPY, USD       PASS
+referential integrity     0 orphan snapshots      expected 0               PASS
+determinism               1 value for PF000001    hash-derived             PASS
+row counts                20.0M flows             35.0M snapshots          PASS
 ```
+
+Each row also prints a `detail` column, trimmed here for width.
 
 It prints numbers as well as verdicts. Read them, because you will be asked about several of them
 later, and a figure that surprises you now is worth writing down.
@@ -586,9 +597,9 @@ permitted at all, rather than an afterthought.
 
 ### Where this course goes
 
-You'll work with Meridian Financial Group throughout: a mid-size US investment manager with $430B
-across 4,500 portfolios, sold through intermediary, institutional, retirement and private-client
-channels. The course builds towards answering the sequence the Head of Wealth began with:
+You'll work with Meridian Financial Group throughout: a mid-size US investment manager with just
+under $100B across 4,500 portfolios, sold through intermediary, institutional, retirement and
+private-client channels. The course builds towards answering the sequence the Head of Wealth began with:
 
 > *"What was Wealth AUM at the end of Q2?"*
 >
@@ -2096,9 +2107,31 @@ Internal: *Genie Performance & Issues Playbook & Health Check* — source for Mo
 > Lab 0 asks learners to notice things for themselves. If you are taking the course rather
 > than teaching it, stop here and come back after Module 4.
 
-Every figure the modules quote is measured from a real provisioning run rather than
-estimated. Re-run `99_validate` after any change to the generators and update them if they
-move — a course that quotes stale numbers teaches learners to distrust it.
+Every figure the modules quote is measured from a real provisioning run rather than estimated.
+Re-run `99_validate` after any change to the generators and update them if they move: a course
+that quotes stale numbers teaches learners to distrust it.
+
+**Measured on Databricks Free Edition, small tier.** Provisioning: `01` 21s, `02` 1m 21s, `03`
+34s, 2m 16s in total. All fourteen checks PASS.
+
+| Property | Measured |
+|---|---|
+| Total managed book, latest snapshot | **$98.5B** |
+| Summing the snapshot across all dates | **$67.2T, or 682×** the real book |
+| Discretionary vs advisory-only | 72.0% / 28.0% |
+| Held-away assets | 20.2% of rows, but only 5.3% of managed value |
+| Exchanges as a share of flows | 24.0% |
+| Flows not settled (pending or cancelled) | 7.0% |
+| Average return, gross vs net | 2.99% vs 2.44% |
+| Asset-class hierarchies | 5 investment classes vs 3 regulatory |
+| Regions / states / channels | 4 / 16 / 4 |
+| Rows | 20.0M flows, 35.0M snapshots, 2.1M clients |
+
+Two of these are worth lifting straight into teaching. **682×** is the cost of summing a daily
+snapshot, and it is a far more arresting number than "too high". And held-away assets being 20.2%
+of rows but 5.3% of value is why the AUM-versus-AUA argument is worth having at all: the choice
+changes the headline by a few percent, not by a factor, which is exactly why nobody notices it is
+being made.
 
 ### F.1 The nine planted flaws
 
@@ -2109,7 +2142,7 @@ move — a course that quotes stale numbers teaches learners to distrust it.
 | **3** | `dim_advisor.region` ∈ `NE, SE, MW, WEST`; `state` ∈ `CA, NY, TX…`; `dim_asset_class.asset_class_code` ∈ `EQ_US, FI_CORP, MM_CASH…` — users say "Northeast", "California", "equities", "cash" | confident **zero rows**, or a silently dropped filter | 9, 12 |
 | **4** | **Net flows counted naively double-count exchanges.** `fct_flows.flow_type` includes `EXCHANGE_IN`/`EXCHANGE_OUT` — money moving between Meridian products, which should net to zero. `status` also includes `PENDING` and `CANCELLED` | gross sales and redemptions both inflated; net flows unchanged, so the error hides | 7, 9, 11 |
 | **5** | `dim_asset_class` carries **two hierarchies**: `investment_class` (how PMs think) vs `regulatory_class` (how reporting rolls up). An ETF of bonds is `FIXED_INCOME` in one and `POOLED_VEHICLE` in the other | rollups mix reporting frames; two answers to one allocation question | 7, 9 |
-| **6** | `fct_aum_snapshot` is a **daily snapshot** — summing it across dates multiplies the book by the number of days | **a plausible wrong number.** The scariest failure in the course, and the most natural mistake here, because AUM is inherently a point-in-time figure | 9, 11, 12 |
+| **6** | `fct_aum_snapshot` is a **daily snapshot** — summing it across dates multiplies the book by the number of days it has been carried, measured at **682×** | **a plausible wrong number.** The scariest failure in the course, and the most natural mistake here, because AUM is inherently a point-in-time figure | 9, 11, 12 |
 | **7** | **Return has three defensible readings** — `twr_gross`, `twr_net` (after fees) and `mwr` (money weighted) — each across six `period_type` values. `fct_performance` also carries `benchmark_return`, which is *not* the portfolio's return at all | several honest answers to "what was our return?" — the reason GIPS exists — plus a fourth column that silently answers a different question | 5, 9, 10, 11 |
 | **8** | `dim_client` holds real **PII**: `ssn_last4`, `email`, `dob`, `annual_income` | a governance incident, not a data-quality one | 6, 17 |
 | **9** | International portfolios report in **EUR, GBP and JPY**, needing `dim_fx_rate` joined *as of the reporting date*. `fct_flows` also separates `trade_date` from `settlement_date` | currency mixing; totals that don't tie to finance; flows landing in the wrong period | 9, 10 |
