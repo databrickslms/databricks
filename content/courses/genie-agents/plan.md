@@ -11,6 +11,8 @@
 
 ## Part A — Course Design
 
+**Summary:** How the course is put together: three tracks cut from one build, and which modules each audience takes.
+
 ### A.1 The one-sentence promise
 *"By the end of this course you can build a Genie Agent your business team actually trusts — you can prove it's right, you can explain why it's slow, and you know which problems aren't yours to fix."*
 
@@ -59,6 +61,8 @@ Three published **tracks** from one build:
 
 ## Module 0 — Build the Meridian Dataset
 **Level:** Setup · **Duration:** 90 min · **Audience:** Agent Author and Platform tracks
+
+**Summary:** Provision the course dataset in your own workspace, then read it closely enough to find the places where one question has more than one honest answer.
 
 **Deliverable:** a working lab environment for every other module.
 
@@ -292,6 +296,8 @@ answer from a correctly configured filter looks exactly like a business with no 
 
 ## Module 1 — What Is Genie, and Which Genie Do You Need?
 **Level:** Beginner · **Duration:** 45 min · **Audience:** everyone
+
+**Summary:** The three Genie experiences, who each one is for, and why an agent has to understand your business rather than merely read it.
 
 ### A question in a Monday meeting
 
@@ -574,6 +580,8 @@ disagreements are the interesting part, and they preview Module 5.
 ## Module 2 — Asking Questions That Actually Work
 **Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers — the whole of the Business User track
 
+**Summary:** What separates a question Genie can answer from one it can't, and how to sanity-check an answer before you act on it.
+
 ### Learning outcomes
 1. Write questions Genie can answer, and recognise the ones it can't.
 2. Name the four things every answerable question needs.
@@ -667,6 +675,8 @@ question is the skill being tested.
 ## Module 3 — Chat Mode vs Agent Mode (Answers vs Research)
 **Level:** Beginner–Intermediate · **Duration:** 45 min
 
+**Summary:** When a single query is enough, when the question needs research, and what Agent mode costs you in time and spend.
+
 ### Learning outcomes
 1. Choose the right mode for a question.
 2. Set expectations on speed, depth and cost.
@@ -736,6 +746,8 @@ answering usefully needs several. Spotting those is the point of the lab.
 ## Module 4 — Under the Hood: The Compound AI System
 **Level:** Intermediate · **Duration:** 60 min
 
+**Summary:** Genie is several components rather than one model. Which inputs shape an answer, ranked by how strongly each one does it.
+
 ### Learning outcomes
 1. Name the inputs Genie uses, ranked by influence.
 2. Explain to a stakeholder *why* an answer was wrong, in terms of a missing input.
@@ -795,6 +807,8 @@ Learners get 9 wrong answers from the deliberately uncurated MFG agent — one p
 ## Module 5 — Fiscal Calendars, Metric Definitions, and Why Business Language Is the Hard Part
 **Level:** Intermediate · **Duration:** 45 min
 
+**Summary:** The words your business argues about are the ones Genie will get wrong. How to find them and settle them.
+
 ### Learning outcomes
 1. Identify the terms in their own domain that carry more than one meaning.
 2. Produce a signed-off business glossary before building anything.
@@ -842,6 +856,8 @@ In pairs, build a 10-term glossary for the MFG wealth domain using the template 
 
 ## Module 6 — Governance: Who Sees What, and Why It's Safe
 **Level:** Intermediate · **Duration:** 75 min · **Audience:** authors + stewards
+
+**Summary:** Row filters and column masks run as the asking user, so one question has several correct answers. Also where that protection stops.
 
 ### Learning outcomes
 1. Explain the two credential types and their security implications.
@@ -985,6 +1001,8 @@ who correctly sees the firm-wide total. Learners who predict those two have unde
 ## Module 7 — Prepare the Data (The 80% That Decides Quality)
 **Level:** Intermediate · **Duration:** 90 min
 
+**Summary:** Choosing the few objects worth exposing and shaping them properly, which decides more about answer quality than any later tuning.
+
 ### Learning outcomes
 1. Scope an agent to a single audience and topic.
 2. Get under the 30-object limit using pre-joined views.
@@ -1068,6 +1086,8 @@ From the 22 raw MFG objects: choose ≤ 8, write the `mfg_core_vw_aum_reporting`
 ## Module 8 — Create Your First Genie Agent
 **Level:** Intermediate · **Duration:** 75 min
 
+**Summary:** Build and share an agent end to end, review what the Genie Code bootstrap suggests, and choose starter questions that hold up.
+
 ### Learning outcomes
 1. Create an agent end to end and share it.
 2. Use the **Genie Code** bootstrap and critically review its suggestions.
@@ -1149,6 +1169,8 @@ the result. Module 10 comes back to it when you write the clarification instruct
 
 ## Module 9 — The Knowledge Store: Teach It Your Business
 **Level:** Intermediate–Advanced · **Duration:** 90 min · **Audience:** authors
+
+**Summary:** Teach the agent your vocabulary: the descriptions, synonyms, joins and SQL expressions that turn column names into meaning.
 
 > **The highest-value module in the course.** Everything before it prepares for this, and
 > everything after it measures or operates what you build here.
@@ -1242,6 +1264,8 @@ On the MFG agent: add synonyms for 10 business terms (start with AUM, AUA, net n
 
 ## Module 10 — Instructions, Example SQL, and Trusted Assets
 **Level:** Advanced · **Duration:** 90 min
+
+**Summary:** Prefer SQL to prose. Worked examples, parameterised queries and UC functions pin intent down where instructions only suggest it.
 
 ### Learning outcomes
 1. Write example SQL queries titled the way users actually ask.
@@ -1346,6 +1370,8 @@ Add 10 example queries (≥3 parameterised with typed, commented parameters), re
 ## Module 11 — Test, Benchmark, and Prove It's Right
 **Level:** Advanced · **Duration:** 90 min
 
+**Summary:** Build a benchmark set with known-correct answers, so you can state accuracy as a number instead of asserting it.
+
 ### Learning outcomes
 1. Build a benchmark set with ground-truth answers.
 2. Interpret Chat-mode vs Agent-mode scoring.
@@ -1419,6 +1445,8 @@ Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least o
 ## Module 12 — Monitor, Triage, and Keep It Accurate Over Time
 **Level:** Advanced · **Duration:** 60 min
 
+**Summary:** Find quality problems before users report them, and turn each piece of feedback into a curation change that lasts.
+
 ### Learning outcomes
 1. Use the Monitor tab to find quality problems before users complain.
 2. Run a feedback triage process.
@@ -1476,6 +1504,8 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 
 ## Module 13 — Performance: Why Genie Feels Slow, and What Actually Fixes It
 **Level:** Advanced · **Duration:** 90 min · **Audience:** authors + platform owners
+
+**Summary:** Split a slow answer into thinking time and query time first, because the fixes for the two are entirely different.
 
 > Sourced from the *Genie Performance & Issues Playbook*. This module needs the **Large** data tier from Module 0 — you cannot teach latency on a toy dataset.
 
@@ -1592,6 +1622,8 @@ Given the deliberately slow MFG agent on the Large tier: measure both halves usi
 ## Module 14 — Errors, Known Issues, and Escalation
 **Level:** Advanced · **Duration:** 60 min
 
+**Summary:** Read the common error signatures, gather the evidence support actually needs, and tell apart the problems that are yours to fix.
+
 > Also sourced from the *Genie Performance & Issues Playbook*. Its purpose is to stop authors burning days on problems that were never theirs to fix.
 
 ### Learning outcomes
@@ -1671,6 +1703,8 @@ Given 8 real symptom reports, classify each (curation / platform bug / performan
 ## Module 15 — Cost, Budgets, and Scaling to Many Domains
 **Level:** Advanced · **Duration:** 60 min · **Audience:** authors + platform owners
 
+**Summary:** How Genie is billed, where budgets bite, and how to run several agents without their definitions drifting apart.
+
 ### Learning outcomes
 1. Explain how Genie is billed.
 2. Set account-level budgets with the right thresholds.
@@ -1736,6 +1770,8 @@ and shared, and say which agent would cause the most damage by redefining it.
 
 ## Module 16 — Extend Genie: API, Embedding, Multi-Agent, CI/CD
 **Level:** Advanced · **Duration:** 90 min · **Audience:** authors + developers
+
+**Summary:** Drive an agent from the Conversation API, embed it, combine it with other sources, and put its configuration under version control.
 
 ### Learning outcomes
 1. Drive a Genie Agent from the **Conversation API**.
@@ -1829,6 +1865,8 @@ concern, and in line with sector-wide EM redemptions over the period.
 ## Module 17 — Capstone: Ship a Business-Ready Genie Agent
 **Level:** Advanced · **Duration:** 4–6 hours (or a 1-week project)
 
+**Summary:** Ship an agent a business team could use on Monday, with a charter, a measured benchmark score and a governance review.
+
 ### The brief
 Learners pick a domain — their own real one if available, otherwise one of the provided
 asset-management profiles (distribution, investment performance, institutional relations, product
@@ -1865,6 +1903,8 @@ and fund operations) — and deliver an agent a business team could use on Monda
 
 ## Part B — Course Assets to Produce
 
+**Summary:** Everything that has to be built or written before the course can run, with the dependencies between them.
+
 | Asset | Count | Notes |
 |---|---|---|
 | **Meridian dataset: DDL + seed notebook** | 1 | **build this first — everything depends on it.** Small (20M) and Large (900M) tiers; nine planted flaws; 12-statement validation script |
@@ -1898,6 +1938,8 @@ and fund operations) — and deliver an agent a business team could use on Monda
 
 ## Part C — Currency and Maintenance
 
+**Summary:** What changes fastest in Genie, and what to re-verify before each delivery.
+
 Genie ships fast and the docs were reorganised recently (Spaces → Agents; the Genie One / Agents / Code split). Build the course to survive that:
 
 - **Quote every limit from the single cheat-sheet asset**, never inline in a video script. Limits change; re-recording video is expensive. This applies especially to the operational limits (90 s, ~597 s, 200 req/sec, character ceilings) which are the most likely to move.
@@ -1911,6 +1953,8 @@ Genie ships fast and the docs were reorganised recently (Spaces → Agents; the 
 ---
 
 ## Part D — Coverage map: *Genie Performance & Issues Playbook* → this course
+
+**Summary:** Which module covers each item in the internal Genie Performance & Issues Playbook.
 
 | Playbook section | Course coverage |
 |---|---|
@@ -1949,6 +1993,8 @@ Genie ships fast and the docs were reorganised recently (Spaces → Agents; the 
 
 ## Part E — Sources
 
+**Summary:** The Databricks documentation and internal material this course is grounded in.
+
 Databricks docs (`docs.databricks.com`, AWS paths; GCP/Azure equivalents exist):
 
 | Topic | Path |
@@ -1976,6 +2022,8 @@ Internal: *Genie Performance & Issues Playbook & Health Check* — source for Mo
 ---
 
 ## Part F — Dataset design (instructor reference)
+
+**Summary:** Instructor reference: the flaws planted in the Meridian dataset and the module each one serves. Contains the answers.
 
 > **This page contains the answers.** It catalogues what is wrong with the Meridian dataset
 > and which module each problem serves. Module 0 deliberately does not mention any of it, and

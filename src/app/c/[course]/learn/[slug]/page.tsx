@@ -67,6 +67,12 @@ export default async function ModulePage({
             {doc.title}
           </h1>
 
+          {doc.summary && (
+            <p className="mt-4 max-w-2xl text-[1.02rem] leading-relaxed text-muted">
+              {doc.summary}
+            </p>
+          )}
+
           {doc.audience && (
             <p className="mt-3 text-[0.83rem] text-faint">Audience: {doc.audience}</p>
           )}

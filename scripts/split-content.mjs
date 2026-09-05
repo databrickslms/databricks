@@ -106,9 +106,19 @@ function splitPlan(id, dir, config) {
     }
     body = body.replace(/^\*\*Level:\*\*.*\n/m, '').trim()
 
-    const summary = (body.split('\n')
-      .find((l) => l.trim() && !/^[#>|*\-`]/.test(l.trim())) || '')
-      .replace(/\*\*/g, '').replace(/`/g, '').trim().slice(0, 260)
+    // An authored `**Summary:**` line is what shows on cards and in search.
+    // Falling back to "the first ordinary paragraph" reliably produced the
+    // wrong thing: for most modules the first such line is `1. <learning
+    // outcome>`, so the card read "1. Write questions Genie can answer...",
+    // and for the rest it was a first sentence sliced mid-clause.
+    const authored = /^\*\*Summary:\*\*\s*([\s\S]*?)(?=\n\n)/m.exec(body)?.[1] ?? ''
+    if (authored) body = body.replace(/^\*\*Summary:\*\*[\s\S]*?(?=\n\n)\n\n/m, '')
+    else console.warn(`  ! ${slugFor(mark)}: no **Summary:** line — card text will be guessed`)
+
+    const summary = (authored ||
+      body.split('\n').find((l) => l.trim() && !/^[#>|*\-`\d]/.test(l.trim())) || '')
+      .replace(/\n/g, ' ').replace(/\*\*/g, '').replace(/`/g, '').replace(/\s+/g, ' ')
+      .trim().slice(0, 260)
 
     const isModule = mark.kind === 'module'
     const slug = isModule
