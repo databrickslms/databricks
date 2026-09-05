@@ -71,11 +71,16 @@ Provisioning is quick. On a Databricks Free Edition warehouse the three required
 this module is the twenty minutes you spend reading the data afterwards, which is the part that
 matters.
 
+If you would rather watch than read, the walkthrough covers both halves of the setup: creating a
+free Databricks workspace from scratch, and installing the dataset into it.
+
 ```video
-title: Provisioning the Meridian dataset
+title: Set up Databricks Free Edition and install the Meridian dataset
 duration: to be confirmed
 src: tbd
 ```
+
+Everything in the video is written out below, so you can follow either one.
 
 > **Why this is a module and not an appendix.** Every later module works on one firm's data.
 > Provisioning it yourself, and spending twenty minutes actually looking at it, is what makes the
@@ -127,7 +132,28 @@ business and worth noticing early.
 The volume is created empty. Your instructor supplies the document pack that Modules 3 and 16
 use; nothing before those modules depends on it.
 
-### 0.3 Provisioning: one pip install
+### 0.3 Getting a workspace
+
+You need a Databricks workspace with Unity Catalog and a SQL warehouse. If your firm has already
+given you one, use it and skip to §0.4.
+
+If not, **Databricks Free Edition** is enough for this entire course apart from Module 13. Sign
+up at `databricks.com/learn/free-edition` with an email address; there is no credit card and no
+cloud account to connect, because Databricks hosts the compute. What you get is a workspace with
+Unity Catalog switched on, serverless compute, and a catalog called `workspace` that you own.
+
+Three things about Free Edition worth knowing before you start:
+
+- **The current catalog is `workspace`.** The lab reads `current_catalog()` rather than assuming
+  a name, so everything lands in `workspace.genie_agent.mfg_core_*` without any configuration.
+- **Compute is serverless**, so there is no cluster to size or start. The first statement you run
+  takes a few seconds longer while it warms up.
+- **You are the only user**, which changes what Module 6 shows you. §0.4 explains why, and it is
+  a useful thing to see rather than a limitation.
+
+Once you can open a notebook and run `SELECT current_catalog()`, you are ready.
+
+### 0.4 Provisioning: one pip install
 
 The lab is installed by a package rather than assembled by hand. In a Databricks notebook:
 
@@ -183,18 +209,15 @@ returns, in a single schema called `genie_agent`, with table names prefixed by g
 
 That default exists because most regulated workspaces do not grant `CREATE CATALOG`, and a lab
 that assumes otherwise fails on its first statement. If you do hold the privilege, or you have
-been given a catalog, you can say so.
+been given a catalog, you can say so. On Free Edition it means the tables land in
+`workspace.genie_agent.mfg_core_*` and there is nothing to configure.
 
-**On Databricks Free Edition** the current catalog is `workspace`, so everything lands in
-`workspace.genie_agent.mfg_core_*` with no configuration at all. Free Edition is a perfectly good
-way to take this course: the whole dataset provisions in a couple of minutes, and every module
-except 13 works on it.
-
-Notebook 05 is the one to think about. Its row filter and column masks key off account groups
-such as `mfg_region_ne`, and if those groups do not exist you belong to none of them. The
-statements still run; you simply land in the most restricted view, seeing no advisor rows and
-fully masked client identifiers. That is not a broken install. It is precisely the case Module 6
-warns about, and it is worth seeing from the inside before you read that module.
+One consequence to expect in Module 6, whichever workspace you are on. Notebook 05's row filter
+and column masks key off account groups such as `mfg_region_ne`, and if those groups do not
+exist you belong to none of them. The statements still run; you simply land in the most
+restricted view, seeing no advisor rows and fully masked client identifiers. That is not a broken
+install. It is precisely the case Module 6 is built around, and it is worth meeting from the
+inside first.
 
 #### The notebooks
 
@@ -273,7 +296,7 @@ understanding, because they explain a design choice you meet again in Module 11:
   benchmark set, and you would only notice when scores stopped making sense.
 - Re-running a notebook reproduces the same rows instead of a fresh random draw.
 
-### 0.4 The personas (used from Module 6 onward)
+### 0.5 The personas (used from Module 6 onward)
 
 Notebook 05 creates the account groups these personas belong to. The point of having four is that
 one question produces four different correct answers.
