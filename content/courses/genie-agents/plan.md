@@ -267,6 +267,27 @@ tables apart inside one shared schema, and it is redundant once the schema is yo
 **Large** (900M) exists only for Module 13, where query time has to be long enough to measure.
 Start small; you can install the large tier later into a different schema.
 
+#### What you should see
+
+Open **Catalog** in the sidebar after `03_facts` finishes and expand
+`workspace` → `genie_agent`. You should have **12 tables** and **one volume**:
+
+| | |
+|---|---|
+| 9 dimensions | `dim_account`, `dim_advisor`, `dim_asset_class`, `dim_benchmark`, `dim_client`, `dim_date`, `dim_fund`, `dim_fx_rate`, `dim_portfolio` |
+| 3 facts | `fct_aum_snapshot`, `fct_flows`, `fct_performance` |
+| 1 volume | `mfg_ref_documents`, which is empty at this stage |
+
+All of them carry the `mfg_core_` prefix, except the volume, which is `mfg_ref_`. Fewer than 12
+tables means a notebook stopped early; check the cell output rather than re-running from the top,
+because each notebook is idempotent and will happily rebuild what already worked.
+
+The empty volume is expected. It holds the document pack that Modules 3 and 16 use, and nothing
+before those modules touches it.
+
+The two staging tables arrive later, with `04_staging`. That brings the total to 14 objects,
+which is the number Module 7 asks you to cut down to six.
+
 #### Confirming the install
 
 `99_validate` runs fourteen checks over the finished dataset, covering grain, referential
