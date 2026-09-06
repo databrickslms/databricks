@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export type Question = { q: string; options: string[]; answer: number; why: string }
@@ -19,6 +19,8 @@ export function Quiz({
   bestScore?: number | null
 }) {
   const router = useRouter()
+  const resultsRef = useRef<HTMLDivElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
   const [picked, setPicked] = useState<(number | null)[]>(() => questions.map(() => null))
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -28,6 +30,15 @@ export function Quiz({
   const score = picked.reduce<number>((n, p, i) => (p === questions[i].answer ? n + 1 : n), 0)
   const pct = Math.round((score / questions.length) * 100)
   const passed = pct >= 70
+  const wrong = picked
+    .map((p, i) => (p === questions[i].answer ? null : i + 1))
+    .filter((n): n is number => n !== null)
+
+  // Submit sits at the foot of a long card, so the score would otherwise render
+  // off-screen above the reader.
+  useEffect(() => {
+    if (submitted) resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [submitted])
 
   async function submit() {
     setSubmitted(true)
@@ -60,11 +71,11 @@ export function Quiz({
     setPicked(questions.map(() => null))
     setSubmitted(false)
     setError(null)
-    window.scrollTo({ top: window.scrollY - 40, behavior: 'smooth' })
+    sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
-    <section id="knowledge-check" className="mt-16 scroll-mt-24">
+    <section ref={sectionRef} id="knowledge-check" className="mt-16 scroll-mt-24">
       <div className="card overflow-hidden">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-4 sm:px-6">
           <div>
@@ -92,6 +103,31 @@ export function Quiz({
           )}
         </header>
 
+        {submitted && (
+          <div
+            ref={resultsRef}
+            className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b px-5 py-4 sm:px-6"
+            style={{ background: passed ? 'rgb(var(--teal) / .07)' : 'rgb(var(--rose) / .06)' }}
+            role="status"
+          >
+            <span
+              className="font-display text-[2rem] leading-none tabular-nums"
+              style={{ color: passed ? 'rgb(var(--teal))' : 'rgb(var(--rose))' }}
+            >
+              {score}/{questions.length}
+            </span>
+            <span className="text-[0.875rem] leading-snug">
+              <span className="font-semibold">
+                {pct}% — {passed ? 'passed' : 'not passed yet'}
+              </span>
+              <br />
+              {wrong.length === 0
+                ? 'Every answer correct.'
+                : `Review question${wrong.length > 1 ? 's' : ''} ${wrong.join(', ')} below.`}
+            </span>
+          </div>
+        )}
+
         <ol className="divide-y">
           {questions.map((question, qi) => {
             const choice = picked[qi]
@@ -102,7 +138,20 @@ export function Quiz({
                   <span className="mt-px font-mono text-[0.72rem] text-faint">
                     {String(qi + 1).padStart(2, '0')}
                   </span>
-                  <span>{question.q}</span>
+                  <span>
+                    {question.q}
+                    {submitted && (
+                      <span
+                        className="ml-2 whitespace-nowrap align-[0.09em] text-[0.68rem] font-semibold uppercase tracking-[0.07em]"
+                        style={{
+                          color:
+                            choice === correct ? 'rgb(var(--teal))' : 'rgb(var(--rose))',
+                        }}
+                      >
+                        {choice === correct ? 'Correct' : 'Incorrect'}
+                      </span>
+                    )}
+                  </span>
                 </p>
 
                 <div className="grid gap-1.5 sm:pl-7">
@@ -119,11 +168,21 @@ export function Quiz({
                         : ' hover:bg-ink/[0.035]'
                     } else if (isRight) {
                       cls += ' font-medium'
-                      style = { borderColor: 'rgb(var(--teal))', background: 'rgb(var(--teal) / .09)' }
+                      style = {
+                        borderColor: 'rgb(var(--teal))',
+                        background: 'rgb(var(--teal) / .16)',
+                        color: 'rgb(var(--ink))',
+                      }
                     } else if (isPicked) {
-                      style = { borderColor: 'rgb(var(--rose))', background: 'rgb(var(--rose) / .07)' }
+                      style = {
+                        borderColor: 'rgb(var(--rose))',
+                        background: 'rgb(var(--rose) / .13)',
+                        color: 'rgb(var(--ink))',
+                      }
                     } else {
-                      cls += ' opacity-55'
+                      // Still legible: these are the options the reader is
+                      // comparing against, not decoration.
+                      style = { color: 'rgb(var(--muted))', borderColor: 'rgb(var(--line))' }
                     }
 
                     return (
@@ -141,7 +200,17 @@ export function Quiz({
                         <span className="mt-[0.15rem] grid h-4 w-4 shrink-0 place-items-center rounded-full border text-[0.6rem]">
                           {submitted && isRight ? '✓' : submitted && isPicked ? '✕' : isPicked ? '●' : ''}
                         </span>
-                        <span>{option}</span>
+                        <span className="flex-1">{option}</span>
+                        {submitted && (isRight || isPicked) && (
+                          <span
+                            className="mt-px shrink-0 text-[0.66rem] font-semibold uppercase tracking-[0.06em]"
+                            style={{
+                              color: isRight ? 'rgb(var(--teal))' : 'rgb(var(--rose))',
+                            }}
+                          >
+                            {isRight ? 'Correct answer' : 'Your answer'}
+                          </span>
+                        )}
                       </button>
                     )
                   })}
@@ -150,7 +219,7 @@ export function Quiz({
                 {submitted && (
                   <p
                     className="mt-3 rounded-lg px-3 py-2.5 text-[0.83rem] leading-relaxed sm:ml-7"
-                    style={{ background: 'rgb(var(--ink) / .04)', color: 'rgb(var(--muted))' }}
+                    style={{ background: 'rgb(var(--ink) / .05)', color: 'rgb(var(--ink))' }}
                   >
                     <strong className="font-semibold text-ink">Why: </strong>
                     {question.why}
