@@ -561,8 +561,6 @@ Then pick the single hardest one and list every business definition that would h
 before any tool could answer it correctly. Compare your list with a colleague's. The
 disagreements are the interesting part, and they preview Module 5.
 
-### Knowledge check
-
 ## Module 2 — Asking Questions That Actually Work
 **Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers, and the whole of the Business User track
 
@@ -679,7 +677,6 @@ agent, and paste in the query it produced. You are marked on the rewrites, not t
 Two of the eight cannot be fixed by rewording at all. Say which, and why. Spotting a question
 Genie should not be asked is the skill being tested.
 
-**Docs:** `/genie-agents/talk-to-genie`, `/genie-one/chat`
 
 ---
 
@@ -747,7 +744,6 @@ answering usefully needs several. Spotting those is the point of the lab.
 > **Setup note for instructors:** the Agent-mode exercises read from the `documents` volume that
 > notebook 01 creates. Populate it with the course document pack before running this module.
 
-**Docs:** `/genie/agent-mode`, `/genie-agents/concepts`
 
 ---
 
@@ -812,7 +808,6 @@ Practical consequences learners must internalise now:
 ### Lab 4 (20 min) — diagnostic
 Learners get 9 wrong answers from the deliberately uncurated MFG agent — one per planted flaw. For each, identify **which input was missing** (e.g. *"summed a daily snapshot → no join cardinality declared"*; *"returned zero for California → no entity matching on `state`"*). Diagnosis only, no fixing. Then compare against their Lab 0 prediction sheet.
 
-**Docs:** `/genie-agents/concepts`, `/genie/best-practices`
 
 ---
 
@@ -862,7 +857,6 @@ In pairs, build a 10-term glossary for the MFG wealth domain using the template 
 ### Teaching line
 > *"Genie didn't get the answer wrong. Your company has three answers and never picked one."*
 
-**Docs:** `/genie/best-practices`, `/metric-views/`
 
 ---
 
@@ -1002,7 +996,6 @@ who correctly sees the firm-wide total. Learners who predict those two have unde
 - Building on a table the consumer group has no `SELECT` on, then debugging the agent instead of
   the grant.
 
-**Docs:** `/genie-agents/concepts` (permissions), `/genie-agents/set-up`
 
 ---
 
@@ -1091,7 +1084,6 @@ From the 22 raw MFG objects: choose ≤ 8, write the `mfg_core_vw_aum_reporting`
 - Exposing a daily-snapshot table without a warning in its description.
 - Exposing `dim_client` when `dim_client_safe` exists.
 
-**Docs:** `/genie/best-practices`, `/metric-views/`, `/genie-agents/set-up`
 
 ---
 
@@ -1175,7 +1167,6 @@ at CAN RUN, and confirm all 5 starters return correct answers.
 Then deliberately add a sixth starter that *is* ambiguous — "What was our AUM?" — run it, and keep
 the result. Module 10 comes back to it when you write the clarification instruction that fixes it.
 
-**Docs:** `/genie-agents/set-up`
 
 ---
 
@@ -1270,7 +1261,6 @@ On the MFG agent: add synonyms for 10 business terms (start with AUM, AUA, net n
 - Adding "return" as a synonym for one of the return columns, instead of asking which one is meant.
 - Burning the 200-snippet budget on low-value descriptions.
 
-**Docs:** `/genie-agents/tune-quality`, `/genie/best-practices`
 
 ---
 
@@ -1371,7 +1361,6 @@ Add 10 example queries (≥3 parameterised with typed, commented parameters), re
 - Reaching for text instructions first.
 - Using instructions to attempt a security control.
 
-**Docs:** `/genie-agents/tune-quality`, `/genie/best-practices`
 
 ---
 
@@ -1450,7 +1439,6 @@ Fails if:  it silently picks one without saying which.
 ### Lab 11 (40 min) — GRADED
 Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least one per planted flaw) with ground-truth SQL. Two of the traps must be questions where the *correct* behaviour is to ask for clarification rather than answer. Run it, record the score, fix the top 3 failures via the edit-and-save loop, re-run, report before/after.
 
-**Docs:** `/genie-agents/monitor`
 
 ---
 
@@ -1510,7 +1498,6 @@ Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least o
 ### Lab 12 (25 min)
 Given a Monitor export of 40 MFG conversations with feedback, produce a triage sheet: root cause, correct fix **layer**, owner, priority. Fix the top 5.
 
-**Docs:** `/genie-agents/monitor`, `/genie/best-practices`
 
 ---
 
@@ -1627,7 +1614,6 @@ Given the deliberately slow MFG agent on the Large tier: measure both halves usi
 - Treating the 90-second SQL limit as a configuration knob.
 - Tuning before measuring.
 
-**Docs:** query history · MLflow Tracing · SQL warehouses · Predictive Optimization · Liquid Clustering · OPTIMIZE · `/genie/best-practices`
 
 ---
 
@@ -1708,7 +1694,6 @@ Did it hit a documented limit?                 → capacity/design       → Mod
 ### Lab 14 (30 min)
 Given 8 real symptom reports, classify each (curation / platform bug / performance / expected variation / governance), name the evidence to capture, and write the escalation note for the two that are platform bugs.
 
-**Docs:** `/genie-agents/monitor`, `/genie/best-practices`
 
 ---
 
@@ -1772,7 +1757,6 @@ Design an agent portfolio for an asset manager (or, if learners prefer, their ow
 plan with thresholds and blocking decisions. Name at least one metric that must be defined once
 and shared, and say which agent would cause the most damage by redefining it.
 
-**Docs:** `/genie/budgets`, `/metric-views/`, `/genie/best-practices`
 
 ---
 
@@ -1870,7 +1854,6 @@ concern, and in line with sector-wide EM redemptions over the period.
 ### Lab 16 (40 min) — GRADED
 **(a)** Write a script that starts a conversation against the MFG agent, polls correctly (2 s interval, capped, instrumented as its own span), retrieves the SQL and result set, then asks a follow-up on the same `conversation_id`. Report your poll-loop overhead separately from Genie's time. **(b)** Export the agent's `serialized_space`, change one instruction, re-import as a second agent, and diff the two configs.
 
-**Docs:** `/genie-agents/conversation-api`, `/generative-ai/agent-bricks/multi-agent-supervisor`, `/genie/best-practices` (version control)
 
 ---
 
