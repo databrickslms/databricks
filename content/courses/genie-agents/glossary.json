@@ -1,0 +1,274 @@
+{
+  "_comment": "Term definitions for the per-module appendix. scripts/split-content.mjs scans each module for these terms and appends the ones it finds, so a term defined in Module 1 is defined again in every later module that uses it. `match` overrides the default word-boundary search on the term itself; keep patterns tight, since a false positive puts a confusing row in the appendix.",
+  "AI": {
+    "match": "\\bAI\\b",
+    "def": "Artificial intelligence. In this course it means the reasoning layer that turns your sentence into a database query. It comes with the platform, so it is not the part you build."
+  },
+  "LLM": {
+    "def": "Large language model. The kind of AI model that reads and writes text. Genie uses one to interpret your question and draft the SQL, which is why answers can vary slightly between runs."
+  },
+  "Genie One": {
+    "def": "The front door where a business user asks a question in plain language. Nobody builds Genie One; it is where you go to ask."
+  },
+  "Genie Agent": {
+    "match": "Genie Agents?\\b",
+    "def": "A focused, governed conversational experience built over one business area. This is the thing the course teaches you to build. Formerly called a Genie Space."
+  },
+  "Genie Code": {
+    "def": "The surface for people who write SQL or Spark. It writes, explains and debugs code, and it is where you inspect what an agent did with a question."
+  },
+  "Genie Workbench": {
+    "def": "The other place, alongside Genie Code, where an author inspects and tunes an agent's behaviour."
+  },
+  "Chat mode": {
+    "def": "One question, one query, one answer. Fast, cheap and easy to check."
+  },
+  "Agent mode": {
+    "def": "Genie plans several steps, runs many queries and returns a written report. Slower and more expensive, and suited to open-ended questions."
+  },
+  "thread": {
+    "match": "\\bthreads?\\b",
+    "def": "A single conversation. Follow-up questions in a thread build on what came before. A new chat starts from nothing."
+  },
+  "prompt": {
+    "match": "\\bprompts?\\b",
+    "def": "The text sent to the model, including your question plus everything the agent has been taught."
+  },
+  "Unity Catalog": {
+    "match": "Unity Catalog|\\bUC\\b",
+    "def": "Databricks' governance layer. It holds the catalogs, schemas, tables and permissions, and it is the only layer that guarantees who can see what."
+  },
+  "catalog": {
+    "match": "\\bcatalogs?\\b",
+    "def": "The top level of the Unity Catalog naming hierarchy, above schemas. On Databricks Free Edition the default one is called `workspace`."
+  },
+  "schema": {
+    "match": "\\bschemas?\\b",
+    "def": "A named group of tables inside a catalog. This lab puts everything in one schema called `genie_agent`."
+  },
+  "volume": {
+    "match": "\\bvolumes?\\b",
+    "def": "A place in Unity Catalog for files rather than tables, such as PDFs. Agent mode can read from one."
+  },
+  "view": {
+    "match": "\\bviews?\\b",
+    "def": "A saved query that behaves like a table. Used here to pre-join tables and hide columns Genie does not need."
+  },
+  "row filter": {
+    "match": "row[- ]filters?|row[- ]level security",
+    "def": "A rule attached to a table that limits which rows a person can see. It applies to the table it is attached to, and only when a query actually reads that table."
+  },
+  "column mask": {
+    "match": "column[- ]masks?",
+    "def": "A rule that hides or blurs a column's value for people who should not see it, such as showing `****` instead of the last four digits of a national ID."
+  },
+  "grant": {
+    "match": "\\bgrants?\\b",
+    "def": "A permission given to a person or group on a Unity Catalog object, such as the right to read a table."
+  },
+  "service principal": {
+    "def": "A non-human identity used by an application or integration. It gets no free monthly allowance, so its usage is billed from the first message."
+  },
+  "PII": {
+    "def": "Personally identifiable information. Data that identifies a real person, such as an email address, date of birth or national ID."
+  },
+  "knowledge store": {
+    "def": "An agent's private dictionary of your business: what each table and column means, the words your people use for them, how tables join, and reusable metric definitions. It belongs to one agent."
+  },
+  "instructions": {
+    "match": "\\binstructions?\\b",
+    "def": "Plain-text rules written by the agent's author, applied to every question. The weakest way to shape an answer, so it is the last resort rather than the first tool."
+  },
+  "example SQL": {
+    "match": "example SQL( quer(y|ies))?",
+    "def": "A question phrased the way your people phrase it, paired with SQL that answers it correctly. Genie matches new questions against these."
+  },
+  "trusted asset": {
+    "match": "trusted assets?",
+    "def": "A query or Unity Catalog function whose logic the author has verified. Genie uses it as written rather than composing its own version."
+  },
+  "UC function": {
+    "match": "UC functions?|Unity Catalog functions?",
+    "def": "A reusable calculation stored in Unity Catalog, so several agents and dashboards compute a metric the same way."
+  },
+  "metric view": {
+    "match": "metric views?",
+    "def": "A governed object that defines a measure once, so every agent and report that asks for it gets identical arithmetic."
+  },
+  "synonym": {
+    "match": "\\bsynonyms?\\b",
+    "def": "An alternative word your people use for something in the data, such as 'equities' for the asset class code `EQ_US`."
+  },
+  "entity matching": {
+    "def": "Teaching the agent the real values in a column, so that asking for 'California' finds rows stored as `CA`."
+  },
+  "benchmark": {
+    "match": "benchmark (set|question|suite)|benchmarks\\b",
+    "def": "A test question with a known-correct answer, used to measure quality. Benchmarks grade an agent; they never improve it. Not to be confused with a market benchmark index."
+  },
+  "certify": {
+    "match": "certif(y|ied|ication)",
+    "def": "Marking an object as the official source, so Genie prefers it over lookalikes."
+  },
+  "deprecate": {
+    "match": "deprecat(e|ed|ion)",
+    "def": "Marking an object as superseded, so Genie avoids it."
+  },
+  "fact table": {
+    "match": "fact tables?|\\bfct_",
+    "def": "A table of events or measurements, such as money movements or daily valuations. Usually large."
+  },
+  "dimension table": {
+    "match": "dimension tables?|\\bdim_",
+    "def": "A table describing things, such as clients, funds or dates. Usually small, and used to break facts down."
+  },
+  "grain": {
+    "match": "\\bgrain\\b",
+    "def": "What one row of a table represents. Getting this wrong is the most common cause of a badly wrong number."
+  },
+  "snapshot": {
+    "match": "\\bsnapshots?\\b",
+    "def": "A table that records a value as it stood on a given day, repeated for every day. Adding several days together multiplies the answer, because each day already holds the full amount."
+  },
+  "cardinality": {
+    "def": "How many rows on one side of a join match a row on the other. Declaring it wrongly causes rows to be duplicated and totals to be inflated."
+  },
+  "fan-out": {
+    "match": "fan[- ]out",
+    "def": "When a join multiplies rows, so a total counts the same money several times."
+  },
+  "SQL": {
+    "def": "The language used to query a database. You do not need to write it to use Genie, but being able to skim it is how you check an answer."
+  },
+  "SQL warehouse": {
+    "match": "SQL warehouses?|\\bwarehouses?\\b",
+    "def": "The compute that runs the queries. Serverless warehouses start on demand, so the first query after a pause takes a little longer."
+  },
+  "deterministic": {
+    "match": "determinis(m|tic)",
+    "def": "Producing the same result every time. The course dataset is generated deterministically so every learner's data is identical."
+  },
+  "idempotent": {
+    "def": "Safe to run more than once. Re-running a lab notebook rebuilds the same tables rather than adding duplicates."
+  },
+  "AUM": {
+    "def": "Assets under management. The market value of the assets a firm manages. At Meridian it has more than one honest definition, which is the point of several exercises."
+  },
+  "AUA": {
+    "match": "\\bAUA\\b|assets under (advisement|administration)",
+    "def": "Assets under advisement or administration. Assets the firm advises on or reports on but does not manage, so they usually sit outside AUM."
+  },
+  "held-away assets": {
+    "match": "held[- ]away",
+    "def": "Assets a client holds elsewhere that the firm can see but does not manage. Whether they belong in a headline figure is a judgement, not a fact."
+  },
+  "discretionary": {
+    "def": "The firm can trade the portfolio without asking the client first. Advisory-only portfolios need the client's agreement, and whether they count towards AUM is a decision someone has to make."
+  },
+  "portfolio": {
+    "match": "\\bportfolios?\\b",
+    "def": "A pool of assets managed to one mandate, held for a single client or institution."
+  },
+  "mandate": {
+    "match": "\\bmandates?\\b",
+    "def": "The agreement setting out what a portfolio may invest in and what it is measured against."
+  },
+  "fund": {
+    "match": "\\bfunds?\\b",
+    "def": "A pooled vehicle many clients invest in together, such as a mutual fund or ETF."
+  },
+  "share class": {
+    "match": "share class(es)?",
+    "def": "A variant of the same fund with different fees or terms, sold to different kinds of buyer."
+  },
+  "asset class": {
+    "match": "asset class(es)?",
+    "def": "The category of what is held, such as US equity or corporate bonds. Meridian classifies each holding two different ways, and the two do not agree."
+  },
+  "benchmark index": {
+    "match": "benchmark[- ]relative|benchmark return",
+    "def": "The market index a portfolio is measured against. Distinct from a benchmark question used to test an agent."
+  },
+  "net flows": {
+    "match": "net flows?",
+    "def": "Money in minus money out over a period. Movements between the firm's own funds should not count on either side."
+  },
+  "subscription": {
+    "match": "subscriptions?\\b",
+    "def": "Money coming into a fund or portfolio. Sometimes called a sale or an inflow."
+  },
+  "redemption": {
+    "match": "redemptions?\\b",
+    "def": "Money leaving a fund or portfolio. Sometimes called an outflow."
+  },
+  "exchange": {
+    "match": "\\bexchanges?\\b(?! rate)",
+    "def": "A client moving money from one of the firm's own products into another. It is not a sale and not a redemption, though counting it as both is a common reporting error."
+  },
+  "trade date": {
+    "def": "The day a transaction was agreed. Different from the day the money actually moves, which decides which period it lands in.",
+    "match": "trade[_ ]date"
+  },
+  "settlement date": {
+    "match": "settlement date|settled (flows?|money|only|trades?)",
+    "def": "The day the money actually changes hands, typically a day or two after the trade date."
+  },
+  "TWR": {
+    "match": "\\bTWR\\b|time[- ]weighted",
+    "def": "Time-weighted return. Measures the manager's performance by removing the effect of client money arriving and leaving."
+  },
+  "MWR": {
+    "match": "\\bMWR\\b|money[- ]weighted",
+    "def": "Money-weighted return. Measures what the investor actually experienced, including the effect of when they put money in."
+  },
+  "gross of fees": {
+    "match": "gross of fees|twr_gross",
+    "def": "Return before the firm's fees are deducted."
+  },
+  "net of fees": {
+    "match": "net[- ]of[- ]fees|twr_net",
+    "def": "Return after the firm's fees are deducted. Always lower than gross, and often the number a client cares about."
+  },
+  "GIPS": {
+    "def": "Global Investment Performance Standards. The industry rules for presenting performance, which exist because return can honestly be calculated several ways."
+  },
+  "fiscal year": {
+    "match": "fiscal (year|quarter|calendar)",
+    "def": "The firm's financial year, which need not start in January. Meridian's starts on 1 October, so FY2026 runs from October 2025 to September 2026."
+  },
+  "reporting date": {
+    "match": "reporting dates?",
+    "def": "The last business day of a month, which is what month-end figures are struck on. Not the same as the last calendar day."
+  },
+  "channel": {
+    "match": "\\bchannels?\\b",
+    "def": "The route through which the firm sells: intermediary, institutional, retirement or private client."
+  },
+  "advisor": {
+    "match": "\\badvisors?\\b",
+    "def": "The person or firm holding the client relationship. Used here to group assets by region and channel."
+  },
+  "DBU": {
+    "def": "Databricks Unit, the unit Databricks bills consumption in.",
+    "match": "\\bDBUs?\\b"
+  },
+  "API": {
+    "match": "\\bAPIs?\\b",
+    "def": "A way for another program to talk to Genie directly, rather than a person typing into the chat window."
+  },
+  "CI/CD": {
+    "match": "CI/CD",
+    "def": "The practice of putting configuration under version control and promoting it through environments automatically, rather than editing production by hand."
+  },
+  "supervisor agent": {
+    "match": "[Ss]upervisor [Aa]gents?",
+    "def": "An agent that routes a question to other agents and tools, then combines what they return."
+  },
+  "message ID": {
+    "match": "message ID",
+    "def": "The identifier for a single response. Without it, support cannot trace what happened, and it is lost as soon as you start a fresh chat."
+  },
+  "latency": {
+    "def": "How long an answer takes. Splits into thinking time, which is the model working, and query time, which is the warehouse working."
+  }
+}

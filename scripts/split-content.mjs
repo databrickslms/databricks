@@ -79,6 +79,20 @@ function splitPlan(id, dir, config) {
   const slugFor = (m) =>
     m.kind === 'module' ? `Module ${m.num}` : m.part
 
+  // Per-module appendix. Every term the module actually uses is defined at the
+  // foot of that module, including terms already defined in an earlier one:
+  // people arrive at a module directly and should not have to hunt backwards.
+  const glossaryPath = join(dir, 'glossary.json')
+  const glossary = existsSync(glossaryPath)
+    ? Object.entries(JSON.parse(readFileSync(glossaryPath, 'utf8')))
+        .filter(([term]) => !term.startsWith('_'))
+        .map(([term, v]) => ({
+          term,
+          def: v.def,
+          re: new RegExp(v.match ?? `\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i'),
+        }))
+    : []
+
   marks.forEach((mark, idx) => {
     const end = idx + 1 < marks.length ? marks[idx + 1].i : lines.length
     let body = lines.slice(mark.i + 1, end).join('\n')
@@ -119,6 +133,20 @@ function splitPlan(id, dir, config) {
       body.split('\n').find((l) => l.trim() && !/^[#>|*\-`\d]/.test(l.trim())) || '')
       .replace(/\n/g, ' ').replace(/\*\*/g, '').replace(/`/g, '').replace(/\s+/g, ' ')
       .trim().slice(0, 260)
+
+    // Match against the prose only. A term appearing solely inside a code block
+    // is usually an identifier rather than a concept being used.
+    const prose = body.replace(/```[\s\S]*?```/g, '')
+    const found = glossary.filter((g) => g.re.test(prose))
+    if (found.length) {
+      const rows = found
+        .slice()
+        .sort((a, b) => a.term.localeCompare(b.term, 'en', { sensitivity: 'base' }))
+        .map((g) => `| **${g.term}** | ${g.def} |`)
+        .join('\n')
+      body += `\n\n### Appendix: terms used in this module\n\n`
+        + `| Term | What it means |\n|---|---|\n${rows}\n`
+    }
 
     const isModule = mark.kind === 'module'
     const slug = isModule
