@@ -598,11 +598,22 @@ it says:
 | | | Example |
 |---|---|---|
 | **A measure** | the number you want | AUM, net flows, return |
-| **A cut** | how to break it up | by asset class, by channel, by fund |
-| **A filter** | which part counts | discretionary only, settled only |
+| **A breakdown** | how to split the answer up | by asset class, by channel, by fund |
+| **A filter** | what to leave out | discretionary only, settled only |
 | **A point in time** | when | as of 30 June 2026, or FY2026 Q3 |
 
-The last one causes the most trouble, because two kinds of number need two kinds of time.
+**Breakdown and filter are easy to mix up**, because both of them name a column. The difference
+is what they do to the answer. A breakdown splits one number into several. A filter throws rows
+away before the number is worked out at all.
+
+> *"AUM by channel"* gives you four numbers, one per channel, and they add back up to the total.
+>
+> *"AUM for the intermediary channel"* gives you one number, and it is smaller than the total.
+
+The same column can do either job, and often you want both at once. *"AUM by asset class,
+intermediary only"* splits the answer by asset class and discards three of the four channels.
+
+The point in time causes the most trouble, because two kinds of number need two kinds of time.
 
 **AUM is a balance.** It is a value at one moment, so it needs a single date. **Net flows and
 returns build up over a period**, so they need a range.
@@ -694,13 +705,14 @@ Genie should not be asked is the skill being tested.
 
 ### How to tell which one you need
 
-Module 2 gave you four things a good question names — a measure, a cut, a filter and a point in
-time. That checklist doubles as the mode test:
+Module 2 gave you the four things a good question names: a measure, a breakdown, a filter and a
+point in time. That checklist doubles as the mode test.
 
 - **You can name all four → Chat mode.** You already know the shape of the answer; you just need
   the number.
-- **You can't name the cut → Agent mode.** "Which funds are in trouble" doesn't specify a cut
-  because *finding* the right cut is the actual work. That's research, not retrieval.
+- **You can't name the breakdown → Agent mode.** "Which funds are in trouble" doesn't say what to
+  split the answer by, because working out which breakdown matters *is* the job. That's research
+  rather than retrieval.
 
 The failure this prevents is asking Chat mode a research question. It will answer — one query,
 one table, confidently — and you'll mistake one slice for the whole picture.
@@ -708,7 +720,7 @@ one table, confidently — and you'll mistake one slice for the whole picture.
 ### Business examples
 | Question | Mode | Why |
 |---|---|---|
-| "What was AUM by asset class as of 30 June 2026?" | Chat | one balance, one as-of date, one cut |
+| "What was AUM by asset class as of 30 June 2026?" | Chat | one balance, one as-of date, one breakdown |
 | "Which funds are losing assets, and what's driving it?" | Agent | needs several angles — net flows by channel, redemptions vs exchanges, return against benchmark, share-class mix |
 | "Summarise the investment committee memos on emerging-market equity alongside the flow trend for those funds" | Agent | unstructured files in a volume, joined to structured tables |
 | "What was the market value of account AC000884120 as of 30 June 2026?" | Chat | one lookup |

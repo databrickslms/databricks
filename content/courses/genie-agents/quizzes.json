@@ -93,13 +93,24 @@
     {
       "q": "A good question names four things. Which set is it?",
       "options": [
-        "A table, a column, a join, and a date range",
+        "A table, a column, a join, and a range of dates",
         "A question, a chart, a filter, and a dashboard to publish it on",
-        "A measure, a cut, a filter, and a point in time",
+        "A measure, a breakdown, a filter, and a point in time",
         "A metric, an owner, a definition, and a source"
       ],
       "answer": 2,
-      "why": "Nearly every question that fails is missing one of those four. The point in time causes the most trouble, because a balance and a period need different kinds of date."
+      "why": "Nearly every question that fails is missing one of those four. Breakdown and filter get confused most often, because both name a column."
+    },
+    {
+      "q": "'AUM by channel' and 'AUM for the intermediary channel' both mention channel. What is the difference?",
+      "options": [
+        "The first needs an as-of date, while the second works over any period you like",
+        "The first is a filter and the second is a breakdown, so the second runs faster",
+        "They are the same request, and Genie will produce identical results for both",
+        "The first splits the total into four numbers; the second returns one smaller number"
+      ],
+      "answer": 3,
+      "why": "A breakdown splits one number into several that still add up to the total. A filter throws rows away before the number is worked out. The same column can do either job, and you often want both at once."
     },
     {
       "q": "Why is 'What was our AUM in June?' a risky way to ask?",
