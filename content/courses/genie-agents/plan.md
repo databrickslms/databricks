@@ -767,9 +767,29 @@ answering usefully needs several. Spotting those is the point of the lab.
 A single model call is simple: text goes in, text comes out. If it gets something wrong, there is
 one place to look.
 
-Genie is not that. It is a **compound AI system**, meaning several components that hand work to
-each other, each doing a different job. Some of them are AI. Some are ordinary software that does
-exactly what it is told, every time.
+Genie is not that. It is a **compound AI system**: an architecture that, in Databricks' own
+words, combines *"multiple interacting components"*, including several calls to models, plus
+retrievers, tools and data sources. Some of those components are AI. Some are ordinary software
+that does exactly what it is told, every time.
+
+#### Why not just use a bigger model?
+
+Because some of what you need cannot be got from a model at all, however large.
+
+A model has no notion of who is asking. It cannot enforce a row filter, respect a grant, or
+decide that this person may not see a client's date of birth. Those are properties of a
+**permission system**, and the only way to have them is to build the model into something that
+includes one. The same is true of arithmetic you need to be exactly right every time: a database
+guarantees that, and a model does not.
+
+There is a second, more practical reason. Making the model bigger produces diminishing returns,
+while improving the system around it, better retrieval, better examples, a governed metric
+definition, tends to be both cheaper and more effective. That is the whole premise of this
+course. You are not going to improve the model. You are going to improve everything around it.
+
+> Further reading: [What are Compound AI Systems?](https://www.databricks.com/blog/what-are-compound-ai-systems)
+
+#### How a question travels through it
 
 Here is the path your question takes:
 
@@ -856,6 +876,11 @@ hierarchy above makes the right answer far more likely. None of it forces one.
 
 The only layer that guarantees anything is **Unity Catalog**: row filters, column masks and
 grants. Those are rules, not suggestions. Everything above them is guidance.
+
+This is not a shortcoming that someone will patch later. It is the reason Genie is built as a
+system rather than a model in the first place, as the section above described: the guarantees
+live in the components that are not AI, and that is exactly where you should put anything that
+has to be true every time.
 
 Say this out loud when you present an agent. The alternative is a CFO discovering it the night
 before results.
@@ -2076,6 +2101,7 @@ Databricks docs (`docs.databricks.com`, AWS paths; GCP/Azure equivalents exist):
 | Business user guide | `/aws/en/genie-agents/talk-to-genie` |
 | Agent mode | `/aws/en/genie/agent-mode` |
 | Genie Agents API | `/aws/en/genie-agents/conversation-api` |
+| What are Compound AI Systems? (blog) | `databricks.com/blog/what-are-compound-ai-systems` |
 | Budgets and cost controls | `/aws/en/genie/budgets` |
 | Genie Code | `/aws/en/genie-code/` |
 | Metric views | `/aws/en/metric-views/` |

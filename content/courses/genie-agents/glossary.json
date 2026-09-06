@@ -273,7 +273,7 @@
   },
   "compound AI system": {
     "match": "compound AI system",
-    "def": "A system built from several components that hand work to each other, rather than a single model call. Genie gathers context, plans, writes SQL, runs it and assembles an answer, and only some of those steps are AI."
+    "def": "An architecture that combines several interacting components, including more than one call to a model, plus retrievers, tools and data sources, rather than relying on a single model. Genie gathers context, plans, writes SQL, runs it and assembles an answer, and only some of those steps are AI."
   },
   "thinking time": {
     "match": "thinking time|thinking[- ]vs[- ]query",
@@ -282,5 +282,13 @@
   "query time": {
     "match": "query time",
     "def": "The part of an answer spent with the warehouse actually running the SQL. Fixed by tuning tables and compute, not by curation."
+  },
+  "retriever": {
+    "match": "\\bretriev(er|al)s?\\b",
+    "def": "The part of a system that finds the relevant material to show the model, rather than showing it everything. Genie retrieves the tables, examples and instructions that suit your question."
+  },
+  "permission system": {
+    "match": "permission systems?",
+    "def": "The component that decides who may see what. A model cannot do this on its own, which is one of the main reasons Genie is built as a system around Unity Catalog rather than as a model alone."
   }
 }
