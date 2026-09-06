@@ -43,6 +43,12 @@ export default async function ReferencePage({
         <h1 className="mt-2 font-display text-[2.2rem] leading-tight tracking-[-0.015em]">{doc.title}</h1>
       </header>
       <div className="prose-course mt-8" dangerouslySetInnerHTML={{ __html: doc.html }} />
+        {doc.appendixHtml && (
+          <div
+            className="prose-course"
+            dangerouslySetInnerHTML={{ __html: doc.appendixHtml }}
+          />
+        )}
     </div>
   )
 }

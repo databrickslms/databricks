@@ -105,6 +105,13 @@ export default async function ModulePage({
           />
         )}
 
+        {doc.appendixHtml && (
+          <div
+            className="prose-course mt-16"
+            dangerouslySetInnerHTML={{ __html: doc.appendixHtml }}
+          />
+        )}
+
         <nav className="mt-14 grid gap-3 border-t pt-8 sm:grid-cols-2">
           {prev ? (
             <Link href={`/c/${id}/learn/${prev.slug}`} className="card card-hover p-4">

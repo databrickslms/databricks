@@ -17,6 +17,9 @@ export type Doc = {
   title: string
   summary: string
   html: string
+  /** The glossary appendix, rendered separately so the page can place it after
+      the knowledge check rather than in the middle of the lesson. */
+  appendixHtml: string
   headings: Heading[]
   readingMinutes: number
   // modules only
@@ -109,9 +112,15 @@ export function allDocs(courseId: string): Doc[] {
     .map((file) => {
       const { data, content } = matter(readFileSync(join(dir, file), 'utf8'))
       const words = content.split(/\s+/).length
+      // Split on the source rather than the rendered HTML: the heading text is
+      // stable, the markup around it is not.
+      const at = content.indexOf('### Appendix: terms used in this module')
+      const body = at === -1 ? content : content.slice(0, at)
+      const appendix = at === -1 ? '' : content.slice(at)
       return {
-        ...(data as Omit<Doc, 'html' | 'headings' | 'readingMinutes'>),
-        html: md.render(content),
+        ...(data as Omit<Doc, 'html' | 'appendixHtml' | 'headings' | 'readingMinutes'>),
+        html: md.render(body),
+        appendixHtml: appendix ? md.render(appendix) : '',
         headings: extractHeadings(content),
         readingMinutes: Math.max(2, Math.round(words / 220)),
       } as Doc

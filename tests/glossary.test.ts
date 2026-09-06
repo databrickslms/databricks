@@ -51,7 +51,17 @@ for (const [term, v] of terms) {
   check('every term is used somewhere', unused.length === 0, unused.map(([t]) => t).join(', '))
 }
 
-// Every module gets one, and it goes last.
+// The appendix is split out of doc.html in src/lib/content.ts so the lesson
+// page can render it after the knowledge check. If the heading text here and
+// the string it splits on ever diverge, the appendix silently reappears in the
+// middle of the lesson.
+{
+  const contentTs = readFileSync(join(process.cwd(), 'src/lib/content.ts'), 'utf8')
+  check('content.ts splits on the same heading',
+    contentTs.includes("'### Appendix: terms used in this module'"))
+}
+
+// Every module gets one, and it goes last in the source.
 for (const { file, text } of bodies) {
   const i = text.indexOf('### Appendix: terms used in this module')
   check(`${file}: has an appendix`, i > -1)
