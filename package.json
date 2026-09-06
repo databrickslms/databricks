@@ -14,10 +14,11 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "test:db": "tsx --tsconfig tests/tsconfig.json tests/db.test.ts",
-    "test": "npm run test:diagrams && npm run test:db",
+    "test": "npm run test:diagrams && npm run test:quizzes && npm run test:db",
     "preview": "npm run content && PREVIEW=1 next dev",
     "verify:db": "node scripts/verify-db.mjs",
-    "test:diagrams": "tsx --tsconfig tests/tsconfig.json tests/diagrams.test.ts"
+    "test:diagrams": "tsx --tsconfig tests/tsconfig.json tests/diagrams.test.ts",
+    "test:quizzes": "tsx --tsconfig tests/tsconfig.json tests/quizzes.test.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.4",
