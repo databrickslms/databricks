@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export type Question = { q: string; options: string[]; answer: number; why: string }
 
@@ -18,12 +17,12 @@ export function Quiz({
   signedIn: boolean
   bestScore?: number | null
 }) {
-  const router = useRouter()
   const resultsRef = useRef<HTMLDivElement>(null)
   const sectionRef = useRef<HTMLElement>(null)
   const [picked, setPicked] = useState<(number | null)[]>(() => questions.map(() => null))
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [savedBest, setSavedBest] = useState<number | null>(bestScore ?? null)
   const [error, setError] = useState<string | null>(null)
 
   const answered = picked.filter((p) => p !== null).length
@@ -59,7 +58,7 @@ export function Quiz({
         }),
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Could not save your score')
-      router.refresh()
+      setSavedBest((b) => (b === null || score > b ? score : b))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save your score')
     } finally {
@@ -82,8 +81,8 @@ export function Quiz({
             <h2 className="font-display text-[1.4rem] leading-none">Knowledge check</h2>
             <p className="mt-1.5 text-[0.8rem] text-muted">
               {questions.length} questions · 70% to pass
-              {typeof bestScore === 'number' && (
-                <> · best so far <span className="font-medium text-ink">{bestScore}/{questions.length}</span></>
+              {typeof savedBest === 'number' && (
+                <> · best so far <span className="font-medium text-ink">{savedBest}/{questions.length}</span></>
               )}
             </p>
           </div>
@@ -217,13 +216,21 @@ export function Quiz({
                 </div>
 
                 {submitted && (
-                  <p
+                  <div
                     className="mt-3 rounded-lg px-3 py-2.5 text-[0.83rem] leading-relaxed sm:ml-7"
                     style={{ background: 'rgb(var(--ink) / .05)', color: 'rgb(var(--ink))' }}
                   >
-                    <strong className="font-semibold text-ink">Why: </strong>
-                    {question.why}
-                  </p>
+                    <p>
+                      <strong className="font-semibold" style={{ color: 'rgb(var(--teal))' }}>
+                        Correct answer:{' '}
+                      </strong>
+                      {question.options[correct]}
+                    </p>
+                    <p className="mt-1.5">
+                      <strong className="font-semibold">Why: </strong>
+                      {question.why}
+                    </p>
+                  </div>
                 )}
               </li>
             )

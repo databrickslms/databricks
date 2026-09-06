@@ -88,29 +88,62 @@
         "What was AUM by asset class as of 30 June 2026?"
       ],
       "answer": 1,
-      "why": "Genie retrieves and computes, it does not diagnose causes. Ask for the evidence, meaning the trend and the breakdown, then draw the conclusion yourself."
+      "why": "Genie can fetch numbers and do the maths. It cannot tell you why something happened. Ask for the trend and the breakdown, then form your own view of the cause."
+    },
+    {
+      "q": "A good question names four things. Which set is it?",
+      "options": [
+        "A table, a column, a join, and a date range",
+        "A question, a chart, a filter, and a dashboard to publish it on",
+        "A measure, a cut, a filter, and a point in time",
+        "A metric, an owner, a definition, and a source"
+      ],
+      "answer": 2,
+      "why": "Nearly every question that fails is missing one of those four. The point in time causes the most trouble, because a balance and a period need different kinds of date."
+    },
+    {
+      "q": "Why is 'What was our AUM in June?' a risky way to ask?",
+      "options": [
+        "June is ambiguous because the financial year starts in October each year",
+        "The word AUM is a synonym that the agent has not been taught to recognise",
+        "AUM is only published quarterly, so a monthly figure will not exist yet",
+        "AUM is a balance, so a whole month invites Genie to add up every day in it"
+      ],
+      "answer": 3,
+      "why": "A balance is a value at one moment. Ask for a month and Genie may total thirty daily values and return a number thirty times too big, with no error shown. Ask 'as of 30 June' instead."
     },
     {
       "q": "You ask a question, then follow up with 'only for the Northeast'. When does that context apply?",
       "options": [
-        "Only within the same thread",
-        "Across every chat with that agent",
-        "Only if you re-state the original question",
-        "For the rest of your session in any agent"
+        "Only within the same thread of conversation",
+        "Across every chat you open with that agent",
+        "Only if you restate the original question",
+        "For the rest of your session, in any agent"
       ],
       "answer": 0,
-      "why": "Threads carry context; separate chats do not. Reopening a thread is also how you re-run a recurring question."
+      "why": "A thread remembers what came before. A new chat starts from nothing, which is why four separate chats give you four answers that do not add up."
     },
     {
-      "q": "What does clicking 'Fix it' on a wrong answer actually accomplish?",
+      "q": "You asked for discretionary portfolios only. What should you check in Show code?",
       "options": [
-        "It automatically rewrites the SQL",
-        "It deletes the conversation",
-        "It reports a bug to Databricks support",
-        "It flags the response for the agent's author to diagnose and correct"
+        "That the query runs in under ninety seconds overall",
+        "That the query uses a join rather than a subquery",
+        "That the query returns fewer than one thousand rows in total",
+        "That something about discretion appears in the query"
       ],
       "answer": 3,
-      "why": "Feedback is how authors find problems. A thumbs-up can even prompt Genie to suggest a new reusable snippet, so rating is not a formality."
+      "why": "A dropped filter is the most common quiet failure. If nothing about discretion appears, you were given the whole book and the number will look perfectly reasonable."
+    },
+    {
+      "q": "What does clicking 'Fix it' on a wrong answer actually do?",
+      "options": [
+        "It flags the answer for whoever maintains the agent",
+        "It reports a bug to Databricks support on your behalf",
+        "It rewrites the query and immediately runs the whole question again for you",
+        "It deletes the conversation so nobody else can reuse it"
+      ],
+      "answer": 0,
+      "why": "Feedback is how the agent's owner finds problems. Rating a good answer can also prompt Genie to offer them a reusable snippet, so the two seconds are worth spending."
     }
   ],
   "3": [

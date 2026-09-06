@@ -564,95 +564,109 @@ disagreements are the interesting part, and they preview Module 5.
 ### Knowledge check
 
 ## Module 2 — Asking Questions That Actually Work
-**Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers — the whole of the Business User track
+**Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers, and the whole of the Business User track
 
-**Summary:** What separates a question Genie can answer from one it can't, and how to sanity-check an answer before you act on it.
+**Summary:** What separates a question Genie can answer from one it can't, and how to check an answer before you act on it.
 
 ### Learning outcomes
-1. Write questions Genie can answer, and recognise the ones it can't.
+1. Write questions Genie can answer, and spot the ones it can't.
 2. Name the four things every answerable question needs.
-3. Use follow-ups and threads instead of re-asking.
-4. Read the **Analysis** panel to sanity-check an answer before you act on it.
+3. Use follow-up questions in one thread instead of starting again.
+4. Check an answer before you put it in front of anyone.
 5. Give feedback that actually improves the agent.
 
-### Key concepts
-- Genie uses **chain-of-thought reasoning**: it breaks the question into steps, picks columns, plans SQL, runs it.
-- The **Analysis / thinking steps** panel shows how the question was interpreted, which sources were used, and a **Show code** button for the generated SQL.
-- **Threads carry context; separate chats do not.**
-- Outputs: an auto-generated chart (editable, savable to a dashboard, downloadable as PNG), CSV download (~1 GB), copy to clipboard.
-- **Feedback is a product feature.** Rate a response **Yes** / **Fix it** / **Request review**. A thumbs-up on an answer that joins tables or uses a SQL expression can prompt Genie to *suggest a new reusable snippet* to the author. Rating is not a formality — it trains the agent.
+### What happens when you ask
+
+Genie does not look up a stored answer. Each time you ask, it works out which tables it needs,
+writes a query, runs it, and shows you the result. You can see every step of that.
+
+- **The Analysis panel** shows how it read your question and which tables it used.
+- **Show code** reveals the query it wrote. You do not need to read it fluently to use it.
+- **A thread remembers.** Follow-up questions build on what came before. A brand new chat starts
+  from nothing.
+- **You can keep the answer.** Charts can be edited and saved to a dashboard, and results
+  download as CSV or copy to the clipboard.
+- **Rating an answer changes the agent.** Mark it **Yes**, **Fix it**, or **Request review**.
+  A positive rating on a good answer can prompt Genie to offer the author a reusable snippet, and
+  a **Fix it** goes to the person who can correct it for everyone. It is worth the two seconds.
 
 ### The four things a good question names
 
-Most questions that fail are missing one of four things. Before you send a question, check that
-it names:
+Nearly every question that fails is missing one of four things. Before you send one, check that
+it says:
 
 | | | Example |
 |---|---|---|
-| **A measure** | the number you want | AUM, net flows, time-weighted return |
+| **A measure** | the number you want | AUM, net flows, return |
 | **A cut** | how to break it up | by asset class, by channel, by fund |
-| **A filter** | which slice counts | discretionary only, settled flows only |
+| **A filter** | which part counts | discretionary only, settled only |
 | **A point in time** | when | as of 30 June 2026, or FY2026 Q3 |
 
-The last one trips people up most, because two different kinds of number need two different
-kinds of time. **AUM is a balance** — it exists at a moment, so it needs an *as-of date*.
-**Flows and returns are periods** — they accumulate, so they need a *date range*. Asking for
-"AUM in June" invites Genie to add up thirty daily snapshots and hand you a number thirty
-times too large. Ask for "AUM as of 30 June" and there is nothing to add up.
+The last one causes the most trouble, because two kinds of number need two kinds of time.
 
-### The question quality ladder (core artifact — distribute widely)
+**AUM is a balance.** It is a value at one moment, so it needs a single date. **Net flows and
+returns build up over a period**, so they need a range.
 
-| ❌ Genie will struggle | ✅ Rewrite | Why |
+This matters more than it sounds. Ask for "AUM in June" and Genie may add up all thirty daily
+values and hand you a number thirty times too big, with no error and no warning. Ask for "AUM as
+of 30 June" and there is nothing to add up.
+
+### The question quality ladder
+
+| ❌ Genie will struggle | ✅ Ask instead | Why |
 |---|---|---|
-| "Why did AUM fall last quarter?" | "What was total AUM by asset class at each month-end for the last eight months?" | Genie retrieves and computes; it does not diagnose causes. Get the shape of the movement, then form your own hypothesis and test *that*. |
-| "Which funds should we close?" | "Which funds had net outflows in each of the last four quarters, and what is their AUM as of the latest reporting date?" | Genie doesn't make recommendations. Ask for the evidence and decide yourself. |
-| "Tell me about the Northeast, and compare advisors, and what about outflows" | three questions, one thread | One question at a time. Genie answers the last thing it understood, not all three. |
-| "Show me our best funds" | "Show the ten funds with the largest net flows in FY2026 Q3" | "Best" is undefined — largest by AUM, by net flows, by return? And which return? No metric, no period, no ranking size. |
-| "What's our AUM?" | "What was discretionary AUM, excluding held-away assets, as of 30 June 2026?" | AUM has three defensible readings at Meridian, and it's a point-in-time balance — it needs an as-of date, not a period. |
-| "What was our return last year?" | "What was the net-of-fees time-weighted return by strategy for the YTD period as of 30 June 2026?" | Three ways to measure your own return sit in one table — plus a fourth column holding the *benchmark's* return, which is not yours — each across six period types. And "last year" is ambiguous when the fiscal year starts 1 October. |
-| "How much did we sell in Q2?" | "What were gross subscriptions, excluding exchanges, for settled flows with a trade date in FY2026 Q3?" | Exchanges between Meridian funds are not sales. Pending and cancelled flows are not money. And trade date is not settlement date. |
-| "AUM for California" | "AUM as of 30 June 2026 for advisors in CA" | The data stores `CA`, not "California". A human reads through it; a filter doesn't. |
+| "Why did AUM fall last quarter?" | "What was total AUM by asset class at each month-end for the last eight months?" | Genie can fetch numbers and do the maths. It cannot tell you why something happened. Get the shape of the change, then form your own view. |
+| "Which funds should we close?" | "Which funds had net outflows in each of the last four quarters, and what is their AUM now?" | Genie does not make recommendations. Ask for the evidence and decide yourself. |
+| "Tell me about the Northeast, and compare advisors, and what about outflows" | three separate questions in one thread | Ask one thing at a time. Genie answers the last thing it understood, not all three. |
+| "Show me our best funds" | "Show the ten funds with the largest net flows in FY2026 Q3" | "Best" could mean biggest, fastest growing, or best performing. Say which, over what period, and how many you want. |
+| "What's our AUM?" | "What was discretionary AUM, excluding held-away assets, as of 30 June 2026?" | Meridian has three honest answers to "what is our AUM". Say which one you mean, and give it a date. |
+| "What was our return last year?" | "What was the net-of-fees time-weighted return by strategy, year to date, as of 30 June 2026?" | Gross, net and money-weighted returns all sit in the same table and all differ. And "last year" is unclear when the financial year starts in October. |
+| "How much did we sell in Q2?" | "What were gross subscriptions in FY2026 Q3, excluding exchanges, counting settled money only?" | Money moving between our own funds is not a sale. Pending and cancelled orders are not money yet. |
+| "AUM for California" | "AUM as of 30 June 2026 for advisors in CA" | The data holds `CA`, not "California". A person reads through that difference. A filter does not. |
 
-Note what the good column has in common: it is *longer*, and it is *boring*. Precision reads as
-pedantic and produces answers you can defend in a meeting. That trade is always worth it.
+Notice what the good column has in common. Every one of them is longer and duller than the
+question it replaces. Being that specific can feel like overkill, and it is what gets you a
+number you can defend in a meeting.
 
-### Business example — the follow-up pattern
+### Use one thread, not four chats
 
 ```
 Q1: "Show AUM by asset class as of 30 June 2026"
-Q2: "Only the intermediary channel"        ← follow-up, inherits Q1's context
+Q2: "Only the intermediary channel"        ← builds on Q1
 Q3: "Now split that by region"             ← keeps narrowing
 Q4: "How does that compare with 31 March 2026?"
 ```
 
-Four questions, one thread, one consistent definition of AUM running through all of them.
+Four questions, one thread, and the same definition of AUM running through all of them.
 
-The anti-pattern is four separate chats. You will get four answers that each look reasonable and
-don't reconcile, because nothing carried the "discretionary only" decision from the first chat
+Start four separate chats instead and you get four answers that each look fine on their own but
+do not add up, because nothing carried your "discretionary only" decision from the first chat
 into the fourth.
 
-### Reading the Analysis panel — three checks before you act
+### Three checks before you use an answer
 
-Open **Analysis** and **Show code** on any answer you plan to put in front of someone. You do not
-need to read SQL fluently. You need to check three things:
+Open **Analysis** and **Show code** on anything you plan to show someone else. You do not need to
+read SQL well. You need to check three things.
 
-1. **Which tables did it use?** Meridian ships two tables that both look like they hold AUM. If
-   the answer came from the wrong one, nothing downstream is worth anything. The certified table
-   is the one to expect.
-2. **Did the filter you asked for actually appear?** A dropped filter is the most common silent
-   failure. If you said "discretionary only" and no condition on discretion appears in the code,
-   you got the whole book.
-3. **Was a balance summed instead of filtered?** For AUM, look for a single date, not a range. A
-   `SUM` over many dates is the wrong-number-that-looks-right failure.
+1. **Which tables did it use?** Meridian has two tables that both look like they hold AUM, and
+   only one is the official source. If the answer came from the other one, stop there.
+2. **Did your filter survive?** This is the most common quiet failure. If you asked for
+   discretionary only, something about discretion should appear in the query. If it does not, you
+   were given the whole book.
+3. **Was a balance added up?** For AUM, look for one date rather than a range. Adding up many
+   dates gives a wrong number that looks perfectly reasonable.
 
-If any check fails, don't re-ask the same question louder. Rate it **Fix it** and say what was
-wrong — that routes to the agent's author, who can fix it once for everyone.
+If a check fails, do not simply ask again in different words. Rate the answer **Fix it** and say
+what was wrong. That reaches the person who maintains the agent, who can fix it once for
+everybody.
 
-### Lab 2 (20 min) — GRADED
-Rewrite 8 badly-written questions from Meridian stakeholders, run each against the pre-built
-Wealth agent, and paste the generated SQL. Graded on rewrite quality, not SQL. Two of the eight
-cannot be rescued by rewriting at all — say so and explain why. Recognising an unanswerable
-question is the skill being tested.
+### Lab 2 (20 min), graded
+
+Rewrite 8 poorly worded questions from Meridian colleagues, run each one against the Wealth
+agent, and paste in the query it produced. You are marked on the rewrites, not the SQL.
+
+Two of the eight cannot be fixed by rewording at all. Say which, and why. Spotting a question
+Genie should not be asked is the skill being tested.
 
 **Docs:** `/genie-agents/talk-to-genie`, `/genie-one/chat`
 
