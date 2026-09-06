@@ -270,5 +270,17 @@
   },
   "latency": {
     "def": "How long an answer takes. Splits into thinking time, which is the model working, and query time, which is the warehouse working."
+  },
+  "compound AI system": {
+    "match": "compound AI system",
+    "def": "A system built from several components that hand work to each other, rather than a single model call. Genie gathers context, plans, writes SQL, runs it and assembles an answer, and only some of those steps are AI."
+  },
+  "thinking time": {
+    "match": "thinking time|thinking[- ]vs[- ]query",
+    "def": "Every part of answering except running the query: gathering context, planning, writing the SQL and assembling the reply. Usually the larger half of a slow answer."
+  },
+  "query time": {
+    "match": "query time",
+    "def": "The part of an answer spent with the warehouse actually running the SQL. Fixed by tuning tables and compute, not by curation."
   }
 }

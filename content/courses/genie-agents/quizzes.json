@@ -194,6 +194,28 @@
   ],
   "4": [
     {
+      "q": "Which stage of answering a question is not AI at all?",
+      "options": [
+        "Assembling the rows into a sentence and a chart",
+        "Planning which tables to use and how to join",
+        "Running the query against the warehouse",
+        "Gathering the context relevant to the question"
+      ],
+      "answer": 2,
+      "why": "The warehouse does exactly what the SQL tells it, every time. That is why a slow answer and a wrong answer are different problems: execution can be slow or time out, but it cannot invent a wrong number."
+    },
+    {
+      "q": "Genie returns a number that is far too high, from a query that ran without error. Which stage failed?",
+      "options": [
+        "Planning, because the query itself did exactly what it said",
+        "Assembling the answer, because the summary misread the result set",
+        "Gathering context, because the tables were not attached to the agent",
+        "Running the query, because the warehouse mis-aggregated the rows"
+      ],
+      "answer": 0,
+      "why": "The warehouse ran valid SQL and returned what that SQL asked for. The mistake was made earlier, when the plan chose the wrong tables, grain or join. That is a curation problem and it is yours to fix."
+    },
+    {
       "q": "In the influence hierarchy, which input has the strongest effect on an answer?",
       "options": [
         "A trusted asset (verified query or UC function)",
