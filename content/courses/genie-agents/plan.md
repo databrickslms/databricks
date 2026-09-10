@@ -1220,22 +1220,22 @@ them anyway: the base tables outlive this agent, and the next author starts from
 
 ### Demo (15 min)
 **Setup — both agents are provisioned from code, not built by hand.** Create Genie Space takes the whole
-configuration in one call, so the two demo agents are checked-in `serialized_space` definitions:
+configuration in one call, so the two demo agents ship as `serialized_space` definitions and are created by
+**notebook `08_agents`**, run in order after `07_metric_view`:
 
+```python
+import databricks360 as academy
+
+academy.create_agents('genie-agents', dry_run=True)   # check, create nothing
+academy.create_agents('genie-agents')                 # create both
 ```
-databricks360/courses/genie_agents/agents/broken.geniespace.json
-databricks360/courses/genie_agents/agents/curated.geniespace.json
 
-python3 scripts/create_agents.py --dry-run   # render, check every object exists
-python3 scripts/create_agents.py             # create both
-```
+Object names come from the same layout as the notebooks, so the agents follow whichever catalog and schema
+you installed into. The dry run refuses to create an agent whose tables are missing — an agent pointed at a
+table that does not exist fails on every question, and the failure looks like a Genie problem rather than a
+notebook you skipped.
 
-Object names come from the same `{{CORE}}` / `{{STAGING}}` placeholders the notebooks use, so the agents
-follow whichever layout you installed. The dry run fails loudly if a table is missing — an agent pointed at
-a table that does not exist fails on every question, and the failure looks like a Genie problem rather than
-a notebook you skipped.
-
-**Requires** `04_staging`, `06_curated` and `07_metric_view` to have been run.
+**Requires** `04_staging`, `06_curated` and `07_metric_view` to have been run first.
 
 **The demo.** Ask the uncurated agent *"What was our AUM in California at the end of last year?"* → it sums a
 daily snapshot, includes held-away assets, uses the calendar year, and returns nothing for "California". Four
