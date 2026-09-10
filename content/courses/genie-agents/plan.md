@@ -272,7 +272,7 @@ you know then is the most useful thing you produce today.
 
 > Step 3 is the module. Steps 1 and 2 are typing.
 
-**Graded by machine.** `academy.check_lab('genie-agents', 0, schema='<your schema>')` runs 8 checks against the dataset you built.
+**Graded by machine.** `academy.check_lab('genie-agents', 0, schema='<your schema>')` runs 8 checks against your work.
 ### Watch the setup end to end
 
 ```video
@@ -562,12 +562,12 @@ Then pick the single hardest one and list every business definition that would h
 before any tool could answer it correctly. Compare your list with a colleague's. The
 disagreements are the interesting part, and they preview Module 5.
 
+
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 1)` lists what a reviewer looks for.
 ## Module 2 — Asking Questions That Actually Work
 **Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers, and the whole of the Business User track
 
 **Summary:** What separates a question Genie can answer from one it can't, and how to check an answer before you act on it.
-
-**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 1)` lists what a reviewer looks for.
 ### Learning outcomes
 1. Write questions Genie can answer, and spot the ones it can't.
 2. Name the four things every answerable question needs.
@@ -682,12 +682,12 @@ Genie should not be asked is the skill being tested.
 
 ---
 
+
+**Reviewed by a person.** `academy.check_lab('genie-agents', 2, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
 ## Module 3 — Chat Mode vs Agent Mode (Answers vs Research)
 **Level:** Beginner–Intermediate · **Duration:** 45 min
 
 **Summary:** When a single query is enough, when the question needs research, and what Agent mode costs you in time and spend.
-
-**Reviewed by a person.** `academy.check_lab('genie-agents', 2, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
 ### Learning outcomes
 1. Choose the right mode for a question.
 2. Set expectations on speed, depth and cost.
@@ -911,12 +911,12 @@ the exercise.
 
 ---
 
+
+**Reviewed by a person.** `academy.check_lab('genie-agents', 4, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
 ## Module 5 — Fiscal Calendars, Metric Definitions, and Why Business Language Is the Hard Part
 **Level:** Intermediate · **Duration:** 45 min
 
 **Summary:** The words your business argues about are the ones Genie will get wrong. How to find them and settle them.
-
-**Reviewed by a person.** `academy.check_lab('genie-agents', 4, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
 ### Learning outcomes
 1. Identify the terms in their own domain that carry more than one meaning.
 2. Produce a signed-off business glossary before building anything.
@@ -1471,8 +1471,6 @@ step 8 are read by a person — a checker cannot tell whether your reasoning was
 
 > **The highest-value module in the course.** Everything before it prepares for this, and
 > everything after it measures or operates what you build here.
-
-**Graded by machine.** `academy.check_lab('genie-agents', 8, schema='<your schema>')` runs 4 checks against your work.
 ### Learning outcomes
 1. Build agent-scoped metadata and synonyms.
 2. Configure **entity matching / value dictionaries** for categorical columns.
@@ -1546,7 +1544,65 @@ Fix at three layers, in order:
 Genie proposes new joins and SQL expressions by reading Unity Catalog schemas and observing author behaviour — thumbs-up on responses and downloaded queries. Teach authors that **their own upvotes are training signal**, and to review suggestions rather than accept blindly.
 
 ### Lab 9 (40 min) — GRADED, hardest lab
-On the MFG agent: add synonyms for 10 business terms (start with AUM, AUA, net new money, equities, cash), enable entity matching on 4 categorical columns, declare all 6 join relationships with correct cardinality, and author 8 SQL expressions (3 filters, 4 measures, 1 field). Then re-run the 9 broken questions from Lab 4 and show which now pass.
+This is the hardest lab in the course, and the one that moves the number most. Work in order —
+each step feeds the next, and step 6 is where you find out whether any of it worked.
+
+**Before you start:** your agent from Lab 8, and the nine wrong answers you diagnosed in Lab 4.
+
+---
+
+**Step 1 — Add synonyms for 10 business terms (8 min).**
+Start with the five that break most often: **AUM**, **AUA**, **net new money**, **equities**, **cash**.
+Put each synonym where the thing it names actually lives — on the measure for `AUM`, on the
+dimension for `equities`.
+*Watch out:* keep AUM and AUA synonyms apart. "total assets" belongs to AUA, and giving it to AUM
+is how the held-away number quietly enters your headline figure.
+*You know it worked when:* asking for "net new money" returns the same number as asking for "net flows".
+
+**Step 2 — Turn on entity matching for 4 categorical columns (7 min).**
+`dim_advisor.state`, `dim_advisor.region`, `dim_asset_class.asset_class_code`, and one more you
+choose. Curate the real values.
+
+This is the fix for the most embarrassing failure in the course: without it, *"How did our
+California advisors do?"* becomes `WHERE state = 'California'`, the table holds `'CA'`, and Genie
+returns a confident **zero** — or drops the filter and hands you the national number labelled
+California.
+*Limits:* 120 columns, 1,024 values each, string columns only.
+*You know it worked when:* "California", "Californa" and "CA" all return the same rows.
+
+**Step 3 — Declare the join relationships (6 min).**
+All six, with the right cardinality — Many-to-One, One-to-Many, One-to-One. Do not leave Genie to
+infer them.
+*Why it matters:* an undeclared join is where fan-out comes from, and fan-out produces a number
+that is too big but entirely plausible.
+*You know it worked when:* a query joining accounts to clients returns the account count you expect,
+not a multiple of it.
+
+**Step 4 — Author 8 SQL expressions (12 min).**
+Three filters, four measures, one field.
+
+| Type | Write these |
+|---|---|
+| **Filters** (3) | `Settled only` → `status = 'SETTLED'` · `Discretionary` → `is_discretionary` · `External money` → `NOT is_internal` |
+| **Measures** (4) | `aum_usd` · `aua_usd` · `net_flows_usd` → `SUM(external_sign * amount_usd)` · `avg_account_value` |
+| **Field** (1) | `account_size_band` → a CASE over `managed_value_usd` |
+
+A measure defined once here cannot drift. The same measure retyped into five dashboards always does.
+*You know it worked when:* the agent uses your `net_flows_usd` rather than inventing its own sum.
+
+**Step 5 — Check your snippet budget (2 min).**
+Table descriptions, join relationships and SQL expressions **share one ceiling of 200 per agent**.
+Text instructions, example queries, SQL functions and column descriptions do **not** count.
+*You know it worked when:* you can state your number, not guess it.
+
+**Step 6 — Re-run the nine broken questions from Lab 4 (5 min).**
+This is the point of the lab. Run each one again and record which now pass, which still fail, and
+**which layer** would fix the remainder.
+
+Some will still fail. That is expected — a few of the nine are not knowledge-store problems at all,
+and recognising which is the skill. "Return" stays ambiguous no matter how many synonyms you add,
+because the ambiguity is real; it needs a clarification instruction, and that is Module 10.
+*You know it worked when:* you can say, for every one of the nine, which layer owns the fix.
 
 **Graded by machine.** `academy.check_lab('genie-agents', 9, schema='<your schema>')` runs 6 checks against your work.
 ### Common mistakes
@@ -1648,7 +1704,65 @@ EXAMPLE      — the exact question to ask
 **Teaching point:** deliberately leaving headroom is professional practice. Monitoring *will* surface questions you didn't predict.
 
 ### Lab 10 (40 min) — GRADED
-Add 10 example queries (≥3 parameterised with typed, commented parameters), register 2 UC functions as trusted assets (one must settle the AUM definition, one the flow netting), and write 4 text instruction blocks including one clarification rule for "return" using the four-part template. Submit an instruction budget table.
+Everything here spends from one budget of **100 instructions**. Every example query, every SQL
+function, and the whole text block each count as one. Spend deliberately.
+
+**Before you start:** your agent from Lab 9, and the ambiguous "What was our AUM?" starter you kept
+from Lab 8 step 8.
+
+---
+
+**Step 1 — Write 10 example queries, titled the way users ask (15 min).**
+The title drives prompt matching, so it must be the user's sentence, not a query name.
+
+❌ `q_aum_ac_fq`
+✅ `What was our AUM by asset class at the end of last fiscal quarter?`
+
+*You know it worked when:* you could paste any title into the chat box and it would read naturally.
+
+**Step 2 — Parameterise at least 3 of them (8 min).**
+Colon syntax, `:fiscal_quarter`. Types are String, Date, Date and Time, Decimal, Integer.
+**Always comment the valid values and the constraint** — the comment is how Genie picks a sensible
+value:
+
+```sql
+WHERE v.fiscal_quarter = :fiscal_quarter  -- Format 'FY2026-Q3'. Fiscal year starts Oct 1.
+```
+*You know it worked when:* a parameter comment explains both the format and the business quirk.
+
+**Step 3 — Register 2 UC functions as trusted assets (6 min).**
+One must settle the **AUM definition**, one the **flow netting**. `06_curated` already created four
+you can use: `aum_by_asset_class`, `net_flows`, `to_usd`, `fiscal_period`.
+
+A trusted asset means the verified logic is used as-is rather than re-derived. It also hides the
+implementation from users, which is the real win: nobody has to remember that exchanges are not sales.
+*You know it worked when:* asking for net flows produces the function's answer, not a fresh SUM.
+
+**Step 4 — Write 4 text instruction blocks (8 min).**
+Organise by topic: terminology, fiscal calendar, formatting, summaries. Be specific enough to follow.
+
+| ❌ Vague | ✅ Specific |
+|---|---|
+| "Use the right calendar" | "The fiscal year starts 1 October. FY2026 is 2025-10-01 to 2026-09-30. 'Last quarter' means the prior **fiscal** quarter unless the user says calendar. A quarter-end figure uses the last **business** day." |
+
+*Keep it short.* A warning appears around 5,000–7,000 characters, and past that Genie may **silently
+ignore** parts of what you wrote. Long prose also lengthens the thinking step, which Module 13 measures.
+
+**Step 5 — Write the clarification rule for "return" (5 min).**
+This is the one that fixes Lab 8's ambiguous starter. Use the four-part shape: **when**, **ask**,
+**example**, **then**.
+
+> **When** a user asks about return or performance without saying which measure, **ask** before
+> running any query. **Example:** "Do you mean time-weighted net of fees, which is what we report to
+> clients, or money-weighted, which reflects that client's own cash-flow timing?"
+
+*You know it worked when:* the agent asks instead of picking one of the three silently.
+
+**Step 6 — Submit your instruction budget (3 min).**
+A table: example queries + functions + text blocks = your total, against 100.
+
+Then go back and run **"What was our AUM?"** — the starter you kept from Lab 8. Compare the answer
+with what you recorded then. That difference is what this module bought you.
 
 **Graded by machine.** `academy.check_lab('genie-agents', 10, schema='<your schema>')` runs 4 checks against your work.
 ### Common mistakes
@@ -1734,17 +1848,65 @@ Fails if:  it silently picks one without saying which.
 **Teaching line:** *every "Fix it" is a free curation task with the answer already attached.*
 
 ### Lab 11 (40 min) — GRADED
-Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least one per planted flaw) with ground-truth SQL. Two of the traps must be questions where the *correct* behaviour is to ask for clarification rather than answer. Run it, record the score, fix the top 3 failures via the edit-and-save loop, re-run, report before/after.
+An agent nobody measured is an agent nobody should trust. This lab produces the evidence.
+
+**Before you start:** your agent from Lab 10.
+
+---
+
+**Step 1 — Write 10 smoke questions (6 min).**
+Questions that must **always** work: total AUM, AUA, account count, client count, average account
+value. If a smoke question fails, the agent is broken, not merely imperfect.
+*You know it worked when:* every one has a single unambiguous right answer.
+
+**Step 2 — Write 12 coverage questions (10 min).**
+One per topic the agent claims to answer. Walk your own description from Lab 8 and turn each clause
+into a question: AUM by asset class, by region, by state, by segment, by strategy; net flows by
+quarter, by type.
+*You know it worked when:* anything your description promises has a question testing it.
+
+**Step 3 — Write 8 trap questions, at least one per planted flaw (12 min).**
+This is where the marks are. One per flaw:
+
+| Trap | The flaw it catches |
+|---|---|
+| "AUM last year" | fiscal vs calendar year |
+| "Total AUM across the month" | summing a daily snapshot |
+| "AUM in California" | value matching — the column holds `CA` |
+| "Net new money" | exchanges double-counted |
+| "Gross sales" | `EXCHANGE_IN` wrongly included |
+| "What we advise on" | held-away vs managed |
+
+**Two of the eight must be questions where the correct behaviour is to ASK, not answer.**
+"What was our return last year?" is one — gross, net and money-weighted are all defensible.
+"How much do we manage for a client?" is another — household, relationship or account.
+
+Those two have **no ground-truth SQL**, and that is deliberate. Answering them at all is the failure.
+
+**Step 4 — Write ground-truth SQL for the other 28 (10 min).**
+Every question needs the answer you believe is right, as SQL. Run each one yourself first — a
+benchmark whose expected answers were never executed measures nothing.
+*You know it worked when:* all 28 execute clean and you have read the numbers.
+
+**Step 5 — Run the benchmark and record the score (5 min).**
+Write the number down before you change anything. You cannot report an improvement you did not
+baseline.
+
+**Step 6 — Fix the top 3 failures, then re-run (12 min).**
+Use the edit-and-save loop. For each fix, name the **layer** you fixed it in — data, knowledge store,
+example query, or instruction. Fixing in the wrong layer works once and rots.
+
+Report before and after, with the layer for each fix. **The layer is what is marked**, not the delta.
 
 
 ---
 
+
+**Graded by machine.** `academy.check_lab('genie-agents', 11, schema='<your schema>')` runs 3 checks against your work.
 ## Module 12 — Monitor, Triage, and Keep It Accurate Over Time
 **Level:** Advanced · **Duration:** 60 min
 
 **Summary:** Find quality problems before users report them, and turn each piece of feedback into a curation change that lasts.
-
-**Graded by machine.** `academy.check_lab('genie-agents', 11, schema='<your schema>')` runs 3 checks against your work.
 ### Learning outcomes
 1. Use the Monitor tab to find quality problems before users complain.
 2. Run a feedback triage process.
@@ -1799,14 +1961,14 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 
 ---
 
+
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 12)` lists what a reviewer looks for.
 ## Module 13 — Performance: Why Genie Feels Slow, and What Actually Fixes It
 **Level:** Advanced · **Duration:** 90 min · **Audience:** authors + platform owners
 
 **Summary:** Split a slow answer into thinking time and query time first, because the fixes for the two are entirely different.
 
 > Sourced from the *Genie Performance & Issues Playbook*. This module needs the **Large** data tier from Module 0 — you cannot teach latency on a toy dataset.
-
-**Reviewed by a person.** There is no automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 12)` lists what a reviewer looks for.
 ### Learning outcomes
 1. Split a slow response into **thinking time** vs **query time** before changing anything.
 2. Measure both halves with `system.query.history` and the Conversation API.
@@ -1919,7 +2081,7 @@ doubled it. Twice. For nothing.
 ### Lab 13 (40 min) — GRADED
 Given the deliberately slow MFG agent on the Large tier: measure both halves using `system.query.history` and the Conversation API, produce a written diagnosis, apply **at least three fixes at the correct layer**, re-measure, and report before/after with evidence. **Grading rewards a correct diagnosis over a large speedup** — a learner who correctly identifies a thinking-bound problem and improves it 20% scores higher than one who doubles the warehouse and gets lucky.
 
-**Reviewed by a person.** `academy.check_lab('genie-agents', 13, schema='<your schema>')` confirms the 3 prerequisites only — the judgement in this lab is what is being assessed, and a checker cannot read it.
+**Reviewed by a person.** `academy.check_lab('genie-agents', 13, schema='<your schema>')` confirms the 3 prerequisites only — the judgement is what is being assessed.
 ### Common mistakes
 - Scaling the warehouse for a thinking-bound problem.
 - Timing Genie from system-table timestamps.
@@ -2010,12 +2172,12 @@ Given 8 real symptom reports, classify each (curation / platform bug / performan
 
 ---
 
+
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 14)` lists what a reviewer looks for.
 ## Module 15 — Cost, Budgets, and Scaling to Many Domains
 **Level:** Advanced · **Duration:** 60 min · **Audience:** authors + platform owners
 
 **Summary:** How Genie is billed, where budgets bite, and how to run several agents without their definitions drifting apart.
-
-**Reviewed by a person.** There is no automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 14)` lists what a reviewer looks for.
 ### Learning outcomes
 1. Explain how Genie is billed.
 2. Set account-level budgets with the right thresholds.
@@ -2074,7 +2236,7 @@ and shared, and say which agent would cause the most damage by redefining it.
 
 ---
 
-**Reviewed by a person.** There is no automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 15)` lists what a reviewer looks for.
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 15)` lists what a reviewer looks for.
 ### LEVEL 5 — ADVANCED / EXTEND
 
 ---
@@ -2172,12 +2334,12 @@ concern, and in line with sector-wide EM redemptions over the period.
 
 ---
 
+
+**Reviewed by a person.** `academy.check_lab('genie-agents', 16, schema='<your schema>')` confirms the 2 prerequisites only — the judgement is what is being assessed.
 ## Module 17 — Capstone: Ship a Business-Ready Genie Agent
 **Level:** Advanced · **Duration:** 4–6 hours (or a 1-week project)
 
 **Summary:** Ship an agent a business team could use on Monday, with a charter, a measured benchmark score and a governance review.
-
-**Reviewed by a person.** `academy.check_lab('genie-agents', 16, schema='<your schema>')` confirms the 2 prerequisites only — the judgement in this lab is what is being assessed, and a checker cannot read it.
 ### The brief
 Learners pick a domain — their own real one if available, otherwise one of the provided
 asset-management profiles (distribution, investment performance, institutional relations, product
