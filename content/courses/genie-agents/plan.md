@@ -394,14 +394,70 @@ and you would only notice when the scores stopped making sense.
 
 ### Lab 0 (60 min)
 
-1. Install the package and run `01`, `02`, `03` and `99` in order.
-2. Check that all fourteen validate rows read PASS.
-3. Now **read the data for twenty minutes.** Open each table, look at the column comments, and run
-   whatever occurs to you. Then write down:
-   - three questions a business user might ask that this data could answer **two different ways**,
-     and why
-   - any column whose meaning you had to guess
-   - the total value of assets Meridian manages, and how you decided which number that was
+**Step 1 — Install the package (2 min).**
+
+In a Databricks notebook:
+
+```python
+%pip install databricks360
+dbutils.library.restartPython()
+```
+
+Then, in a **new** cell — the restart matters, and skipping it is the most common way this goes
+wrong:
+
+```python
+import databricks360 as academy
+academy.install('genie-agents')
+```
+
+That writes the notebooks into your workspace and prints the run order. It runs none of them.
+
+---
+
+**Step 2 — Run four notebooks, in order (25 min).**
+
+1. `01_catalog_and_schemas` — read what it prints. It tells you which catalog you landed in.
+2. `02_dimensions`
+3. `03_facts` — around a minute on a warm serverless warehouse
+4. `99_validate`
+
+**Every one of the fourteen validation rows must read PASS.** If one does not, stop and fix it —
+everything after this module is built on this data, and a partial install fails later in ways that
+look like something else.
+
+---
+
+**Step 3 — Read the data for twenty minutes (20 min).**
+
+Not skim. Read.
+
+1. Open each table in Catalog Explorer.
+2. Read the column comments — they are written, and they are worth reading.
+3. Run whatever occurs to you. Count things. Sum things. Look at a single account across dates.
+
+Resist the urge to move on. This is the only point in the course where you meet the data without
+anybody telling you what to look for, and that is exactly what makes it useful later.
+
+---
+
+**Step 4 — Write the sheet (10 min).**
+
+Three things, in writing, and keep it:
+
+1. **Three questions a business user might ask that this data could answer two different ways** —
+   and why. Not questions it cannot answer; questions where two honest people would produce
+   different numbers.
+2. **Any column whose meaning you had to guess.** There are several. Naming them is the point.
+3. **The total value of assets Meridian manages** — and, more importantly, how you decided *which*
+   number that was.
+
+That third one is the whole exercise. There is more than one defensible answer, and whichever you
+chose, you made an assumption. Write down what it was.
+
+**Keep this sheet.** Module 4 asks you to compare it against nine diagnosed failures, and the gap
+between what you noticed today and what you can name then is the most useful thing this course will
+show you about your own blind spots.
 
 Keep the sheet. You return to it in Module 4, and the gap between what you noticed now and what
 you know then is the most useful thing you produce today.
@@ -4048,7 +4104,7 @@ something a team can review.
 
 ---
 
-## Part A — drive it from the API
+### Part A — drive it from the API
 
 **Step 1 — Start a conversation (5 min).**
 
@@ -4093,7 +4149,7 @@ Three numbers: Genie's time, your poll-loop overhead, total. Separately.
 
 ---
 
-## Part B — manage it as code
+### Part B — manage it as code
 
 **Step 6 — Export the configuration (4 min).**
 
@@ -4197,8 +4253,59 @@ academy.cleanup('genie-agents', confirm=True)  # remove it
 Do it once the capstone is assessed, not before — the checks in this module read the agent you
 built, and cleanup deletes it.
 
+### How to work through it
+
+The capstone is not new work. It is the work you have already done, assembled and defended — so the
+order matters more than the effort.
+
+**Step 1 — Re-run the earlier lab checks (10 min).**
+
+```python
+academy.check_lab('genie-agents', 7, schema='<your schema>')
+academy.check_lab('genie-agents', 9)
+academy.check_lab('genie-agents', 10)
+academy.check_lab('genie-agents', 11)
+```
+
+Fix anything failing before you write a word of the submission. A capstone built on a failing Lab 9
+is a capstone that will fail the same check.
+
+**Step 2 — Write the charter first, not last (20 min).**
+
+One page: audience, the top fifteen questions, sponsor, owner, success metric.
+
+Writing it first is the discipline. If you cannot state the audience in one line, the agent is too
+broad — and that is a Module 7 problem you still have time to fix.
+
+**Step 3 — Assemble the evidence (40 min).**
+
+Deliverables 2 through 6 already exist in your workspace. Collect them, and for each one write the
+sentence that says *why it is that way* — not what it is. "Seven objects" is a fact; "seven objects,
+because exposing `dim_client` would put identifiers in reach of every user" is a defence.
+
+**Step 4 — Write the benchmark report (20 min).**
+
+Score, the questions that still fail, and why each one still fails. **Do not hide the failures.** An
+author who reports 27 out of 30 and can explain the three is more credible than one who reports 30
+out of 30, because the second is not believable.
+
+**Step 5 — Write the handover (20 min).**
+
+Three things, and they are what a sponsor actually needs:
+
+1. Who owns it, and how often they review it.
+2. What it does **not** answer — specifically.
+3. What signal would show it had started being wrong, and who would see that signal.
+
+**Step 6 — Answer the question (10 min).**
+
+Write the paragraph you would say out loud when the sponsor asks *"if this gives someone a wrong
+number in a client meeting, what happens?"*
+
+If that paragraph is reassurance rather than evidence, go back to step 4.
+
 ### Checking your own work first
-Before you submit, run the checks the earlier labs used. The capstone re-checks them in one pass:
+The capstone re-checks the earlier labs in one pass:
 
 ```python
 academy.check_lab('genie-agents', 17, schema='<your schema>')
