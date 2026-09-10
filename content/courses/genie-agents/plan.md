@@ -100,6 +100,35 @@ academy.create_agents('genie-agents', schema='large_tier')
 Do this the day before Module 13, not during it. Only `03_facts` scales with the tier; the
 dimensions are identical either way.
 
+### 0.9 Putting it away afterwards
+
+The course installs a schema, twenty-odd objects, a volume of forty documents, two Genie Agents
+and nine notebooks. When the cohort is done, take it back:
+
+```python
+academy.cleanup('genie-agents')                # show what would go
+academy.cleanup('genie-agents', confirm=True)  # remove it
+```
+
+Notebook **`100_cleanup`** does the same, with the destructive line commented out so that running
+every cell top to bottom cannot delete a lab someone is still using.
+
+It is a dry run until you confirm, and it removes **only what the course created**. Agents are
+matched against the titles the package gives them, so one you renamed or built yourself in Lab 8 is
+reported and left alone — as is anything else that ended up in the lab schema. You are told what was
+kept and why.
+
+If you installed with arguments, pass the same ones back or nothing is found:
+
+```python
+academy.cleanup('genie-agents', catalog='training', confirm=True)
+academy.cleanup('genie-agents', schema='large_tier', title_suffix='(large tier)', confirm=True)
+```
+
+> **Instructors: do this between cohorts, not just at the end.** The dataset is deterministic, so a
+> stale install looks identical to a fresh one right up until someone's Lab 7 answer is graded
+> against views a previous learner left behind.
+
 ### 0.1 The company: Meridian Financial Group (MFG)
 
 A mid-size US investment manager, close to **$100B** under management across **4,500 portfolios**
@@ -2476,6 +2505,17 @@ and fund operations) — and deliver an agent a business team could use on Monda
 | Measured accuracy | 18 | real benchmark run, honest before/after, Tier-1 at 100%, failures triaged not hidden |
 | Performance & operations | 12 | thinking-vs-query measured before tuning; correct fix layer; real cadence, owners, budget, escalation path |
 | Business communication | 10 | a non-technical sponsor understands the value **and the limits** in 5 minutes |
+
+### When you are finished with the workspace
+Module 0 section 0.9 covers this, and notebook `100_cleanup` does it:
+
+```python
+academy.cleanup('genie-agents')                # dry run
+academy.cleanup('genie-agents', confirm=True)  # remove it
+```
+
+Do it once the capstone is assessed, not before — the checks in this module read the agent you
+built, and cleanup deletes it.
 
 ### Checking your own work first
 Before you submit, run the checks the earlier labs used. The capstone re-checks them in one pass:
