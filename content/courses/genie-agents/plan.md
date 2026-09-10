@@ -2,7 +2,9 @@
 **From Basics to Advanced · Asset Management · Business-First, Example-Driven**
 
 > Version 3.0 · Planned 2026-08-21
-> Grounded in current `docs.databricks.com` (Genie section) **and** the internal *Genie Performance & Issues Playbook & Health Check*.
+> Grounded in current `docs.databricks.com` (Genie section), plus operating figures observed in
+> practice where Databricks publishes none. The two are labelled separately throughout, because
+> quoting the second sort as documented is how a client stops trusting the first.
 > Domain: **asset and wealth management** — AUM and AUA, net flows, investment performance,
 > distribution channels, and the client and advisor relationships behind them.
 > Terminology note: what used to be called **Genie Spaces** is now **Genie Agents**. Use the new naming throughout; mention the old name once (Module 1) so learners recognise older screenshots and blog posts.
@@ -1242,8 +1244,8 @@ within the limit and still badly built. Everything below is about getting to the
 > **On limits generally.** Databricks also documents **100 instructions** and **200 knowledge store
 > snippets** per agent — Module 13 covers both, and they matter once you start writing SQL expressions.
 > What is *not* documented anywhere is a **character limit on the instructions text**. Module 13 uses a
-> ~5,000–7,000 character degradation threshold from the *Genie Performance & Issues Playbook*: a sound
-> operating heuristic, but do not present it to a client as a published platform limit.
+> ~5,000–7,000 character degradation threshold observed in practice: a sound operating heuristic,
+> but do not present it to a client as a published platform limit.
 
 **Databricks' framing:** *"Think of Genie as a new data analyst joining your company. Like any new team member,
 Genie needs clear context to be effective."* You would give a new analyst a clean, documented, narrow dataset —
@@ -1743,7 +1745,7 @@ because the ambiguity is real; it needs a clarification instruction, and that is
 
 ### Key concepts and limits
 - **Budget: 100 instructions per agent.** Every **example query**, every **function**, and every **text block** counts as **1**. (Separate from the 200 knowledge-store snippets.)
-- **Text instructions behave badly when they get long.** Databricks documents the count limit — 100 instructions — but **publishes no character limit**. What the *Genie Performance & Issues Playbook* reports from the field is degradation from around **5,000–7,000 characters**, past which parts of a long block may be **silently ignored**. Treat that as an operating heuristic, not a published limit, and do not quote it to a client as documented. Either way it is the strongest argument for the influence hierarchy: prose ranks lowest, and past some length it can be dropped without telling you. Long blocks also lengthen the "thinking" step (Module 13).
+- **Text instructions behave badly when they get long.** Databricks documents the count limit — 100 instructions — but **publishes no character limit**. What is observed in practice is degradation from around **5,000–7,000 characters**, past which parts of a long block may be **silently ignored**. Treat that as an operating heuristic, not a published limit, and do not quote it to a client as documented. Either way it is the strongest argument for the influence hierarchy: prose ranks lowest, and past some length it can be dropped without telling you. Long blocks also lengthen the "thinking" step (Module 13).
 - **Example SQL queries** — the highest-leverage tool after trusted assets. Title each with the **user's phrasing**, because the title drives prompt matching. Static or parameterised. Users with CAN EDIT can view source queries, which makes them a debugging tool too.
 - **Parameters** — colon syntax `:parameter_name`. Types: String, Date, Date and Time, Decimal, Integer. **Always comment valid values and constraints** — that's how Genie picks a sensible value.
 - **SQL functions (Unity Catalog)** — for logic too complex for a static query. Shareable across teams, and they **hide implementation detail** from users. Register as trusted assets so the verified logic is used as-is.
@@ -2083,7 +2085,7 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 
 **Summary:** Split a slow answer into thinking time and query time first, because the fixes for the two are entirely different.
 
-> Sourced from the *Genie Performance & Issues Playbook*. This module needs the **large** data
+> This module needs the **large** data
 > tier — see Module 0 section 0.0. Build it into its own schema *before* the session, not during
 > it: 900M flow events takes tens of minutes of real compute, and only `03_facts` scales.
 >
@@ -2132,7 +2134,7 @@ typical observed:        ~20+ seconds            ~3–10 seconds
 | Entity matching | string columns only; up to **120 columns**; **1,024 distinct values** per column, each **≤ 127 characters** | values beyond the cap are not matched |
 | Conversations | **10,000 per agent**, each up to **10,000 messages** | — |
 
-**From the *Genie Performance & Issues Playbook*, not the docs** — field-observed, and useful, but
+**Observed in practice, not published by Databricks** — useful, and worth planning for, but
 label them as such in front of a client:
 
 | Heuristic | Observed value | What happens |
@@ -2234,7 +2236,7 @@ Given the deliberately slow MFG agent on the Large tier: measure both halves usi
 
 **Summary:** Read the common error signatures, gather the evidence support actually needs, and tell apart the problems that are yours to fix.
 
-> Also sourced from the *Genie Performance & Issues Playbook*. Its purpose is to stop authors burning days on problems that were never theirs to fix.
+> The purpose of this module is to stop authors burning days on problems that were never theirs to fix.
 
 ### Learning outcomes
 1. Recognise the common error signatures and what they actually mean.
@@ -2548,7 +2550,7 @@ work of Labs 7 through 11, assembled. The handover document is read by a person.
 | Guided demo recordings | 18 | all on the Meridian dataset |
 | Lab guides + solution keys | 17 (Lab 0–16) | graded: Labs 2, 6, 7, 8, 9, 10, 11, 13, 16, plus the capstone |
 | Knowledge checks | 17 | 4–6 questions each, auto-graded (Modules 0–16) |
-| **Cheat sheet: limits & what happens at the limit** | 1 | Two columns, and keep them apart. **Documented:** 30 tables/views · 100 instructions · 200 knowledge store snippets · 500 benchmarks · 120 entity-matching columns × 1,024 values × 127 chars · 10,000 conversations × 10,000 messages. **Playbook, not documented:** ~5–7k char instruction degradation · ~90 s SQL · ~597 s backend · 200 req/sec · ~1,000+ ontology snippets. Quoting the second column as documented is how a client loses trust in the first. |
+| **Cheat sheet: limits & what happens at the limit** | 1 | Two columns, and keep them apart. **Documented:** 30 tables/views · 100 instructions · 200 knowledge store snippets · 500 benchmarks · 120 entity-matching columns × 1,024 values × 127 chars · 10,000 conversations × 10,000 messages. **Observed, not documented:** ~5–7k char instruction degradation · ~90 s SQL · ~597 s backend · 200 req/sec · ~1,000+ ontology snippets. Quoting the second column as documented is how a client loses trust in the first. |
 | **Cheat sheet: fix-routing table** | 1 | Module 12's symptom → right-layer table |
 | **Cheat sheet: error signatures + evidence checklist** | 1 | Module 14 — the laminated card; message ID first |
 | **Cheat sheet: latency triage flow** | 1 | Module 13 — thinking vs query, with the `system.query.history` columns |
@@ -2584,11 +2586,11 @@ Genie ships fast and the docs were reorganised recently (Spaces → Agents; the 
 
 ---
 
-## Part D — Coverage map: *Genie Performance & Issues Playbook* → this course
+## Part D — Coverage map: performance and operational issues → this course
 
-**Summary:** Which module covers each item in the internal Genie Performance & Issues Playbook.
+**Summary:** Which module covers each known Genie performance and operational issue.
 
-| Playbook section | Course coverage |
+| Topic | Course coverage |
 |---|---|
 | Start here — Genie Code / Genie Workbench | Module 1 (named + course rule), Modules 7–14 (used in every lab) |
 | Foundation — metric views | Modules 7, 15 |
@@ -2650,7 +2652,6 @@ Databricks docs (`docs.databricks.com`, AWS paths; GCP/Azure equivalents exist):
 | Knowledge Assistant | `/aws/en/generative-ai/agent-bricks/knowledge-assistant` |
 | Release notes | `/aws/en/ai-bi/release-notes/` |
 
-Internal: *Genie Performance & Issues Playbook & Health Check* — source for Modules 13 and 14, the limits table, and the supervisor stance in 16.4.
 
 ---
 

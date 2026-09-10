@@ -489,7 +489,7 @@
         "It is truncated with a visible marker"
       ],
       "answer": 1,
-      "why": "Prose does not just rank lowest in the influence hierarchy \u2014 past a certain length it can be dropped without telling you. Note the source: Databricks documents the count limit of 100 instructions but publishes no character limit. The 5,000-7,000 figure is field-observed, from the Genie Performance & Issues Playbook."
+      "why": "Prose does not just rank lowest in the influence hierarchy \u2014 past a certain length it can be dropped without telling you. Note the source: Databricks documents the count limit of 100 instructions but publishes no character limit. The 5,000-7,000 figure is observed in practice rather than published."
     },
     {
       "q": "How should you title an example SQL query?",
@@ -616,7 +616,7 @@
         "597 seconds, and it cannot be raised"
       ],
       "answer": 0,
-      "why": "Keep the warehouse warm and filter or cluster large tables instead. Treating it as a config knob wastes time. This ceiling is field-observed from the Genie Performance & Issues Playbook, not a published limit \u2014 plan for it, but do not quote it to a client as documented."
+      "why": "Keep the warehouse warm and filter or cluster large tables instead. Treating it as a config knob wastes time. This ceiling is observed in practice rather than published \u2014 plan for it, but do not quote it to a client as documented."
     },
     {
       "q": "What happens at the ~597 second backend ceiling?",
@@ -627,7 +627,7 @@
         "The conversation is deleted"
       ],
       "answer": 1,
-      "why": "Set client and orchestrator timeouts below it, or you pay for answers nobody ever sees. The number is field-observed from the Performance & Issues Playbook; what Databricks does document is API guidance to stop polling after 10 minutes and return a timeout."
+      "why": "Set client and orchestrator timeouts below it, or you pay for answers nobody ever sees. The number is observed in practice rather than published; what Databricks does document is API guidance to stop polling after 10 minutes and return a timeout."
     },
     {
       "q": "A naive polling loop in your own integration was measured adding how much delay?",
