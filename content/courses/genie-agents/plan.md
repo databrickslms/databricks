@@ -1348,8 +1348,28 @@ diagnoses is "the AI got it wrong".
 2. Produce a signed-off business glossary before building anything.
 3. Recognise that most "AI accuracy problems" are unresolved definition problems.
 
-### Key concept
-Genie can only be as unambiguous as your organisation. Where the business has never agreed on a definition, no amount of curation fixes it — someone has to decide. This module is a **workshop**, not a demo.
+### Start here: two people, one number, both right
+
+Meridian's Q2 board pack showed AUM of **$98.4 billion**. The client statements sent the same week
+totalled **$91.2 billion**. Seven billion apart, on the same date, from the same warehouse.
+
+Finance checked their figure. Correct. Distribution checked theirs. Also correct.
+
+The board pack included advisory-only mandates, where Meridian gives advice but holds no discretion.
+The client statements did not. Both teams had been computing AUM this way for years, neither had
+written it down, and nobody had put the two numbers side by side until a board member did.
+
+**No amount of curation would have fixed this.** You cannot write an instruction that resolves a
+disagreement the business has never had out loud. There is no correct answer in the data — there are
+two defensible answers and no decision.
+
+That is what makes this module different from the ones around it. Every other module in this course
+teaches you to configure something. This one asks you to get people in a room and make them choose,
+and then write down what they chose. It is a **workshop, not a demo**, and it is the module authors
+most often skip and most often regret skipping.
+
+Genie can only be as unambiguous as your organisation. Where the business has never agreed, someone
+has to decide.
 
 ### Business example — four contested terms at MFG
 | Term | Meanings in active use | Decision required |
@@ -1379,7 +1399,80 @@ The `NOT THE SAME AS` line does more work than any other. Most bad answers come 
 being quietly swapped for its near neighbour.
 
 ### Lab 5 (25 min)
-In pairs, build a 10-term glossary for the MFG wealth domain using the template — start with AUM, return, net flows, quarter-end, and "client". Every term needs a named owner and an implementation route. Disagreements are the point of the exercise, not a problem with it.
+Work in pairs. You are going to produce a real glossary, and the arguing is the work.
+
+---
+
+**Step 1 — Get the template and the five starting terms (2 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 5)
+```
+
+Five columns: **Term · What it means · Owner · Implementation route · Disagreement recorded.**
+
+---
+
+**Step 2 — Define the five hard ones, separately (8 min).**
+
+Each of you writes your own definition for **AUM**, **return**, **net flows**, **quarter-end** and
+**client**. Do not discuss them yet. Write them apart, then compare.
+
+Where you differ, do not split the difference. **Record both readings**, then pick one and say who
+decided.
+
+"Client" is the one that catches people. Meridian's data has clients and accounts. It has no
+household. So a question about "the Hartmann family" has no answer at any level, and noticing that
+is worth more than a tidy definition.
+
+---
+
+**Step 3 — Name an owner for each (3 min).**
+
+A **person**, not a team. "Wealth Analytics" cannot be asked a question or overruled; a named person
+can.
+
+If you cannot name an owner, that term is not settled — mark it, and it becomes an action rather
+than a glossary entry.
+
+---
+
+**Step 4 — Choose an implementation route for each (5 min).**
+
+Where will this definition actually live? Four options, and this is Module 7's question arriving
+early:
+
+| Route | Use when |
+|---|---|
+| **Metric view** | it must mean one thing across several agents and dashboards |
+| **UC function** | the logic is complex and shared |
+| **Curated view** | the fix is structural — a grain, a join, a conversion |
+| **Instruction** | genuinely last resort |
+
+**Count how many you routed to "instruction."** If it is more than one or two, you are planning to
+solve data problems with prose, and Module 10 will explain why that fails quietly.
+
+---
+
+**Step 5 — Add five of your own (5 min).**
+
+Five more terms from your own firm, or from Meridian if you prefer. Choose ones you expect to
+disagree about — if you and your partner agree on all ten immediately, you picked easy terms and
+learned nothing.
+
+---
+
+**Step 6 — Read the disagreement column (2 min).**
+
+Look at what you recorded there.
+
+Every row with something in it is a number that two people in your organisation are currently
+computing differently, and have been for some time. **That column is the actual output of this lab.**
+The definitions are useful; the list of things nobody had agreed is what you take to a meeting.
+
+*You know it worked when:* all ten terms have a named person and a route, and you can point at one
+row and say "we did not know we disagreed about this until today".
 
 **Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 5)` prints the brief, the material this lab works on, and what a reviewer looks for.
 ### Teaching line
@@ -1392,6 +1485,26 @@ In pairs, build a 10-term glossary for the MFG wealth domain using the template 
 **Level:** Intermediate · **Duration:** 75 min · **Audience:** authors + stewards
 
 **Summary:** Row filters and column masks run as the asking user, so one question has several correct answers. Also where that protection stops.
+
+### Start here: the answer that was right for the wrong person
+
+Two people at Meridian asked the agent the same question on the same afternoon:
+
+> *"What was AUM in the West region?"*
+
+Ana Reyes, who runs the West, got **$18.2 billion**. The CFO's office got **zero**.
+
+Neither answer is a bug. Ana sees advisors in her coverage region because a row filter says so. The
+CFO has no region assigned, so the filter matches nothing and returns an empty result — which is
+correct, and looks exactly like "there is no data".
+
+**This is the module where most people's mental model of Genie breaks.** The natural assumption is
+that an agent is a thing with data in it, and everyone who opens it sees the same thing. That is not
+how it works, and the difference matters enormously the first time someone in Compliance asks
+whether the agent can leak client identifiers.
+
+The short answer is that it cannot leak anything the asking user could not already query. Getting
+from that sentence to something you can defend in a review is what this module does.
 
 ### Learning outcomes
 1. Explain the two credential types and their security implications.
@@ -1512,12 +1625,78 @@ addresses") have built nothing. Demonstrate that instruction failing.
 | Exec assistant | CAN VIEW | read shared threads only |
 
 ### Lab 6 (25 min) — GRADED
-Given the Meridian access matrix (4 personas × the core objects, one row filter, four column
-masks), predict for 8 questions whether each user gets a full answer, a masked answer, an empty
-answer, or a permission error. Then verify in the workspace.
+You will predict eight outcomes **before** running anything, then check yourself. Predicting first
+is the lab — reading the answers off a screen teaches nothing.
 
-Two of the eight are the cases above: the CFO who correctly sees zero rows, and the regional lead
-who correctly sees the firm-wide total. Learners who predict those two have understood the module.
+**Before you start:** notebook `05_governance` must have been run. It needs privileges to create
+functions and ALTER tables, so if you cannot run it, do steps 1–3 on paper and skip step 4.
+
+---
+
+**Step 1 — Read the access matrix (3 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 6)
+```
+
+Four personas, one row filter on `dim_advisor.region`, four column masks on `dim_client`, and one
+service principal with no grant on the client table at all.
+
+---
+
+**Step 2 — Write down eight predictions (10 min).**
+
+For each of the eight questions, choose one of four outcomes **and write your reason**:
+
+| Outcome | It looks like |
+|---|---|
+| **Full answer** | the number, as the data holds it |
+| **Masked answer** | rows come back, some values are `****` |
+| **Empty answer** | zero rows, no error |
+| **Permission error** | the query does not run at all |
+
+Commit to all eight before running any of them. A prediction you revise after seeing the answer is
+not a prediction.
+
+---
+
+**Step 3 — Get the two hard ones right (5 min).**
+
+Numbers 2 and 3 are what the lab is really testing.
+
+**Number 3** — the CFO asks for firm-wide AUM and correctly gets **zero rows**. Not an error, not
+missing data. The row filter is on `dim_advisor.region`, the CFO has no region, so nothing matches.
+
+**Number 2** — Ana asks for firm-wide AUM and correctly gets **the firm-wide total**, even though
+she is filtered. Why? Because that query never reads `dim_advisor`. A row filter protects the table
+it is attached to and nothing else.
+
+If you predicted both, you have understood the module. If you predicted the second as "filtered to
+the West", you have just found the most common misconception about row filters, which is worth more
+than getting it right.
+
+---
+
+**Step 4 — Verify in the workspace (5 min).**
+
+1. Run each question against the agent.
+2. Mark each prediction right or wrong.
+3. For every one you got wrong, write down which of the two credential types explains it —
+   **compute** (which warehouse runs the query) or **data** (whose identity reads the rows).
+
+---
+
+**Step 5 — Say what an empty answer looks like to a user (2 min).**
+
+An empty answer and a permission error are different outcomes and Genie shows them differently.
+Confusing them is the most common mistake in this lab.
+
+Write one sentence you would put in the agent's description so a user seeing zero rows does not
+conclude the data is missing.
+
+*You know it worked when:* you predicted the CFO's zero and Ana's firm-wide total, and can explain
+both in terms of which table the filter sits on.
 
 **Reviewed by a person.** `academy.check_lab('genie-agents', 6, schema='<your schema>')` confirms the 2 prerequisites only — the judgement is what is being assessed.
 
