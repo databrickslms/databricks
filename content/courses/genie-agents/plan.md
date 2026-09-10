@@ -739,7 +739,7 @@ Genie should not be asked is the skill being tested.
 ---
 
 
-**Reviewed by a person.** `academy.check_lab('genie-agents', 2, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
+**Reviewed by a person.** `academy.check_lab('genie-agents', 2)` confirms the 1 prerequisite only — the judgement is what is being assessed. This lab grades your agent, so it needs no schema.
 
 **The material for this lab ships with the package.** `academy.lab('genie-agents', 2)` prints the brief and *the eight questions, exactly as colleagues wrote them* — so you can start without waiting for a handout.
 ## Module 3 — Chat Mode vs Agent Mode (Answers vs Research)
@@ -1016,7 +1016,7 @@ the exercise.
 ---
 
 
-**Reviewed by a person.** `academy.check_lab('genie-agents', 4, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
+**Reviewed by a person.** `academy.check_lab('genie-agents', 4)` confirms the 1 prerequisite only — the judgement is what is being assessed. This lab grades your agent, so it needs no schema.
 
 **The material for this lab ships with the package.** `academy.lab('genie-agents', 4)` prints the brief and *nine answers from the uncurated agent. every one is wrong.* — so you can start without waiting for a handout.
 ## Module 5 — Fiscal Calendars, Metric Definitions, and Why Business Language Is the Hard Part
@@ -1950,16 +1950,47 @@ Table descriptions, join relationships and SQL expressions **share one ceiling o
 Text instructions, example queries, SQL functions and column descriptions do **not** count.
 *You know it worked when:* you can state your number, not guess it.
 
-**Step 6 — Re-run the nine broken questions from Lab 4 (5 min).**
-This is the point of the lab. Run each one again and record which now pass, which still fail, and
-**which layer** would fix the remainder.
+**Step 6 — Re-run the nine broken answers from Lab 4 (5 min).**
 
-Some will still fail. That is expected — a few of the nine are not knowledge-store problems at all,
-and recognising which is the skill. "Return" stays ambiguous no matter how many synonyms you add,
-because the ambiguity is real; it needs a clarification instruction, and that is Module 10.
-*You know it worked when:* you can say, for every one of the nine, which layer owns the fix.
+This is the point of the lab. Everything above was setup.
 
-**Graded by machine.** `academy.check_lab('genie-agents', 9, schema='<your schema>')` runs 6 checks against your work.
+1. Print the nine questions again — they ship with the course, so you do not need your notes:
+   ```python
+   academy.lab('genie-agents', 4)
+   ```
+2. Ask your agent each one, in order.
+3. Fill in this table as you go:
+
+   | # | The question | Passes now? | If not, which layer owns the fix? |
+   |---|---|---|---|
+   | 1 | "What do we manage?" | | |
+   | 2 | "AUM at the end of last year" | | |
+   | 3 | "How did our California advisors do?" | | |
+   | 4 | "Net sales in FY2026 Q3" | | |
+   | 5 | "Allocation by asset class" | | |
+   | 6 | "What is our AUM?" | | |
+   | 7 | "What was our return last year?" | | |
+   | 8 | "Which clients have the largest balances?" | | |
+   | 9 | "Total flows in March" | | |
+
+4. For every row you marked as still failing, name the layer: **data**, **knowledge store**,
+   **example query**, **instruction**, or **not a defect**.
+
+**Some will still fail, and that is the exercise.** Not all nine are knowledge-store problems.
+
+Number 7 is the clearest case. *"What was our return last year?"* stays ambiguous however many
+synonyms you add, because the ambiguity is real — gross, net and money-weighted are all defensible
+answers and the agent cannot know which you meant. No synonym fixes that. It needs an instruction
+that makes the agent **ask**, and that is Module 10.
+
+Number 8 is a different kind again: if identifiers are still reaching the answer, that is a
+governance fix in Unity Catalog, not anything you do in this screen.
+
+**Check it worked:** you can say, for each of the nine, which layer owns the fix. Not that all nine
+pass — they will not, and an author who thinks they should is the one who ends up writing prose to
+patch a data problem.
+
+**Graded by machine.** `academy.check_lab('genie-agents', 9)` runs 6 checks against your work. This lab grades your agent, so it needs no schema.
 ### Common mistakes
 - Adding synonyms to the column but not the values (or vice versa).
 - Wrong cardinality (One-to-Many where it's Many-to-One) → fan-out and inflated totals.
@@ -2120,7 +2151,7 @@ A table: example queries + functions + text blocks = your total, against 100.
 Then go back and run **"What was our AUM?"** — the starter you kept from Lab 8. Compare the answer
 with what you recorded then. That difference is what this module bought you.
 
-**Graded by machine.** `academy.check_lab('genie-agents', 10, schema='<your schema>')` runs 4 checks against your work.
+**Graded by machine.** `academy.check_lab('genie-agents', 10)` runs 4 checks against your work. This lab grades your agent, so it needs no schema.
 ### Common mistakes
 - Generic SQL patterns as examples (Genie already knows `GROUP BY`) instead of **organisation-specific logic**.
 - Conflicting guidance between a text instruction and a SQL expression → nondeterministic answers. The docs are explicit: *"a key task is to review and resolve any inconsistencies."*
@@ -2260,7 +2291,7 @@ Report before and after, with the layer for each fix. **The layer is what is mar
 ---
 
 
-**Graded by machine.** `academy.check_lab('genie-agents', 11, schema='<your schema>')` runs 3 checks against your work.
+**Graded by machine.** `academy.check_lab('genie-agents', 11)` runs 3 checks against your work. This lab grades your agent, so it needs no schema.
 ## Module 12 — Monitor, Triage, and Keep It Accurate Over Time
 **Level:** Advanced · **Duration:** 60 min
 
@@ -2459,7 +2490,7 @@ doubled it. Twice. For nothing.
 ### Lab 13 (40 min) — GRADED
 Given the deliberately slow MFG agent on the Large tier: measure both halves using `system.query.history` and the Conversation API, produce a written diagnosis, apply **at least three fixes at the correct layer**, re-measure, and report before/after with evidence. **Grading rewards a correct diagnosis over a large speedup** — a learner who correctly identifies a thinking-bound problem and improves it 20% scores higher than one who doubles the warehouse and gets lucky.
 
-**Reviewed by a person.** `academy.check_lab('genie-agents', 13, schema='<your schema>')` confirms the 3 prerequisites only — the judgement is what is being assessed.
+**Reviewed by a person.** `academy.check_lab('genie-agents', 13)` confirms the 3 prerequisites only — the judgement is what is being assessed. This lab grades your agent, so it needs no schema.
 
 **The material for this lab ships with the package.** `academy.lab('genie-agents', 13)` prints the brief and *measurement worksheet — fill this in before you change anything* — so you can start without waiting for a handout.
 ### Common mistakes
@@ -2715,7 +2746,7 @@ concern, and in line with sector-wide EM redemptions over the period.
 ---
 
 
-**Reviewed by a person.** `academy.check_lab('genie-agents', 16, schema='<your schema>')` confirms the 2 prerequisites only — the judgement is what is being assessed.
+**Reviewed by a person.** `academy.check_lab('genie-agents', 16)` confirms the 2 prerequisites only — the judgement is what is being assessed. This lab grades your agent, so it needs no schema.
 ## Module 17 — Capstone: Ship a Business-Ready Genie Agent
 **Level:** Advanced · **Duration:** 4–6 hours (or a 1-week project)
 
