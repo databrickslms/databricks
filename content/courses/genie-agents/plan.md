@@ -132,6 +132,26 @@ problem.
 > Provisioning it yourself, and actually looking at it, is what makes the rest of the course
 > concrete rather than theoretical.
 
+### Start here: why you build the data before you build anything
+
+It is tempting to skip this module. It is the one with no Genie in it — just SQL notebooks that
+create tables — and the interesting material is obviously later.
+
+Skip it and everything after breaks in a particular way. Module 4 asks you to diagnose nine wrong
+answers, and you cannot diagnose an answer about data you have never looked at. Module 7 asks you to
+choose eight objects out of fourteen, which is a judgement, not a rule. Module 9 asks you to teach
+an agent vocabulary you do not yet have.
+
+There is a second reason, and it matters more. **The Meridian data has nine problems planted in it
+on purpose** — three defensible definitions of AUM, a fiscal year starting in October, a daily
+snapshot that multiplies if you sum it, two asset-class hierarchies that disagree. Every one is an
+argument a real asset manager genuinely has.
+
+You are not going to be told which nine. You are going to spend twenty minutes reading the data and
+write down what you notice — and then, in Module 4, find out how much you missed. That gap is the
+most useful thing this course will show you about your own blind spots, and it only works if you do
+the reading now, before anyone tells you what to look for.
+
 ### Learning outcomes
 1. Provision the course dataset in Unity Catalog.
 2. Describe what Meridian's business does and which tables record it.
@@ -1123,6 +1143,26 @@ named both disguised questions and what makes them research.
 **Level:** Intermediate · **Duration:** 60 min
 
 **Summary:** Genie is several components working together rather than one model. What each one does, which of them can go wrong, and which inputs shape an answer most.
+
+### Start here: "the AI got it wrong"
+
+An analyst brings you a bad answer. The agent said Meridian's AUM was sixty-five trillion dollars.
+Her explanation is the one everybody reaches for: *the AI got it wrong.*
+
+It is a comfortable explanation and a useless one, because it points at nothing you can fix. If the
+AI is wrong, your options are to wait for a better model or to give up.
+
+Here is what actually happened. The agent understood the question. It found the right table. It
+wrote valid SQL. Then it summed a daily snapshot across two years, because **nobody had told it that
+each row already carries the whole book** — and that fact belongs in a column comment that was never
+written, not in the model.
+
+That distinction is the module. Genie is not one thing that is either right or wrong. It is several
+components, some AI and some ordinary software, and when an answer is bad you can usually name
+**which component** and **which missing input**.
+
+An author who can say *"it summed a daily snapshot because no grain was declared"* knows what to do
+next. An author who says *"the AI got it wrong"* does not.
 
 ### Learning outcomes
 1. Describe the components Genie uses to answer a question, and which of them are AI.
@@ -3287,12 +3327,6 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 > `flow_type ILIKE '%transfer in%'` against a column holding `TRANSFER_IN`, matched
 > nothing, and reported null without flagging it. One response gives you both the
 > latency to diagnose and the failure to explain.
-### Learning outcomes
-1. Split a slow response into **thinking time** vs **query time** before changing anything.
-2. Measure both halves with `system.query.history` and the Conversation API.
-3. Apply the right fix to the right half.
-4. Recognise the hard limits that masquerade as bugs.
-
 ### Start here: the warehouse they doubled twice
 
 Meridian's agent was slow. Answers took forty seconds, users complained, and the platform team did
@@ -3311,6 +3345,12 @@ problem that happens before the warehouse is involved.
 This module has one discipline behind it: split the time into two halves and find out which half is
 slow, *before* changing anything. The two halves are fixed in completely different places, and the
 instinct — make the compute bigger — is right about half the time and expensive the other half.
+
+### Learning outcomes
+1. Split a slow response into **thinking time** vs **query time** before changing anything.
+2. Measure both halves with `system.query.history` and the Conversation API.
+3. Apply the right fix to the right half.
+4. Recognise the hard limits that masquerade as bugs.
 
 ### The core insight
 ```
