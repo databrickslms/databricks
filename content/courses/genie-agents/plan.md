@@ -1637,7 +1637,7 @@ because the ambiguity is real; it needs a clarification instruction, and that is
 
 ### Key concepts and limits
 - **Budget: 100 instructions per agent.** Every **example query**, every **function**, and every **text block** counts as **1**. (Separate from the 200 knowledge-store snippets.)
-- **Text instructions also have a *length* ceiling.** A warning appears around **5,000–7,000 characters**, and beyond it Genie may **silently ignore parts** of long instructions. This is the strongest argument for the influence hierarchy: prose doesn't just rank lowest — past a certain length it can be dropped without telling you. Long prose blocks also lengthen the "thinking" step (Module 13).
+- **Text instructions behave badly when they get long.** Databricks documents the count limit — 100 instructions — but **publishes no character limit**. What the *Genie Performance & Issues Playbook* reports from the field is degradation from around **5,000–7,000 characters**, past which parts of a long block may be **silently ignored**. Treat that as an operating heuristic, not a published limit, and do not quote it to a client as documented. Either way it is the strongest argument for the influence hierarchy: prose ranks lowest, and past some length it can be dropped without telling you. Long blocks also lengthen the "thinking" step (Module 13).
 - **Example SQL queries** — the highest-leverage tool after trusted assets. Title each with the **user's phrasing**, because the title drives prompt matching. Static or parameterised. Users with CAN EDIT can view source queries, which makes them a debugging tool too.
 - **Parameters** — colon syntax `:parameter_name`. Types: String, Date, Date and Time, Decimal, Integer. **Always comment valid values and constraints** — that's how Genie picks a sensible value.
 - **SQL functions (Unity Catalog)** — for logic too complex for a static query. Shareable across teams, and they **hide implementation detail** from users. Register as trusted assets so the verified logic is used as-is.
@@ -1751,8 +1751,9 @@ Organise by topic: terminology, fiscal calendar, formatting, summaries. Be speci
 |---|---|
 | "Use the right calendar" | "The fiscal year starts 1 October. FY2026 is 2025-10-01 to 2026-09-30. 'Last quarter' means the prior **fiscal** quarter unless the user says calendar. A quarter-end figure uses the last **business** day." |
 
-*Keep it short.* A warning appears around 5,000–7,000 characters, and past that Genie may **silently
-ignore** parts of what you wrote. Long prose also lengthens the thinking step, which Module 13 measures.
+*Keep it short.* There is no documented character limit, but the field heuristic is that quality
+degrades past roughly 5,000–7,000 characters, and beyond that Genie may **silently ignore** parts of
+what you wrote. Long prose also lengthens the thinking step, which Module 13 measures.
 
 **Step 5 — Write the clarification rule for "return" (5 min).**
 This is the one that fixes Lab 8's ambiguous starter. Use the four-part shape: **when**, **ask**,
@@ -1859,6 +1860,8 @@ An agent nobody measured is an agent nobody should trust. This lab produces the 
 **Before you start:** your agent from Lab 10.
 
 ---
+
+A Genie Agent holds up to **500 benchmark questions**, so 30 is a starting set, not a ceiling.
 
 **Step 1 — Write 10 smoke questions (6 min).**
 Questions that must **always** work: total AUM, AUA, account count, client count, average account
@@ -2408,7 +2411,7 @@ work of Labs 7 through 11, assembled. The handover document is read by a person.
 | Guided demo recordings | 18 | all on the Meridian dataset |
 | Lab guides + solution keys | 17 (Lab 0–16) | graded: Labs 2, 6, 7, 8, 9, 10, 11, 13, 16, plus the capstone |
 | Knowledge checks | 17 | 4–6 questions each, auto-graded (Modules 0–16) |
-| **Cheat sheet: limits & what happens at the limit** | 1 | 30 objects · 100 instructions (~5–7k char warning) · 200 snippets · 500 benchmarks · 120 cols × 1,024 values · **90 s SQL** · **~597 s backend** · **200 req/sec** · ~1,000+ ontology snippets |
+| **Cheat sheet: limits & what happens at the limit** | 1 | Two columns, and keep them apart. **Documented:** 30 tables/views · 100 instructions · 200 knowledge store snippets · 500 benchmarks · 120 entity-matching columns × 1,024 values × 127 chars · 10,000 conversations × 10,000 messages. **Playbook, not documented:** ~5–7k char instruction degradation · ~90 s SQL · ~597 s backend · 200 req/sec · ~1,000+ ontology snippets. Quoting the second column as documented is how a client loses trust in the first. |
 | **Cheat sheet: fix-routing table** | 1 | Module 12's symptom → right-layer table |
 | **Cheat sheet: error signatures + evidence checklist** | 1 | Module 14 — the laminated card; message ID first |
 | **Cheat sheet: latency triage flow** | 1 | Module 13 — thinking vs query, with the `system.query.history` columns |
