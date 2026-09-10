@@ -457,7 +457,7 @@
       "why": "Measured on the real dataset, summing the snapshot overstates the book by 682x. This is the scariest failure in the course because nothing errors. Fix it in the data layer, the join specification and the column description."
     },
     {
-      "q": "'Posted transactions only' (status = 'POSTED') should be implemented as which kind of SQL expression?",
+      "q": "'Settled flows only' (status = 'SETTLED') should be implemented as which kind of SQL expression?",
       "options": [
         "A measure",
         "A filter",

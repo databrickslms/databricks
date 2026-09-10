@@ -703,7 +703,7 @@ Genie should not be asked is the skill being tested.
 | Data | structured (UC tables/views) | structured **+ unstructured files** in UC volumes the author attached |
 | Best for | known metrics, recurring questions | open-ended, exploratory, "what's going on with…" |
 | Trade-off | fast, cheap, easy to verify | slower, more LLM spend, more to review |
-| Availability | broad | Americas & Europe workspaces; elsewhere needs **cross-Geo processing** enabled |
+| Availability | broad | region-dependent. Cross-Geo processing is enabled by default outside the US and EU Geos unless a compliance security profile is on. Tokyo and Seoul workspaces now use in-region models and no longer need it. **Check current regional availability before you promise this to a client** — it has already moved once. |
 
 ### How to tell which one you need
 
@@ -725,6 +725,17 @@ one table, confidently — and you'll mistake one slice for the whole picture.
 | "What was AUM by asset class as of 30 June 2026?" | Chat | one balance, one as-of date, one breakdown |
 | "Which funds are losing assets, and what's driving it?" | Agent | needs several angles — net flows by channel, redemptions vs exchanges, return against benchmark, share-class mix |
 | "Summarise the investment committee memos on emerging-market equity alongside the flow trend for those funds" | Agent | unstructured files in a volume, joined to structured tables |
+
+**What Agent mode can read from a volume.** PDFs, Word documents, slide decks and images. An author
+attaches one or more volumes and users ask across a volume, several volumes, and the structured
+tables in one conversation. **Files over 10 MB are ignored** — silently, and the agent carries on
+answering from the rest, so a missing document does not announce itself.
+
+The forty Meridian documents install into the course volume with
+`academy.create_documents('genie-agents')`: committee memos, advisor call notes and complaint
+resolutions. Each argues about something the tables also record — whether exchanges are
+redemptions, whether held-away belongs in AUM — so a question over them has to reconcile the prose
+against the numbers rather than trusting either alone.
 | "What was the market value of account AC000884120 as of 30 June 2026?" | Chat | one lookup |
 | "Show net flows by channel for FY2026 Q3" | Chat | recurring, well-defined, belongs on a dashboard |
 | "Why are private-client redemptions up, and is it advisors or clients leaving?" | Agent | the question contains a hypothesis to test, not a metric to fetch |
@@ -995,9 +1006,15 @@ permissions or direct share.
 
 **Also cover:** cloning an agent; **exporting an agent's context as a metric view** (promotes
 curated semantics into a governed UC object); assigning **certification** to an agent; and
-**certify/deprecate on the underlying data**, so Genie prefers the certified `fct_aum_snapshot`
-over `fct_aum_legacy`, which ships tagged `deprecated = true` and
-`superseded_by = fct_aum_snapshot`.
+**certify/deprecate on the underlying data**. Both are values of one system-governed tag,
+`system.certification_status`. `fct_aum_snapshot` ships `certified`; `fct_aum_legacy` ships
+`deprecated` with a `superseded_by` note. Be precise about the effect: Databricks documents that
+certification helps Genie prioritise the assets your organisation vouches for. It documents no
+equivalent ranking effect for `deprecated` — that one warns people and shows a restricted icon.
+The thing that reliably keeps the legacy table out of an answer is not adding it to the agent.
+
+A custom tag that merely spells the word `certified` does none of this. It has to be the system
+tag key, or it is decoration.
 
 ### The Meridian groups
 Notebook 05 builds the whole demo on six account groups. Everything below follows from them:
@@ -1943,14 +1960,14 @@ Report before and after, with the layer for each fix. **The layer is what is mar
 | Symptom | Wrong fix | Right fix |
 |---|---|---|
 | "California" returns nothing | tell users to say "CA" | **entity matching** on `state` (Module 9) |
-| Revenue is gross, not net | text instruction "use net revenue" | `net_fee_revenue` **measure expression** + fix the view (Modules 7, 9) |
+| AUM includes held-away | text instruction "exclude held-away" | an `aum_usd` **measure expression** that excludes it, and a view that splits the two columns (Modules 7, 9) |
 | AUM is 30× too high | re-ask the question | **join cardinality** + `Latest snapshot` filter + EOP view (Modules 7, 9) |
 | Wrong year | a note in the description | **fiscal calendar instruction** + `dim_date` fiscal columns (Modules 7, 10) |
-| Transaction counts too high | ignore it | **`status = 'POSTED'` filter expression** (Module 9) |
+| Flow totals too high | ignore it | a **`status = 'SETTLED'` filter expression**, and exclude exchanges (Module 9) |
 | "Net flows" answered inconsistently | more prose | **two named measures** + a **clarification instruction** (Modules 9, 10) |
 | A complex recurring question is always slightly off | more text instructions | **example query** or **UC function** as a trusted asset (Module 10) |
 | Genie asserts a *cause* ("outflows rose because of the fee change") | forward it to the CIO | it's an **unsupported claim** — tighten context, remove overlapping tables, diagnose with Genie Code. Genie retrieves; it does not diagnose (Module 2). |
-| Answers pull from `fct_aum_legacy` | delete the table and break downstream | **certify** `fct_transactions`, **deprecate** the legacy table in UC (Modules 6, 7) |
+| Answers pull from `fct_aum_legacy` | delete the table and break downstream | **certify** `fct_aum_snapshot` and **deprecate** the legacy table with `system.certification_status`, then stop exposing it to the agent (Modules 6, 7) |
 | PII appeared in an answer | add "never show PII" to instructions | **column masks** in Unity Catalog (Module 6) |
 | Answers are correct but slow | add instructions | measure thinking vs query time first (Module 13) |
 | Routing is getting worse workspace-wide | tune this agent harder | **delete old and unused agents** — too many hurts routing for everyone |
@@ -2046,9 +2063,9 @@ The split matters. The first table is what you promise; the second is what you p
 |---|---|
 | Warehouse overloaded / queuing? | scale up or add a dedicated warehouse; turn on Genie's **"auto" compute mode** |
 | Using Serverless with sensible autoscaling? | Serverless with a real **min/max**, not one fixed large warehouse |
-| Hitting the **90-second** query limit? | keep the warehouse warm; filter and cluster big tables. **The limit cannot be raised.** |
+| Hitting the **~90-second** query ceiling? | keep the warehouse warm; filter and cluster big tables. Field-observed, not a published limit, and not a config knob. |
 | Managed tables with **Predictive Optimization** on *and running*? | enable PO and confirm it is actually running |
-| **Liquid Clustering** on filter/join columns? | cluster `fct_transactions` on `txn_date`, `account_id`; `fct_loan_balances` on `snapshot_date` |
+| **Liquid Clustering** on filter/join columns? | cluster `fct_flows` on `settlement_date`, `account_id`; `fct_aum_snapshot` on `snapshot_date`, `account_id` |
 | **External tables** maintained? | schedule `VACUUM` + `OPTIMIZE` + `ANALYZE` — external tables get no auto-upkeep |
 | Slow joins to an **outside database** (federation)? | prefer catalog federation, or copy hot data into a Databricks table. **Escalate to the perf/federation team — not a Genie fix.** |
 
