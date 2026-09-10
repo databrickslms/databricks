@@ -3293,6 +3293,25 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 3. Apply the right fix to the right half.
 4. Recognise the hard limits that masquerade as bugs.
 
+### Start here: the warehouse they doubled twice
+
+Meridian's agent was slow. Answers took forty seconds, users complained, and the platform team did
+the obvious thing: they doubled the SQL warehouse.
+
+No change. So they doubled it again.
+
+Still forty seconds — and now costing four times as much. At which point someone finally measured
+where the time was going, and found the SQL was taking **four seconds**. The other thirty-six were
+spent before a query ever ran: reading fourteen tables' worth of context, including a 380-column
+custodian feed, and 10,300 characters of prose instructions.
+
+**They had been buying a faster engine to fix a traffic jam.** No amount of warehouse fixes a
+problem that happens before the warehouse is involved.
+
+This module has one discipline behind it: split the time into two halves and find out which half is
+slow, *before* changing anything. The two halves are fixed in completely different places, and the
+instinct — make the compute bigger — is right about half the time and expensive the other half.
+
 ### The core insight
 ```
 total response time  =  THINKING  +  QUERY EXECUTION
@@ -3419,6 +3438,24 @@ Given the deliberately slow MFG agent on the Large tier: measure both halves usi
 
 > The purpose of this module is to stop authors burning days on problems that were never theirs to fix.
 
+### Start here: three days on somebody else's bug
+
+An author at Meridian spent three days on an agent that kept timing out on one particular question.
+She rewrote the example query. She simplified the instructions. She hid columns, added a filter
+expression, split a view in two.
+
+The question was scanning 900 million rows without a partition filter, and the timeout was a
+platform ceiling she could not have raised from where she was sitting. Three days of careful work on
+a problem that was never hers.
+
+The reverse happens more often and costs more. An author escalates a "platform bug" that turns out
+to be a missing synonym, and the ticket sits in a queue for a fortnight while the users who reported
+it quietly stop asking.
+
+**Knowing which problems are yours is most of this job.** This module is the triage: what the common
+error signatures actually mean, what evidence to capture the first time so you do not have to
+reproduce it later, and how to write an escalation that gets read rather than queued.
+
 ### Learning outcomes
 1. Recognise the common error signatures and what they actually mean.
 2. Capture the right evidence the first time.
@@ -3503,6 +3540,24 @@ Given 8 real symptom reports, classify each (curation / platform bug / performan
 2. Set account-level budgets with the right thresholds.
 3. Design a multi-agent portfolio for a bank.
 
+### Start here: the integration that ran all weekend
+
+Meridian's first API integration was a nightly job that asked the agent five questions and posted
+the answers to a channel. It ran as a service principal, which is correct practice.
+
+A retry loop had no backoff. On the Friday it started failing, retried, failed, retried — all
+weekend, several times a second.
+
+Two things made that expensive rather than merely embarrassing. **A service principal gets no free
+monthly allowance**, so every one of those calls was billed from the first. And nobody had set a
+budget, because budgets felt like something you did once there was something to control.
+
+The bill was noticed on Tuesday.
+
+This module is about the two decisions that would have prevented it — a budget with blocking, and
+knowing which identities get an allowance — and then about the larger question that follows once one
+agent works: how do you run *five* without them drifting apart?
+
 ### Key concepts — billing and budgets
 - **Pay-as-you-go**, with a **free monthly LLM allowance per identified user**. Only usage beyond the allowance is billed, in DBUs based on underlying LLM consumption.
 - **The free allowance cannot be removed by a budget.**
@@ -3565,6 +3620,25 @@ and shared, and say which agent would cause the most damage by redefining it.
 **Level:** Advanced · **Duration:** 90 min · **Audience:** authors + developers
 
 **Summary:** Drive an agent from the Conversation API, embed it, combine it with other sources, and put its configuration under version control.
+
+### Start here: the agent that only existed in a browser
+
+Meridian's Wealth agent took three weeks to build. Curated views, a knowledge store, example
+queries, a benchmark. All of it configured by clicking, and all of it living in exactly one place: a
+workspace someone had admin on.
+
+Then Distribution asked for the same thing for Institutional. Nobody could say precisely what was in
+the first agent, because the only description of it was the agent itself. There was no diff, no
+review, no way to promote a tested configuration from dev to prod — and no way to answer "what
+changed last month?"
+
+**An agent that exists only in a browser is not a product.** It is a thing someone configured once,
+and it has the operational maturity of a spreadsheet on a laptop.
+
+This module is about the two ways out. The **Conversation API** lets other software ask the agent
+questions, which is how an agent becomes a component rather than a destination. The **Management
+API** and `serialized_space` turn its configuration into a file you can review, diff, and deploy —
+which is how it becomes something a team can own.
 
 ### Learning outcomes
 1. Drive a Genie Agent from the **Conversation API**.
@@ -3664,6 +3738,26 @@ concern, and in line with sector-wide EM redemptions over the period.
 Learners pick a domain — their own real one if available, otherwise one of the provided
 asset-management profiles (distribution, investment performance, institutional relations, product
 and fund operations) — and deliver an agent a business team could use on Monday.
+
+### Start here: the question you will be asked
+
+Everything in this course has been building to one moment, and it is not a technical one.
+
+You will be sitting with a business sponsor who is deciding whether to put your agent in front of
+their team. They will not ask about entity matching or metric views. They will ask some version of:
+
+> *"If this gives someone a wrong number in a client meeting, what happens?"*
+
+There are two kinds of answer. One is reassurance — *it has been tested, it should be fine*. The
+other is evidence: **here is the benchmark, here is the score, here are the five questions it still
+gets wrong and why, here is what it refuses to answer, here is who owns it, and here is how we would
+know if it started drifting.**
+
+The second answer is what this capstone produces. Not a working agent — you have had one of those
+since Module 8 — but a working agent **you can defend**.
+
+That is also the honest definition of business-ready. An agent that is right most of the time and
+cannot tell you when it is not is more dangerous than no agent, because people act on it.
 
 ### Deliverables
 1. **Charter (1 page)** — audience, top 15 questions, business sponsor, owner, success metric
