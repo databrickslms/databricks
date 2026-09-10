@@ -2219,22 +2219,135 @@ patch a data problem.
 
 **Summary:** Prefer SQL to prose. Worked examples, parameterised queries and UC functions pin intent down where instructions only suggest it.
 
-### Learning outcomes
-1. Write example SQL queries titled the way users actually ask.
-2. Parameterise queries correctly with types and comments.
-3. Register Unity Catalog functions as trusted assets.
-4. Write text instructions specific enough to be followed.
-5. Structure clarification-question instructions.
-6. Budget within 100 instructions.
+### Start here: the starter question you planted
 
-### Key concepts and limits
-- **Budget: 100 instructions per agent.** Every **example query**, every **function**, and every **text block** counts as **1**. (Separate from the 200 knowledge-store snippets.)
-- **Text instructions behave badly when they get long.** Databricks documents the count limit — 100 instructions — but **publishes no character limit**. What is observed in practice is degradation from around **5,000–7,000 characters**, past which parts of a long block may be **silently ignored**. Treat that as an operating heuristic, not a published limit, and do not quote it to a client as documented. Either way it is the strongest argument for the influence hierarchy: prose ranks lowest, and past some length it can be dropped without telling you. Long blocks also lengthen the "thinking" step (Module 13).
-- **Example SQL queries** — the highest-leverage tool after trusted assets. Title each with the **user's phrasing**, because the title drives prompt matching. Static or parameterised. Users with CAN EDIT can view source queries, which makes them a debugging tool too.
-- **Parameters** — colon syntax `:parameter_name`. Types: String, Date, Date and Time, Decimal, Integer. **Always comment valid values and constraints** — that's how Genie picks a sensible value.
-- **SQL functions (Unity Catalog)** — for logic too complex for a static query. Shareable across teams, and they **hide implementation detail** from users. Register as trusted assets so the verified logic is used as-is.
-- **Text instructions** — organise by topic; cover terminology, fiscal calendars, formatting standards. Applied **globally**, not to a subset. Use only where natural language is genuinely required.
-- **Summary formatting** — add a dedicated *"Instructions you must follow when providing summaries"* section for language, citation style and structure.
+At the end of Module 8 you did something deliberately wrong. You added a sixth starter question that
+you knew was ambiguous — **"What was our AUM?"** — ran it, and kept the answer.
+
+Go and look at that answer now.
+
+It returned a number. A confident, formatted, defensible number. And it did not tell you which of
+the three AUM definitions it used: discretionary only, all managed, or managed plus held-away. In
+this dataset those differ by about eleven percent, which is more growth than most quarters produce.
+
+Nothing you have built so far fixes this. The data is clean — Module 7 made it so. The vocabulary is
+taught — Module 9 did that. But the question is genuinely ambiguous, and **the honest response is not
+an answer at all.** It is a question back.
+
+This module is about the last layer: what you tell the agent to *do* when the data cannot decide.
+
+### Everything here spends from one budget of 100
+
+Before the tools, the constraint, because it shapes every choice you make.
+
+An agent holds **100 instructions**. And the accounting is not what people expect:
+
+- every **example SQL query** counts as one
+- every **SQL function** registered as a trusted asset counts as one
+- the **entire General instructions text block** counts as one
+
+So ten example queries, two functions and your whole prose block is thirteen — not twelve plus
+however many paragraphs. That is a generous budget if you spend it on examples and a wasted one if
+you spend it on prose.
+
+This budget is separate from the 200 knowledge store snippets in Module 9. Different pool, different
+purpose.
+
+### Four tools, weakest last
+
+They are not interchangeable, and the order matters because people reach for them in exactly the
+wrong sequence.
+
+| Tool | Use it when | Strength |
+|---|---|---|
+| **Trusted asset** (UC function) | the logic is settled and must never be re-derived | strongest |
+| **Example query** | there is a shape of question you want answered a specific way | strong |
+| **Parameterised example** | that shape recurs with a different period or filter | strong |
+| **Text instruction** | it genuinely cannot be expressed as SQL — a convention, a clarification rule | weakest |
+
+The rule of thumb: **if you can show it, do not describe it.** One worked query teaches more per
+instruction than a paragraph, and unlike a paragraph it cannot be misread.
+
+### Example queries — the title is the feature
+
+This is the part people get wrong, and it is not obvious.
+
+The **title** of an example query is what Genie matches a user's question against. So the title must
+be the user's sentence, not a query name:
+
+❌ `q_aum_ac_fq`
+✅ `What was our AUM by asset class at the end of last fiscal quarter?`
+
+Write titles you could paste into the chat box and have them read naturally. If a title needs a
+glossary to understand, it will never match anything a user types.
+
+### Parameters, and why the comment matters more than the type
+
+A parameterised query handles a whole family of questions. The syntax is a colon:
+
+```sql
+WHERE v.fiscal_quarter = :fiscal_quarter  -- Format 'FY2026-Q3'. Fiscal year starts 1 October.
+```
+
+Types available: String, Date, Date and Time, Decimal, Integer.
+
+**Always comment the valid values and the business quirk.** That comment is how Genie picks a
+sensible value — it is not documentation for humans, it is an input. A parameter named
+`:fiscal_quarter` with no comment invites `Q3`, `2026-Q3`, `FY26Q3` and three other guesses.
+
+### Trusted assets — logic that cannot be re-derived
+
+A Unity Catalog function registered as a trusted asset is the strongest thing in this module. Genie
+calls it rather than writing its own SQL for that calculation.
+
+Module 7's `06_curated` already created four you can use:
+
+| Function | What it settles |
+|---|---|
+| `aum_by_asset_class(as_of)` | which AUM, at a reporting date, excluding held-away |
+| `net_flows(from, to)` | flow netting, with exchanges excluded |
+| `to_usd(amount, ccy, date)` | conversion at the as-of rate |
+| `fiscal_period(label)` | what 'FY2026-Q3' actually means in dates |
+
+Two things a trusted asset buys you that an instruction cannot. The logic is **verified once** and
+used as-is. And it **hides the implementation** — nobody asking for net flows has to know that
+exchanges are excluded, because they cannot get a version where they are not.
+
+### Text instructions — the last resort, written well
+
+Sometimes prose is genuinely the only option: a naming convention, a formatting standard, or a rule
+about when to ask rather than answer.
+
+Specificity is everything. The docs call out vague instructions as a common failure, and the
+difference looks like this:
+
+| ❌ Vague | ✅ Specific |
+|---|---|
+| "Use the right calendar" | "The fiscal year starts 1 October. FY2026 is 2025-10-01 to 2026-09-30. 'Last quarter' means the prior **fiscal** quarter unless the user says calendar. A quarter-end figure uses the last **business** day." |
+| "AUM should be accurate" | "'AUM' with no qualifier means **discretionary managed assets in USD**, excluding held-away. Say which you used in the answer." |
+
+**Keep it short.** Databricks documents the count limit — 100 instructions — and publishes no
+character limit at all. What is observed in practice is degradation from around 5,000–7,000
+characters, past which parts of a long block may be silently ignored. Treat that as an operating
+heuristic, not a published limit, and do not quote it to a client as documented.
+
+Either way it argues for the same discipline: prose ranks lowest, and past some length it can be
+dropped without telling you.
+
+### The clarification rule — how to make it ask
+
+This is what fixes your planted starter, and it has a shape worth copying: **when**, **ask**,
+**example**, **then**.
+
+> **When** a user asks about return or performance without saying which measure, **ask** before
+> running any query. **Example:** "Do you mean time-weighted net of fees, which is what we report to
+> clients, or money-weighted, which reflects that client's own cash-flow timing?"
+
+Note what it does not do. It does not pick a default and mention the choice in a footnote. A
+footnote on a number nobody reads is not a clarification — it is cover.
+
+An agent that asks a good question is more useful than one that answers a bad one, and this is the
+only tool in the course that produces that behaviour.
 
 ### Business example — example query done right
 ❌ **Title:** `q_aum_ac_fq`
@@ -2302,68 +2415,148 @@ EXAMPLE      — the exact question to ask
 **Teaching point:** deliberately leaving headroom is professional practice. Monitoring *will* surface questions you didn't predict.
 
 ### Lab 10 (40 min) — GRADED
-Everything here spends from one budget of **100 instructions**. Every example query, every SQL
-function, and the whole text block each count as one. Spend deliberately.
+Everything here spends from one budget of **100 instructions**. Spend it deliberately.
 
 **Before you start:** your agent from Lab 9, and the ambiguous "What was our AUM?" starter you kept
 from Lab 8 step 8.
 
+All of this lives in **Configure → Examples**, the same screen as Lab 9's joins and expressions.
+
 ---
 
-**Step 1 — Write 10 example queries, titled the way users ask (15 min).**
-The title drives prompt matching, so it must be the user's sentence, not a query name.
+**Step 1 — Add your first example query (5 min).**
 
-❌ `q_aum_ac_fq`
-✅ `What was our AUM by asset class at the end of last fiscal quarter?`
+Do one slowly.
 
-*You know it worked when:* you could paste any title into the chat box and it would read naturally.
+1. Click **Configure**, then **Examples**.
+2. Click **Add**, then choose **Example SQL query**.
+3. In **Title**, type the user's sentence — not a query name:
+   `What was our AUM by asset class at the end of last fiscal quarter?`
+4. In the SQL box, paste:
+   ```sql
+   SELECT ac.asset_class_name, SUM(v.managed_value_usd) AS aum_usd
+   FROM   genie_agent.mfg_core_vw_aum_reporting v
+   JOIN   genie_agent.mfg_core_dim_asset_class  ac
+     ON   ac.asset_class_code = v.asset_class_code
+   WHERE  v.is_discretionary
+     AND  v.as_of_date = (SELECT max(as_of_date)
+                          FROM genie_agent.mfg_core_vw_aum_reporting)
+   GROUP BY ac.asset_class_name
+   ORDER BY aum_usd DESC
+   ```
+5. **Save.**
 
-**Step 2 — Parameterise at least 3 of them (8 min).**
-Colon syntax, `:fiscal_quarter`. Types are String, Date, Date and Time, Decimal, Integer.
-**Always comment the valid values and the constraint** — the comment is how Genie picks a sensible
-value:
+**Check it worked:** ask the agent that exact question. You should get the same shape of answer the
+example produces.
 
-```sql
-WHERE v.fiscal_quarter = :fiscal_quarter  -- Format 'FY2026-Q3'. Fiscal year starts Oct 1.
-```
-*You know it worked when:* a parameter comment explains both the format and the business quirk.
+---
 
-**Step 3 — Register 2 UC functions as trusted assets (6 min).**
-One must settle the **AUM definition**, one the **flow netting**. `06_curated` already created four
-you can use: `aum_by_asset_class`, `net_flows`, `to_usd`, `fiscal_period`.
+**Step 2 — Add nine more (10 min).**
 
-A trusted asset means the verified logic is used as-is rather than re-derived. It also hides the
-implementation from users, which is the real win: nobody has to remember that exchanges are not sales.
-*You know it worked when:* asking for net flows produces the function's answer, not a fresh SUM.
+Repeat Step 1 for nine further questions. Take them from what people actually ask — the starters you
+wrote in Lab 8 are a good source, and so is Lab 4's list.
 
-**Step 4 — Write 4 text instruction blocks (8 min).**
-Organise by topic: terminology, fiscal calendar, formatting, summaries. Be specific enough to follow.
+Cover at least these shapes:
 
-| ❌ Vague | ✅ Specific |
+| Shape | Example title |
 |---|---|
-| "Use the right calendar" | "The fiscal year starts 1 October. FY2026 is 2025-10-01 to 2026-09-30. 'Last quarter' means the prior **fiscal** quarter unless the user says calendar. A quarter-end figure uses the last **business** day." |
+| A total | "What is our total AUM right now?" |
+| A breakdown | "AUM by region" |
+| A comparison | "AUA versus AUM" |
+| A period | "Net flows by fiscal quarter" |
+| A count | "How many funded accounts do we have?" |
 
-*Keep it short.* There is no documented character limit, but the field heuristic is that quality
-degrades past roughly 5,000–7,000 characters, and beyond that Genie may **silently ignore** parts of
-what you wrote. Long prose also lengthens the thinking step, which Module 13 measures.
+Write every title as a sentence you could paste into the chat box.
 
-**Step 5 — Write the clarification rule for "return" (5 min).**
-This is the one that fixes Lab 8's ambiguous starter. Use the four-part shape: **when**, **ask**,
-**example**, **then**.
+---
 
-> **When** a user asks about return or performance without saying which measure, **ask** before
-> running any query. **Example:** "Do you mean time-weighted net of fees, which is what we report to
-> clients, or money-weighted, which reflects that client's own cash-flow timing?"
+**Step 3 — Parameterise three of them (8 min).**
 
-*You know it worked when:* the agent asks instead of picking one of the three silently.
+1. Open one of your period-based examples.
+2. Replace the hard-coded period with a parameter:
+   ```sql
+   WHERE v.fiscal_quarter = :fiscal_quarter  -- Format 'FY2026-Q3'. Fiscal year starts 1 October.
+   ```
+3. Set the parameter **type** — `String` here, `Date` for a date.
+4. **Save.**
+5. Repeat for two more.
 
-**Step 6 — Submit your instruction budget (3 min).**
-A table: example queries + functions + text blocks = your total, against 100.
+The comment is not decoration. It is how Genie chooses a sensible value, and without it you will get
+`Q3` and `2026-Q3` and three other guesses.
 
-Then go back and run **"What was our AUM?"** — the starter you kept from Lab 8. Compare the answer
-with what you recorded then. That difference is what this module bought you.
+**Check it worked:** ask the same question for two different quarters. Both should answer, and the
+numbers should differ.
 
-**Graded by machine.** `academy.check_lab('genie-agents', 10)` runs 4 checks against your work. This lab grades your agent, so it needs no schema.
+---
+
+**Step 4 — Register two trusted assets (6 min).**
+
+1. In **Configure → Examples**, click **Add**, then **SQL function**.
+2. Select `genie_agent.mfg_core_aum_by_asset_class` — this one settles the AUM definition.
+3. **Save.**
+4. Repeat for `genie_agent.mfg_core_net_flows`, which settles the flow netting.
+
+Both were created for you by `06_curated` in Module 7. Registering them means Genie calls the
+verified logic instead of rewriting it, and nobody asking for net flows has to remember that
+exchanges are excluded.
+
+**Check it worked:** ask for net flows over a date range and confirm the answer uses the function
+rather than a fresh `SUM`.
+
+---
+
+**Step 5 — Write four instruction blocks (8 min).**
+
+1. Go to **Configure → Instructions**.
+2. Write four sections, organised by topic: **terminology**, **fiscal calendar**, **formatting**,
+   **summaries**.
+3. Keep the whole thing short — it counts as one instruction no matter how long, and long blocks
+   degrade.
+
+Be specific enough to follow. "Use the right calendar" is not an instruction; the fiscal-calendar
+example in this module is.
+
+---
+
+**Step 6 — Write the clarification rule that fixes Lab 8 (5 min).**
+
+This is the one that matters.
+
+1. In the same instructions area, add a section for **return**.
+2. Use the four-part shape — when, ask, example, then:
+
+   > **When** a user asks about return or performance without saying which measure, **ask** before
+   > running any query. **Example:** "Do you mean time-weighted net of fees, which is what we report
+   > to clients, or money-weighted, which reflects that client's own cash-flow timing?"
+
+3. **Save.**
+4. Now re-run **"What was our AUM?"** — the starter you planted in Lab 8.
+
+**Check it worked:** the agent asks which AUM you mean instead of picking one. Compare its response
+with the answer you kept from Lab 8. That difference is what this module bought you.
+
+---
+
+**Step 7 — Submit your instruction budget (3 min).**
+
+Count what you spent and write it down:
+
+| | Count |
+|---|---|
+| Example queries | 10 |
+| SQL functions | 2 |
+| General instructions block | 1 |
+| **Total, against 100** | **13** |
+
+Then get graded:
+
+```python
+academy.check_lab('genie-agents', 10)
+```
+
+Four checks. Whether your clarification rule is any good is read by a person — a checker can count
+instructions and cannot tell whether the question you wrote is one a user would understand.
+
 ### Common mistakes
 - Generic SQL patterns as examples (Genie already knows `GROUP BY`) instead of **organisation-specific logic**.
 - Conflicting guidance between a text instruction and a SQL expression → nondeterministic answers. The docs are explicit: *"a key task is to review and resolve any inconsistencies."*
