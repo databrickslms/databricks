@@ -1425,7 +1425,32 @@ Three are not what they first appear:
 
 ---
 
-**Step 4 — Compare with your Lab 0 sheet (3 min).**
+**Step 4 — Ask your own agent the same nine (5 min).**
+
+The nine you have been reading were recorded. Now run them yourself against the uncurated agent and
+write down what you actually get.
+
+**Several will come back better than the recorded version.** When this was last checked, the agent
+asked a clarifying question about held-away instead of silently summing, and answered the California
+question correctly without any entity matching having been configured.
+
+That is worth sitting with, because two conclusions are available and only one is right.
+
+The wrong conclusion is that the problem is solved. The model got better at guessing, and guessing
+well is not the same as being told. It guessed right about `CA` today on a question phrased that
+way; it will guess differently on a question phrased another way, and you will not know which
+happened, because a confident right answer and a confident wrong answer look identical.
+
+The right conclusion is narrower and more useful: **the failures that survive a model improvement
+are the ones that were never the model's fault.** A daily snapshot is still a daily snapshot. Two
+asset-class hierarchies still disagree. Three definitions of AUM are still three. Those are yours.
+
+Mark each of the nine: *still fails*, *now handled*, or *handled differently*. The ones in the first
+column are the ones Modules 7 to 10 exist for.
+
+---
+
+**Step 5 — Compare with your Lab 0 sheet (3 min).**
 
 Get out the notes you wrote in Module 0, when you read the data for twenty minutes and listed the
 questions it could answer two ways.
@@ -1435,8 +1460,8 @@ How many of these nine did you already sense then, without the vocabulary to nam
 **That gap is the exercise.** In Module 0 you noticed something was odd. Now you can say which
 component, which input, and where the fix belongs.
 
-*You know it worked when:* every one of the nine has a stage and a missing input, and none of your
-diagnoses is "the AI got it wrong".
+*You know it worked when:* every one of the nine has a stage and a missing input, you can say which
+still fail against your own agent, and none of your diagnoses is "the AI got it wrong".
 
 ---
 
@@ -2753,6 +2778,11 @@ This is the point of the lab. Everything above was setup.
    **example query**, **instruction**, or **not a defect**.
 
 **Some will still fail, and that is the exercise.** Not all nine are knowledge-store problems.
+
+You may also find one or two were already handled before you started — Lab 4 step 4 asked you to
+record that. Do not count those as wins for your synonyms. The model guessed well; nothing you did
+made it reliable, and a guess that lands today is not a fix. The rows worth reporting are the ones
+your work changed, and the ones nothing here could change.
 
 Number 7 is the clearest case. *"What was our return last year?"* stays ambiguous however many
 synonyms you add, because the ambiguity is real — gross, net and money-weighted are all defensible
