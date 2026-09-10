@@ -1324,9 +1324,9 @@ adding to one of them.
 > Instructions and examples **change** answers. Benchmarks **grade** them. These get confused
 > constantly, and the difference matters: adding benchmarks will never make an agent better.
 
-### The influence hierarchy
+### What to reach for first
 
-Not every input carries equal weight. Ranked from strongest to weakest:
+Not every input does the same amount of work. Ranked by how much of the answer each one settles:
 
 ```ladder
 strongest: Trusted assets — a verified query or UC function: *"use this exact logic"*
@@ -1337,10 +1337,28 @@ Unity Catalog comments — generic table documentation
 weakest: Plain-text instructions — *"please remember to..."*
 ```
 
-**Text instructions are the last resort, not the first tool.** Databricks' own guidance is to
-prefer SQL expressions and worked examples over written rules, which is the opposite of what most
-people reach for. Writing a sentence is easier than writing a query, so that is what gets tried
-first, and it is the weakest thing available.
+**Text instructions are the last resort, not the first tool.** Writing a sentence is easier than
+writing a query, so a sentence is what gets tried first — and it is the least binding thing
+available. A trusted asset says *use this*. An instruction says *please*.
+
+> **Be careful how you state this to a client.** The ladder above is a working model for deciding
+> what to build, and it matches how strongly each input constrains an answer. It is **not** a
+> documented precedence rule, and Databricks does not publish one. Do not tell anyone that a
+> trusted asset overrides a conflicting instruction — that is a guess, and it is the kind of guess
+> that gets repeated back to you six months later as something you promised.
+>
+> What Databricks *does* document is narrower and worth knowing:
+>
+> - When Genie answers from a trusted asset, it marks the response as a **verified answer** —
+>   *"giving agent users an extra layer of confidence in the result's accuracy"*. In chat mode, an
+>   exact-text match on a parameterised query does the same.
+> - The guidance on conflicts is not "the stronger input wins". It is to **not have conflicts**:
+>   *"it's important to make the guidance free from conflicting or ambiguous information to
+>   minimize the risk of undesirable responses."*
+>
+> That second point is the more useful discipline anyway. If your instruction and your SQL
+> expression disagree, the answer is not to work out which one Genie will follow. It is that you
+> have two definitions in the agent and you need one.
 
 ### Guidance, not guarantee
 
@@ -2987,8 +3005,10 @@ character limit at all. What is observed in practice is degradation from around 
 characters, past which parts of a long block may be silently ignored. Treat that as an operating
 heuristic, not a published limit, and do not quote it to a client as documented.
 
-Either way it argues for the same discipline: prose ranks lowest, and past some length it can be
-dropped without telling you.
+Either way it argues for the same discipline: prose is the least binding input you have, and past
+some length it can be dropped without telling you. Note that "least binding" is a statement about
+how much of an answer an instruction settles, not a documented precedence rule — Module 4 has the
+distinction, and it matters when a client asks whether an instruction can override a query.
 
 ### The clarification rule — how to make it ask
 
