@@ -2253,6 +2253,23 @@ you spend it on prose.
 This budget is separate from the 200 knowledge store snippets in Module 9. Different pool, different
 purpose.
 
+Here is how a mature Meridian agent actually spends it:
+
+```
+40  example SQL queries      the top 40 recurring business questions
+ 8  UC functions             aum_by_asset_class, net_flows, to_usd, fiscal_period,
+                             benchmark_relative, flows_by_channel, account_growth,
+                             reporting_date_resolver
+12  text instruction blocks  fiscal calendar, AUM terminology, return clarification,
+                             flow netting, settled-only rule, currency handling,
+                             summary formatting, data freshness, ...
+── 60 used, 40 held in reserve
+```
+
+**Leaving headroom is professional practice, not laziness.** Monitoring will surface questions you
+did not predict — Module 12 is about exactly that — and an agent with no budget left cannot absorb
+what it learns.
+
 ### Four tools, weakest last
 
 They are not interchangeable, and the order matters because people reach for them in exactly the
@@ -2280,6 +2297,28 @@ be the user's sentence, not a query name:
 
 Write titles you could paste into the chat box and have them read naturally. If a title needs a
 glossary to understand, it will never match anything a user types.
+
+Here is one example carrying five lessons at once:
+
+```sql
+-- Title: What was our AUM by asset class at the end of last fiscal quarter?
+SELECT ac.asset_class_name,
+       SUM(v.managed_value_usd) AS aum_usd
+FROM   genie_agent.mfg_core_vw_aum_reporting v
+JOIN   genie_agent.mfg_core_dim_asset_class  ac ON ac.asset_class_code = v.asset_class_code
+WHERE  v.fiscal_quarter = :fiscal_quarter   -- Format 'FY2026-Q3'. Fiscal year starts Oct 1.
+  AND  v.as_of_date = (                     -- the quarter's last reporting date
+         SELECT max(as_of_date) FROM genie_agent.mfg_core_vw_aum_reporting
+         WHERE fiscal_quarter = :fiscal_quarter)
+  AND  v.is_discretionary                   -- AUM excludes advisory-only mandates
+GROUP BY ac.asset_class_name
+ORDER BY aum_usd DESC
+```
+
+The title is the user's sentence. The parameter comment explains the format *and* the fiscal quirk.
+The view has already handled currency and the snapshot grain, so neither appears here. The
+discretionary filter pins down which AUM this is. And the join path is demonstrated rather than
+described — which is worth more than a paragraph saying "join asset class on the code".
 
 ### Parameters, and why the comment matters more than the type
 
@@ -2313,6 +2352,22 @@ Two things a trusted asset buys you that an instruction cannot. The logic is **v
 used as-is. And it **hides the implementation** — nobody asking for net flows has to know that
 exchanges are excluded, because they cannot get a version where they are not.
 
+What one looks like:
+
+```sql
+CREATE OR REPLACE FUNCTION genie_agent.mfg_core_net_flows(
+  from_date DATE COMMENT 'Inclusive start, on settlement date.',
+  to_date   DATE COMMENT 'Inclusive end, on settlement date.'
+) RETURNS TABLE (gross_sales_usd DECIMAL(20,2), redemptions_usd DECIMAL(20,2), net_flows_usd DECIMAL(20,2))
+COMMENT 'Net new money between two settlement dates. Excludes exchanges between Meridian
+         products and anything not settled. Owner: Wealth Analytics. Do not recompute by hand.'
+RETURN ...
+```
+
+Note the comments on the parameters and the function. They are how a reader — and Genie — knows that
+`from_date` means settlement date rather than trade date, which is a distinction that has caused at
+least one restatement at this firm.
+
 ### Text instructions — the last resort, written well
 
 Sometimes prose is genuinely the only option: a naming convention, a formatting standard, or a rule
@@ -2324,7 +2379,14 @@ difference looks like this:
 | ❌ Vague | ✅ Specific |
 |---|---|
 | "Use the right calendar" | "The fiscal year starts 1 October. FY2026 is 2025-10-01 to 2026-09-30. 'Last quarter' means the prior **fiscal** quarter unless the user says calendar. A quarter-end figure uses the last **business** day." |
-| "AUM should be accurate" | "'AUM' with no qualifier means **discretionary managed assets in USD**, excluding held-away. Say which you used in the answer." |
+| "AUM should be accurate" | "'AUM' with no qualifier means **discretionary managed assets in USD**, excluding held-away. Use 'AUA' for the wider figure, and say which you used." |
+| "Handle flows carefully" | "Net flows = subscriptions and transfers in, **less** redemptions and transfers out. **Exclude exchanges** — they move money between Meridian products. Settled instructions only." |
+| "Be helpful in summaries" | "In summaries: report USD in millions with thousands separators, state the reporting date in every headline number, and say which AUM definition you used." |
+| "Never show PII" | **Delete this one.** It does nothing. An instruction cannot enforce access — column masks can, and that is Module 6. |
+
+That last row is the one worth pausing on. A written rule about PII feels like a control and is not
+one. It survives exactly as long as the model chooses to follow it, which is not a guarantee you can
+give a regulator.
 
 **Keep it short.** Databricks documents the count limit — 100 instructions — and publishes no
 character limit at all. What is observed in practice is degradation from around 5,000–7,000
@@ -2336,8 +2398,16 @@ dropped without telling you.
 
 ### The clarification rule — how to make it ask
 
-This is what fixes your planted starter, and it has a shape worth copying: **when**, **ask**,
-**example**, **then**.
+This is what fixes your planted starter, and it has a shape worth copying — four parts, all required:
+
+```
+TRIGGER   — when does this apply?
+MISSING   — what detail is absent?
+ACTION    — ask before querying
+EXAMPLE   — the exact question to ask
+```
+
+Written out, for return:
 
 > **When** a user asks about return or performance without saying which measure, **ask** before
 > running any query. **Example:** "Do you mean time-weighted net of fees, which is what we report to
@@ -2348,71 +2418,6 @@ footnote on a number nobody reads is not a clarification — it is cover.
 
 An agent that asks a good question is more useful than one that answers a bad one, and this is the
 only tool in the course that produces that behaviour.
-
-### Business example — example query done right
-❌ **Title:** `q_aum_ac_fq`
-✅ **Title:** `What was our AUM by asset class at the end of last fiscal quarter?`
-```sql
-SELECT ac.asset_class_name,
-       SUM(v.managed_value_usd) AS aum_usd
-FROM   genie_agent.mfg_core_vw_aum_reporting v
-JOIN   genie_agent.mfg_core_dim_asset_class  ac ON ac.asset_class_code = v.asset_class_code
-WHERE  v.fiscal_quarter = :fiscal_quarter   -- Format 'FY2026-Q3'. MFG fiscal year starts Oct 1.
-  AND  v.as_of_date = (                     -- the quarter's last reporting date
-         SELECT max(as_of_date) FROM genie_agent.mfg_core_vw_aum_reporting
-         WHERE fiscal_quarter = :fiscal_quarter)
-  AND  v.is_discretionary                   -- AUM excludes advisory-only mandates
-GROUP BY ac.asset_class_name
-ORDER BY aum_usd DESC
-```
-Five lessons in one artifact: the title is the user's sentence; the parameter comment explains
-the format *and* the fiscal quirk; the view already handles currency and the snapshot grain;
-the discretionary filter pins down which AUM this is; and the join path is demonstrated rather
-than described.
-
-### Business example — a UC function as a trusted asset
-```sql
-CREATE OR REPLACE FUNCTION genie_agent.mfg_core_net_flows(
-  from_date DATE COMMENT 'Inclusive start, on settlement date.',
-  to_date   DATE COMMENT 'Inclusive end, on settlement date.'
-) RETURNS TABLE (gross_sales_usd DECIMAL(20,2), redemptions_usd DECIMAL(20,2), net_flows_usd DECIMAL(20,2))
-COMMENT 'Net new money between two settlement dates. Excludes exchanges between Meridian
-         products and anything not settled. Owner: Wealth Analytics. Do not recompute by hand.'
-RETURN ...
-```
-This settles the exchange question permanently and hides the netting logic from users
-entirely — which is the point. Nobody has to remember that exchanges aren't sales.
-
-### Business example — instruction quality ladder
-| ❌ Vague (the docs call this out) | ✅ Specific |
-|---|---|
-| "Ask clarification questions about returns" | "**When** a user asks about return or performance without saying which measure, **ask** before running any query. **Example:** 'Do you mean time-weighted net of fees, which is what we report to clients, or money-weighted, which reflects that client's own cash-flow timing?'" |
-| "Use the right calendar" | "MFG's fiscal year starts 1 October. FY2026 = 2025-10-01 to 2026-09-30. 'Last quarter' means the prior **fiscal** quarter unless the user says 'calendar'. A quarter-end figure uses the last **business** day, not the last calendar day." |
-| "AUM should be accurate" | "'AUM' with no qualifier means **discretionary managed assets in USD**, excluding held-away. Use 'AUA' or 'advised assets' for the wider figure, and say which you used in the answer." |
-| "Handle flows carefully" | "Net flows = subscriptions and transfers in, **less** redemptions and transfers out. **Exclude exchanges** — they move money between Meridian products. Count settled instructions only." |
-| "Never show PII" | *(delete this — it does nothing.* Use column masks, Module 6.*)* |
-| "Be helpful in summaries" | "In summaries: report USD in millions with thousands separators, state the reporting date in every headline number, and say which AUM definition you used." |
-
-### The clarification-question template (four required parts)
-```
-TRIGGER      — when does this apply?
-MISSING      — what detail is absent?
-ACTION       — ask before querying
-EXAMPLE      — the exact question to ask
-```
-
-### Business example — budgeting 100 instructions at MFG
-```
-40  example SQL queries      the top 40 recurring business questions
- 8  UC functions             aum_by_asset_class, net_flows, to_usd, fiscal_period,
-                             benchmark_relative, flows_by_channel, account_growth,
-                             reporting_date_resolver
-12  text instruction blocks  fiscal calendar and reporting dates, AUM terminology,
-                             return clarification, flow netting, settled-only rule,
-                             currency handling, summary formatting, data freshness, ...
-── 60 used, 40 held in reserve for what monitoring reveals
-```
-**Teaching point:** deliberately leaving headroom is professional practice. Monitoring *will* surface questions you didn't predict.
 
 ### Lab 10 (40 min) — GRADED
 Everything here spends from one budget of **100 instructions**. Spend it deliberately.
