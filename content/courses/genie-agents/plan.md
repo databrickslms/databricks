@@ -1583,76 +1583,202 @@ step 8 are read by a person — a checker cannot tell whether your reasoning was
 
 **Summary:** Teach the agent your vocabulary: the descriptions, synonyms, joins and SQL expressions that turn column names into meaning.
 
-> **The highest-value module in the course.** Everything before it prepares for this, and
-> everything after it measures or operates what you build here.
-### Learning outcomes
-1. Build agent-scoped metadata and synonyms.
-2. Configure **entity matching / value dictionaries** for categorical columns.
-3. Declare join relationships with the right cardinality.
-4. Write the three kinds of **SQL expressions** — filters, measures, fields.
-5. Evaluate **knowledge mining** suggestions.
+### Start here: a question that came back empty
 
-### Key concepts and limits
-| Element | What it does | Limit |
+Ana Reyes runs the West region for Meridian. On the first Monday of the quarter she opens the
+agent you built in Module 8 and types the question she has typed into a spreadsheet every quarter
+for six years:
+
+> *"How did our California advisors do last quarter?"*
+
+The agent thinks for a few seconds and answers:
+
+> *No results found.*
+
+Ana knows this is wrong. She has 340 advisors in California. She closes the tab, and the next time
+someone suggests she use the agent, she says she tried it and it does not have her data.
+
+**Nothing was broken.** The warehouse was up, the tables were full, the SQL was valid. Here is what
+Genie wrote:
+
+```sql
+WHERE state = 'California'
+```
+
+And here is what is in the column:
+
+```
+CA    NY    TX    FL    IL    ...
+```
+
+`'California'` never equals `'CA'`, so the filter matched nothing and the query returned zero rows —
+correctly, and confidently, and with no warning that it had understood the question and then failed
+to find the words.
+
+This module is about the gap between how your people talk and how your columns are spelled. Closing
+it is the single highest-leverage thing you will do as an agent author. Everything before this module
+prepared the data; everything after it measures or operates what you build here.
+
+### Why the agent could not work it out
+
+It is tempting to think the agent should have known. It read `dim_advisor`, it saw a column called
+`state`, and a person asking about California is obviously asking about the state.
+
+The agent got that part right. What it could not know is **which spelling is in the column**. It has
+the column's name and type, and unless you tell it otherwise, it has to guess at the values. Guessing
+"California" for a column called `state` is a reasonable guess. It is just wrong here.
+
+That is the shape of almost every failure in this module: the agent understood the question and did
+not know your conventions. Your conventions are not in the schema. They are in your head, in a
+spreadsheet somewhere, and in the way your team has always talked. **The knowledge store is where
+you write them down so the agent can read them.**
+
+### The four things you can teach it
+
+There are four, and they answer four different questions. Learn which is which, because using the
+wrong one is the most common mistake in this module and it fails quietly.
+
+| You want to fix | Use | Because |
 |---|---|---|
-| Table / column descriptions | agent-scoped meaning — **does not overwrite** Unity Catalog metadata | part of the 200-snippet budget |
-| Synonyms | maps business vocabulary onto column names | " |
+| "People call it something else" | **synonyms** | maps their word onto your column |
+| "People say a value that isn't in the column" | **entity matching** | gives the agent the real list of values |
+| "It joins the tables wrong, or not at all" | **join relationships** | tells it how the tables connect |
+| "It computes our number differently each time" | **SQL expressions** | defines the calculation once |
+
+Take them one at a time.
+
+---
+
+### 1. Synonyms — when people use a different word
+
+Your column is called `net_flows_usd`. Nobody in your building says that. Distribution says **net new
+money**. Finance says **net flows**. The board pack says **net sales**. All three mean the same
+number, and a new hire will say whichever one they learned first.
+
+A synonym tells the agent that these words point at the same thing:
+
+```
+net_flows_usd   ←  "net new money", "net sales", "flows", "net inflows"
+```
+
+Now all four questions land on the same measure, and the answer does not depend on who is asking.
+
+**Put the synonym where the thing lives.** A synonym for `AUM` goes on the measure. A synonym for
+"equities" goes on the dimension that holds asset classes. Putting it in the wrong place is like
+filing a document under the wrong client — it exists, and nobody finds it.
+
+**One trap, and it is expensive.** *"Total assets"* is not a synonym for AUM. It is a synonym for
+**AUA**, which includes held-away assets Meridian reports on but does not manage. Attach it to AUM
+and every question about total assets quietly inflates your headline number by the held-away amount.
+The query runs, the number looks plausible, and it is wrong in the direction that flatters you —
+which is the direction nobody checks.
+
+Ten synonyms is a sensible start. Begin with the five that break most often here: **AUM**, **AUA**,
+**net new money**, **equities**, **cash**.
+
+---
+
+### 2. Entity matching — when people say a value that isn't there
+
+This is Ana's problem, and it needs a different tool. A synonym maps a *word to a column*. Ana's
+question was not about the wrong column — it found `state` correctly. It was about the wrong
+**value**.
+
+Entity matching hands the agent the actual list of values in a column. Give it the fifty states
+that live in `dim_advisor.state`, and when someone says "California" it can see that the column
+holds `CA` and match the two. It also handles "Californa", because it is matching against a real
+list rather than spelling from memory.
+
+**What it looks like before and after:**
+
+| Ana asks | Without entity matching | With it |
+|---|---|---|
+| "our California advisors" | `WHERE state = 'California'` → zero rows | `WHERE state = 'CA'` → 340 advisors |
+| "the Northeast" | `WHERE region = 'Northeast'` → zero rows | `WHERE region = 'NE'` |
+| "cash holdings" | `WHERE asset_class = 'cash'` → zero rows | `WHERE asset_class_code = 'MM_CASH'` |
+
+Notice the failure is always the same: **a confident zero**. Not an error. Not "I could not find
+that". A number, and the number is nought, and nought is a perfectly ordinary answer to a question
+about a small region on a quiet quarter. That is why this one is worth the effort — the failure is
+invisible unless you already know the answer.
+
+**Turn it on for every low-cardinality column your people name out loud.** Region, state, asset
+class, flow type, channel, strategy, period. If someone might say the value in a meeting, curate it.
+
+The limits, once you need them: **120 columns** per agent, **1,024 distinct values** each, each value
+up to **127 characters**, string columns only.
+
+---
+
+### 3. Join relationships — when it connects the tables wrong
+
+Ask *"what do we manage?"* against an agent that has not been told how the tables join, and you can
+get a number roughly **682 times too large**.
+
+Here is how. `fct_aum_snapshot` holds one row per account per day. `dim_account` holds one row per
+account. Join them correctly and you still have one row per account per day. Join them wrongly — or
+let the agent guess and guess badly — and rows multiply. Sum the result and you are adding the same
+book of business over and over.
+
+The number that comes back is not obviously absurd. It is large, and large numbers in asset
+management are normal. In this dataset the real book is about **$98.5 billion** and the fanned-out
+sum is about **$67.2 trillion**, which is visibly wrong. But sum a week instead of two years and you
+get roughly seven times the truth, and seven times looks like a very good quarter.
+
+Declaring the join removes the guesswork. Each relationship has a **cardinality** — a word that
+sounds technical and just means "how many of these match how many of those":
+
+- **Many to one** — many snapshot rows point at one account. This is the common case.
+- **One to many** — one account has many snapshot rows. The same fact from the other end.
+- **One to one** — at most one match each way.
+
+Declare all of them. An undeclared join is where a plausible wrong number comes from, and a
+plausible wrong number is the worst thing this course can produce.
+
+---
+
+### 4. SQL expressions — when the number is computed differently each time
+
+The last one is the most valuable and the least obvious.
+
+Ask the agent for AUM three times and you can get three different numbers — not because it is
+unreliable, but because "AUM" genuinely has three defensible readings in this data, and it picks one
+each time without telling you. Discretionary only. All managed. Managed plus held-away.
+
+A SQL expression settles it. You write the calculation once, name it, and the agent uses your
+definition instead of inventing one. There are three kinds, and the difference is what they produce:
+
+| Kind | What it is | Meridian example |
+|---|---|---|
+| **Filter** | a reusable condition | `Settled only` → `status = 'SETTLED'` |
+| **Measure** | a number you aggregate | `net_flows_usd` → `SUM(external_sign * amount_usd)` |
+| **Field** | a derived attribute you group by | `account_size_band` → Retail / Affluent / Institutional |
+
+A measure defined once here cannot drift. The same measure retyped into five dashboards always does
+— and it drifts silently, because each version is correct in isolation and nobody compares them
+until a client does.
+
+**Write these for the arguments your firm actually has.** In Meridian's case that means: which AUM,
+whether exchanges count, settled or instructed, discretionary or advised. Every one of those is a
+disagreement between two teams that a SQL expression ends permanently.
+
+---
+
+### The reference, once you know what the words mean
+
+| Element | What it does | Counts toward |
+|---|---|---|
+| Table / column descriptions | agent-scoped meaning; **does not overwrite** Unity Catalog metadata | the 200 |
+| Synonyms | maps business vocabulary onto your columns | the 200 |
 | Hidden columns | removes noise and duplicate hierarchies | — |
-| **Prompt matching — format assistance** | supplies representative values automatically; fixes spelling/format drift | automatic |
-| **Prompt matching — entity matching** (also called **example values** / **value dictionaries**) | curated lists of distinct values, so Genie filters on the *real* value (`'CA'`, `'MM_CASH'`) instead of inventing one (`'California'`, `'cash'`) | **120 columns**, **1,024 values** each |
-| Join relationships | explicit PK–FK links; Many-to-One / One-to-Many / One-to-One; complex conditions via SQL expression | part of 200 |
-| **SQL expressions** | filters, measures, fields | part of 200 |
-| **Knowledge store snippets total** | descriptions + joins + SQL expressions | **200 per agent** |
+| **Prompt matching — format assistance** | supplies representative values automatically; fixes spelling drift | automatic |
+| **Prompt matching — entity matching** | curated value lists, so it filters on `CA` not `California` | **120 columns**, **1,024 values** each |
+| Join relationships | explicit links, with cardinality | the 200 |
+| **SQL expressions** | filters, measures, fields | the 200 |
+| **Knowledge store total** | descriptions + joins + SQL expressions share one budget | **200 per agent** |
 
-### The three SQL expression types — MFG examples
-| Type | Purpose | Example |
-|---|---|---|
-| **Filter** | a reusable condition | `Settled only` → `status = 'SETTLED'` · `Reporting dates only` → `is_reporting_date` · `Discretionary` → `is_discretionary` · `External money` → `flow_type NOT IN ('EXCHANGE_IN','EXCHANGE_OUT')` |
-| **Measure** | a KPI | `aum_usd` → `SUM(CASE WHEN is_discretionary THEN managed_value_usd ELSE 0 END)` · `aua_usd` → `SUM(total_advised_value_usd)` · `net_flows_usd` → `SUM(external_sign * amount_usd)` · `avg_account_value` → `SUM(managed_value_usd)/NULLIF(COUNT(DISTINCT account_id),0)` |
-| **Field** | a derived attribute | `account_size_band` → `CASE WHEN managed_value_usd < 250000 THEN 'Retail' WHEN managed_value_usd < 5000000 THEN 'Affluent' ELSE 'Institutional' END` · `is_international` → `local_currency <> 'USD'` |
-
-### Business example — synonyms that unblock real users
-| Users actually say | Column / value | Fix |
-|---|---|---|
-| "Northeast", "the East" | `region = 'NE'` | synonym + entity matching |
-| "West Coast", "out west" | `region = 'WEST'` | synonym |
-| "California" | `state = 'CA'` | **entity matching** |
-| "equities", "stocks" | `investment_class = 'EQUITY'` | synonym on the measure's dimension |
-| "cash", "money market" | `asset_class_code = 'MM_CASH'` | synonym + entity matching |
-| "AUM", "managed assets", "book of business" | the `AUM` measure | synonyms on the measure |
-| "AUA", "advised assets", "total assets" | the `Assets Under Advisement` measure | synonyms — and keep them apart from AUM |
-| "net new money", "net sales", "flows" | `net_flows_usd` measure | synonyms |
-| "return", "performance" | ambiguous — four columns | a clarification instruction, not a synonym |
-
-### Business example — entity matching in action
-Without it: *"How did our California advisors do last quarter?"* → Genie writes
-`WHERE state = 'California'`, the table holds `'CA'`, and the answer is a confident **zero** —
-or the filter is silently dropped and you get the national number labelled as California.
-
-With entity matching on `dim_advisor.state` (50 values curated), `region` (4) and
-`dim_asset_class.asset_class_code` (12): Genie matches the phrasing to the real value, and
-handles "Californa" too.
-
-**Teaching rule:** turn on entity matching for every low-cardinality categorical column users
-name out loud — region, state, asset class, flow type, channel, strategy, period.
-
-### Business example — the fan-out trap — spend real time here
-`fct_aum_snapshot` holds one row per account per day. Ask *"What do we manage?"* against the
-raw table with no cardinality declared, and Genie writes `SUM(market_value_local)` across
-every snapshot in the table. The answer is the real book **multiplied by the number of days**.
-
-The number *looks* like a number. The chart *looks* like a chart. Nobody notices until the
-figure fails to tie to the regulatory filing.
-
-Fix at three layers, in order:
-1. **Data:** `vw_aum_reporting` exposes month-end reporting dates only (Module 7).
-2. **Knowledge store:** declare `fct_aum_snapshot.account_id → dim_account.account_id
-   (Many-to-One)`, and a `Reporting dates only` filter expression.
-3. **Description:** "one row per account per day — never SUM across dates."
-
-> **This is the scariest failure mode in the course: a plausible wrong number.** It is also
-> the most natural mistake in this domain, because AUM is point-in-time by nature and nothing
-> in the SQL warns you.
+Text instructions, example queries, SQL functions and column descriptions do **not** count toward
+the 200. They have their own budget, and that is Module 10.
 
 ### Knowledge mining
 Genie proposes new joins and SQL expressions by reading Unity Catalog schemas and observing author behaviour — thumbs-up on responses and downloaded queries. Teach authors that **their own upvotes are training signal**, and to review suggestions rather than accept blindly.
