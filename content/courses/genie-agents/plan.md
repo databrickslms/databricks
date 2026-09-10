@@ -756,11 +756,18 @@ attaches one or more volumes and users ask across a volume, several volumes, and
 tables in one conversation. **Files over 10 MB are ignored** — silently, and the agent carries on
 answering from the rest, so a missing document does not announce itself.
 
-The forty Meridian documents install into the course volume with
-`academy.create_documents('genie-agents')`: committee memos, advisor call notes and complaint
+The forty Meridian documents are written into the course volume by **notebook `08_agents`**, and
+the curated agent attaches that volume: committee memos, advisor call notes and complaint
 resolutions. Each argues about something the tables also record — whether exchanges are
 redemptions, whether held-away belongs in AUM — so a question over them has to reconcile the prose
 against the numbers rather than trusting either alone.
+
+> **Check this works in your workspace before you build a session on it.** The attachment is
+> accepted and the files are there, but on a Databricks Free Edition workspace Agent mode then
+> answers that it has no document-search tool available — and falls back to answering from the
+> schema, correctly, while saying what it could not do. Whether an agent can actually read an
+> attached volume appears to depend on the feature being enabled for your workspace. Ask it a
+> question only the documents can answer, and see what comes back, before the room is watching.
 | "What was the market value of account AC000884120 as of 30 June 2026?" | Chat | one lookup |
 | "Show net flows by channel for FY2026 Q3" | Chat | recurring, well-defined, belongs on a dashboard |
 | "Why are private-client redemptions up, and is it advisors or clients leaving?" | Agent | the question contains a hypothesis to test, not a metric to fetch |
