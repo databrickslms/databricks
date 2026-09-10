@@ -272,6 +272,7 @@ you know then is the most useful thing you produce today.
 
 > Step 3 is the module. Steps 1 and 2 are typing.
 
+**Graded by machine.** `academy.check_lab('genie-agents', 0, schema='<your schema>')` runs 8 checks against the dataset you built.
 ### Watch the setup end to end
 
 ```video
@@ -566,6 +567,7 @@ disagreements are the interesting part, and they preview Module 5.
 
 **Summary:** What separates a question Genie can answer from one it can't, and how to check an answer before you act on it.
 
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 1)` lists what a reviewer looks for.
 ### Learning outcomes
 1. Write questions Genie can answer, and spot the ones it can't.
 2. Name the four things every answerable question needs.
@@ -685,6 +687,7 @@ Genie should not be asked is the skill being tested.
 
 **Summary:** When a single query is enough, when the question needs research, and what Agent mode costs you in time and spend.
 
+**Reviewed by a person.** `academy.check_lab('genie-agents', 2, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
 ### Learning outcomes
 1. Choose the right mode for a question.
 2. Set expectations on speed, depth and cost.
@@ -747,6 +750,7 @@ answering usefully needs several. Spotting those is the point of the lab.
 
 ---
 
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 3)` lists what a reviewer looks for.
 ### LEVEL 2 — HOW IT WORKS
 
 ---
@@ -912,6 +916,7 @@ the exercise.
 
 **Summary:** The words your business argues about are the ones Genie will get wrong. How to find them and settle them.
 
+**Reviewed by a person.** `academy.check_lab('genie-agents', 4, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
 ### Learning outcomes
 1. Identify the terms in their own domain that carry more than one meaning.
 2. Produce a signed-off business glossary before building anything.
@@ -950,6 +955,7 @@ being quietly swapped for its near neighbour.
 ### Lab 5 (25 min)
 In pairs, build a 10-term glossary for the MFG wealth domain using the template — start with AUM, return, net flows, quarter-end, and "client". Every term needs a named owner and an implementation route. Disagreements are the point of the exercise, not a problem with it.
 
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 5)` lists what a reviewer looks for.
 ### Teaching line
 > *"Genie didn't get the answer wrong. Your company has three answers and never picked one."*
 
@@ -1081,6 +1087,7 @@ answer, or a permission error. Then verify in the workspace.
 Two of the eight are the cases above: the CFO who correctly sees zero rows, and the regional lead
 who correctly sees the firm-wide total. Learners who predict those two have understood the module.
 
+**Reviewed by a person.** `academy.check_lab('genie-agents', 6, schema='<your schema>')` confirms the 2 prerequisites only — the judgement is what is being assessed.
 ### Common mistakes
 - Assuming the author's permissions apply to consumers (they don't).
 - **Reading an empty answer as an empty business.** Check group membership before believing a zero.
