@@ -944,6 +944,27 @@ missing from the world — not from the sentence — for the other two.
 2. Set expectations on speed, depth and cost.
 3. Know that Agent mode can read **unstructured files** from Unity Catalog volumes.
 
+### Start here: the right answer to the wrong shape of question
+
+Meridian's Head of Distribution asked the agent a reasonable question:
+
+> *"Which funds are losing assets?"*
+
+It came back with a clean table: ten funds, ranked by net outflow, biggest first. Accurate,
+fast, nothing wrong with it.
+
+She took it to the product committee and was asked the obvious next question — *why?* — and had
+nothing. The table showed which funds, and said nothing about whether the outflows were
+redemptions or exchanges into other Meridian products, whether one channel drove all of it, or
+whether performance against benchmark explained any of it.
+
+**The answer was correct and useless.** Not because the agent failed, but because she had asked a
+research question in a shape that only retrieval could answer, and retrieval answered it.
+
+One query cannot tell you why. It can tell you what. Working out which of those you actually need
+is what this module is about, and it is a decision you make *before* you ask, because afterwards
+you have a table and a committee waiting.
+
 ### Key concepts
 | | **Chat mode** | **Agent mode** |
 |---|---|---|
@@ -1037,9 +1058,55 @@ The instructive part is not that Agent mode found more. It's that the Chat answe
 it was one true slice, presented with the same confidence as the full picture.
 
 ### Lab 3 (15 min)
-Route 10 Meridian questions to Chat or Agent mode with a one-line justification each. Two of the
-ten are research questions disguised as metric questions — the phrasing names a measure, but
-answering usefully needs several. Spotting those is the point of the lab.
+Ten questions. Route each one, and find the two that are not what they look like.
+
+---
+
+**Step 1 — Get the ten questions (1 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 3)
+```
+
+---
+
+**Step 2 — Apply the four-part test to each (7 min).**
+
+Module 2 gave you the four things a good question names. That checklist doubles as the mode test:
+
+1. Read the question.
+2. Can you name the **measure**, the **breakdown**, the **filter** and the **point in time**?
+3. **All four → Chat mode.** You already know the shape of the answer; you just need the number.
+4. **Cannot name the breakdown → Agent mode.** Working out which breakdown matters *is* the job,
+   and that is research rather than retrieval.
+
+Write one line of justification per question. The justification must say **what the answer needs**,
+not which mode sounds more impressive.
+
+---
+
+**Step 3 — Find the two disguised ones (5 min).**
+
+Two of the ten name a single measure and still need several to answer usefully. They read like
+metric questions and are not.
+
+Look at numbers 5 and 7. Both mention one thing — growth, performance — and neither can be answered
+by one query, because the useful answer is a comparison across several angles the asker has not
+specified.
+
+Say for each what the extra angles are. That list is what Agent mode would go and get.
+
+---
+
+**Step 4 — Justify one Chat routing on cost (2 min).**
+
+Pick a question you routed to Chat and say why Agent mode would have been the wrong call — not
+because it would fail, but because it costs more for no gain. Agent mode runs many queries per
+question. Routing everything there is not a safe default; it is an expensive one.
+
+*You know it worked when:* your ten justifications describe what each answer needs, and you have
+named both disguised questions and what makes them research.
 
 > **Setup note for instructors:** the Agent-mode exercises read from the `documents` volume that
 > notebook 01 creates. Populate it with the course document pack before running this module.
