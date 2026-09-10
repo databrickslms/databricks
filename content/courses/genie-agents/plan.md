@@ -1813,44 +1813,137 @@ each step feeds the next, and step 6 is where you find out whether any of it wor
 
 ---
 
-**Step 1 — Add synonyms for 10 business terms (8 min).**
-Start with the five that break most often: **AUM**, **AUA**, **net new money**, **equities**, **cash**.
-Put each synonym where the thing it names actually lives — on the measure for `AUM`, on the
-dimension for `equities`.
-*Watch out:* keep AUM and AUA synonyms apart. "total assets" belongs to AUA, and giving it to AUM
-is how the held-away number quietly enters your headline figure.
-*You know it worked when:* asking for "net new money" returns the same number as asking for "net flows".
+**Step 1 — Add column synonyms (8 min).**
 
-**Step 2 — Turn on entity matching for 4 categorical columns (7 min).**
-`dim_advisor.state`, `dim_advisor.region`, `dim_asset_class.asset_class_code`, and one more you
-choose. Curate the real values.
+Do this for one column first, so you learn the path. Then repeat it for the rest.
 
-This is the fix for the most embarrassing failure in the course: without it, *"How did our
-California advisors do?"* becomes `WHERE state = 'California'`, the table holds `'CA'`, and Genie
-returns a confident **zero** — or drops the filter and hands you the national number labelled
-California.
-*Limits:* 120 columns, 1,024 values each, string columns only.
-*You know it worked when:* "California", "Californa" and "CA" all return the same rows.
+1. Open your agent.
+2. Click **Configure**, then **Sources**.
+3. Click the table name **`dim_advisor`**.
+4. Find the row for the column **`region`**. Click the **pencil icon** next to it.
+5. In the **Synonyms** field, type: `Northeast, the East, Southeast, Midwest, West Coast, out west`
+6. **Save.**
+
+That is one column done. Now repeat steps 3–6 for these four:
+
+| Click this table | Pencil next to this column | Type these synonyms |
+|---|---|---|
+| `dim_asset_class` | `investment_class` | equities, stocks, fixed income, bonds, credit |
+| `dim_asset_class` | `asset_class_code` | cash, money market |
+| `dim_client_safe` | `client_segment` | segment, channel, tier |
+| `vw_aum_reporting` | `held_away_value_usd` | held away, unmanaged, assets we do not manage |
+
+Then add five more of your own, using words you have actually heard someone say out loud.
+
+> **Do not add AUM, AUA or "net new money" here.** Those name *measures*, not columns, and the
+> measures do not exist yet — you create them in Step 4, and that form has its own Synonyms field.
+> Putting them on a column is the usual way this step goes wrong.
+
+**Check it worked:** ask the agent *"what is our exposure to equities?"* You should get rows back,
+not an empty table.
+
+---
+
+**Step 2 — Turn on entity matching for 4 columns (7 min).**
+
+Same screen as Step 1, one level deeper. Again, do the first one slowly.
+
+1. Click **Configure**, then **Sources**.
+2. Click the table **`dim_advisor`**.
+3. Click the **pencil icon** next to the column **`state`**.
+4. Click **Advanced**.
+5. Toggle **Entity matching** on.
+6. A **value dictionary** button appears on the right. Click it.
+7. Confirm the values it found are the real ones — `CA`, `NY`, `TX` and so on.
+8. **Save.**
+
+Now repeat steps 2–8 for these three:
+
+| Table | Column | What should be in the dictionary |
+|---|---|---|
+| `dim_advisor` | `region` | `NE`, `SE`, `MW`, `WEST` |
+| `dim_asset_class` | `asset_class_code` | `EQ_US`, `FI_CORP`, `MM_CASH`, and the rest |
+| `vw_net_flows` | `flow_type` | the six flow types |
+
+*Limits, if you go further:* 120 columns per agent, 1,024 values each, string columns only.
+
+**Check it worked:** ask *"how did our California advisors do last quarter?"* — the question from the
+start of this module. You should now get advisors back instead of nothing. Try "Californa" too.
+
+---
 
 **Step 3 — Declare the join relationships (6 min).**
-All six, with the right cardinality — Many-to-One, One-to-Many, One-to-One. Do not leave Genie to
-infer them.
-*Why it matters:* an undeclared join is where fan-out comes from, and fan-out produces a number
-that is too big but entirely plausible.
-*You know it worked when:* a query joining accounts to clients returns the account count you expect,
-not a multiple of it.
+
+Different screen this time.
+
+1. Click **Configure**, then **Examples**.
+2. Click **Add**, then choose **Joins**.
+3. In **left table**, pick `vw_aum_reporting`.
+4. In **right table**, pick `dim_client_safe`.
+5. In **Join condition**, enter `client_id = client_id`.
+6. In **Relationship Type**, choose **Many to one**.
+7. **Save.**
+
+Repeat steps 2–7 five more times:
+
+| Left table | Right table | Join condition | Relationship Type |
+|---|---|---|---|
+| `vw_aum_reporting` | `dim_asset_class` | `asset_class_code = asset_class_code` | Many to one |
+| `vw_aum_reporting` | `dim_portfolio` | `portfolio_id = portfolio_id` | Many to one |
+| `vw_aum_reporting` | `dim_date` | `as_of_date = date_key` | Many to one |
+| `vw_net_flows` | `dim_date` | `as_of_date = date_key` | Many to one |
+| `dim_client_safe` | `dim_advisor` | `advisor_id = advisor_id` | Many to one |
+
+All six are Many to one — a fact table joining to its dimensions. Declare them even though they look
+obvious. Genie does not read a foreign key you never told it about.
+
+**Check it worked:** ask *"how many accounts do we have?"* and compare with
+`SELECT count(*) FROM dim_account`. The two should match. If the agent's number is a multiple of the
+real one, a join is still fanning out.
+
+---
 
 **Step 4 — Author 8 SQL expressions (12 min).**
-Three filters, four measures, one field.
 
-| Type | Write these |
+Same screen as Step 3. Start with one filter.
+
+1. Click **Configure**, then **Examples**.
+2. Click **Add**, then choose **Filter**.
+3. **Name:** `Settled only`
+4. **Code:** `status = 'SETTLED'`
+5. **Save.**
+
+Now add the other two filters the same way:
+
+| Name | Code |
 |---|---|
-| **Filters** (3) | `Settled only` → `status = 'SETTLED'` · `Discretionary` → `is_discretionary` · `External money` → `NOT is_internal` |
-| **Measures** (4) | `aum_usd` · `aua_usd` · `net_flows_usd` → `SUM(external_sign * amount_usd)` · `avg_account_value` |
-| **Field** (1) | `account_size_band` → a CASE over `managed_value_usd` |
+| `Discretionary` | `is_discretionary` |
+| `External money` | `NOT is_internal` |
 
-A measure defined once here cannot drift. The same measure retyped into five dashboards always does.
-*You know it worked when:* the agent uses your `net_flows_usd` rather than inventing its own sum.
+Next the measures. Same path, but choose **Measure** at step 2 — and this form has a **Synonyms**
+field, which is where the AUM and AUA synonyms belong:
+
+| Name | Code | Synonyms |
+|---|---|---|
+| `aum_usd` | `SUM(CASE WHEN is_discretionary THEN managed_value_usd ELSE 0 END)` | AUM, managed assets, book of business |
+| `aua_usd` | `SUM(total_advised_value_usd)` | AUA, advised assets, total assets |
+| `net_flows_usd` | `SUM(external_sign * amount_usd)` | net new money, net sales, flows |
+| `avg_account_value` | `SUM(managed_value_usd) / NULLIF(COUNT(DISTINCT account_id), 0)` | average account size |
+
+Finally one field. Same path, choose **Field**:
+
+| Name | Code |
+|---|---|
+| `account_size_band` | `CASE WHEN managed_value_usd < 250000 THEN 'Retail' WHEN managed_value_usd < 5000000 THEN 'Affluent' ELSE 'Institutional' END` |
+
+> **Look carefully at the two AUM rows.** "Total assets" sits on `aua_usd`, not `aum_usd`. Put it on
+> AUM instead and every question about total assets silently adds the held-away money to your
+> headline figure. It will look like a good quarter.
+
+**Check it worked:** ask for *"net new money last quarter"*, then ask for *"net flows last quarter"*.
+Same number both times, because both now resolve to `net_flows_usd`.
+
+---
 
 **Step 5 — Check your snippet budget (2 min).**
 Table descriptions, join relationships and SQL expressions **share one ceiling of 200 per agent**.
