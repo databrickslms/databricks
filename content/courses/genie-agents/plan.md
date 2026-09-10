@@ -1383,13 +1383,83 @@ every new user clicks.
   belongs here, and the definition is visible before anyone asks a thing.
 
 ### Lab 8 (35 min) — GRADED, milestone lab
-Build the Meridian **Wealth & Distribution** agent for real: the objects from Lab 7, review the
-Genie Code suggestions (documenting at least 2 you **rejected** and why — flaws 1 and 5 are
-planted in those suggestions), configure settings and 5 common questions, share with a peer group
-at CAN RUN, and confirm all 5 starters return correct answers.
+This is the milestone lab: the first time the agent exists as a thing other people can open.
+Work through the steps in order — each one depends on the last, and step 6 is the one people skip.
 
-Then deliberately add a sixth starter that *is* ambiguous — "What was our AUM?" — run it, and keep
-the result. Module 10 comes back to it when you write the clarification instruction that fixes it.
+**Before you start**, you need Lab 7's curated objects to exist, and a SQL warehouse you can use.
+
+---
+
+**Step 1 — Create the agent (3 min).**
+Genie Agents → **New**. Pick your warehouse. Name it so a stranger can tell what it covers:
+`Meridian Wealth & Distribution`, not `Wealth agent`.
+*You know it worked when:* the agent appears in the list and opens to an empty chat.
+
+**Step 2 — Select the data (5 min).**
+Add the objects you kept in Lab 7 — the curated views, the dimensions you exposed, and the metric
+view. Nothing else. Not `dim_client`, not `fct_holdings_raw`, not the legacy AUM table.
+*You know it worked when:* Configure → Data lists 7 objects or fewer and none of them surprises you.
+
+**Step 3 — Let Genie Code bootstrap it, then argue with it (10 min).**
+The bootstrap launches on its own and proposes table descriptions and example queries. Read every
+one. **Never bulk-accept.**
+
+Two of its suggestions on this data are wrong, and they are wrong in ways that matter:
+
+| It suggests | Reject it because |
+|---|---|
+| `fct_aum_snapshot` is *"total assets under management"* | It is the **daily** value of one account, and it excludes held-away. Accept this and every user sums it across dates. |
+| `dim_asset_class` is *"the asset class of the holding"* | There are **two** hierarchies in that table and they disagree. A description naming neither invites Genie to pick either. |
+
+Write down the two you rejected and why. That written note is part of what is marked.
+*You know it worked when:* you have rejected at least two suggestions and can say what each would
+have taught the agent.
+
+**Step 4 — Hide the columns nobody asks about (5 min).**
+Configure → Data → per table, open **Overview** and **Sample data**, and hide what is noise.
+Every visible column is context Genie reads before writing a line of SQL.
+*You know it worked when:* nothing remains visible that you could not explain to a business user.
+
+**Step 5 — Write the description and settings (4 min).**
+The description is how a user picks your agent from a list, so it must say what is in scope **and**
+what the words mean:
+
+> `Wealth & Distribution — AUM, net flows and performance by portfolio, fund, channel and region.`
+> `AUM means discretionary market value excluding held-away assets. Fiscal year starts 1 October.`
+> `Owner: Wealth Analytics.`
+
+*You know it worked when:* someone who has never seen the data can tell whether their question belongs here.
+
+**Step 6 — Add 5 starter questions, and check every one (5 min).**
+The starters are the whole onboarding experience. Each must name **which** AUM, **which** return,
+and **which** period. Then run all five and read the answers.
+
+This is the step people skip, and it is the one that matters: a starter question that returns a
+wrong answer is a P1 bug, because it is the first thing every new user clicks.
+*You know it worked when:* all five return numbers you can defend, not just numbers.
+
+**Step 7 — Share it (2 min).**
+Share with a peer group at **CAN RUN**. Not CAN EDIT — you want them using it, not fixing it.
+*You know it worked when:* a colleague can open it and ask a question without asking you for access.
+
+**Step 8 — Break it on purpose (1 min).**
+Add a sixth starter that *is* ambiguous: **"What was our AUM?"** Run it. Keep the answer.
+
+It will return something confident. Note which of the three defensible AUM definitions it picked,
+and whether it told you. Module 10 comes back to this exact result when you write the
+clarification instruction that fixes it.
+
+---
+
+**Grade your work:**
+
+```python
+academy.check_lab('genie-agents', 8, schema='<your schema>')
+```
+
+Four checks: the agent exists, it carries 5 starter questions, it has instructions, and it has at
+least one example query. The rejected-suggestion notes from step 3 and the ambiguous starter from
+step 8 are read by a person — a checker cannot tell whether your reasoning was any good.
 
 
 ---
