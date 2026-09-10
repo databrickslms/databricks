@@ -1725,15 +1725,16 @@ management are normal. In this dataset the real book is about **$98.5 billion** 
 sum is about **$67.2 trillion**, which is visibly wrong. But sum a week instead of two years and you
 get roughly seven times the truth, and seven times looks like a very good quarter.
 
-Declaring the join removes the guesswork. Each relationship has a **cardinality** — a word that
-sounds technical and just means "how many of these match how many of those":
+You know how to write this join. That is not the problem. The problem is that **Genie will not use
+your join unless you declare it in the agent** — it works from the schema, and a foreign key you hold
+in your head is not in the schema.
 
-- **Many to one** — many snapshot rows point at one account. This is the common case.
-- **One to many** — one account has many snapshot rows. The same fact from the other end.
-- **One to one** — at most one match each way.
+Declaring a relationship means naming the two columns and the cardinality Genie should assume:
+`Many to one`, `One to many`, or `One to one`. For `fct_aum_snapshot.account_id → dim_account.account_id`
+that is Many to one.
 
-Declare all of them. An undeclared join is where a plausible wrong number comes from, and a
-plausible wrong number is the worst thing this course can produce.
+Declare all of them, including the ones that look obvious. An undeclared join is where a plausible
+wrong number comes from, and a plausible wrong number is the worst thing this course can produce.
 
 ---
 
@@ -1763,6 +1764,27 @@ whether exchanges count, settled or instructed, discretionary or advised. Every 
 disagreement between two teams that a SQL expression ends permanently.
 
 ---
+
+### Where this actually lives, and why that matters
+
+This is the part that trips up everyone new to Databricks, so it is worth being explicit.
+
+Everything in this module is **agent-scoped**. The synonyms, the join declarations, the SQL
+expressions belong to this Genie Agent and live with it. They write nothing to Unity Catalog, and
+they do not overwrite the table and column comments already there.
+
+Two consequences follow, and both bite in practice:
+
+- **A second agent over the same tables inherits none of it.** Build one for Institutional next
+  quarter and you start from nothing. If a definition has to hold across several agents, it belongs
+  in a metric view or a Unity Catalog function instead (Module 7) — those are catalog-scoped, and
+  every agent sees them.
+- **Unity Catalog column comments are still read.** They are a separate, lower-priority input. Good
+  comments on the base tables make every agent better; the knowledge store is for what is true of
+  *this* audience.
+
+The rough rule: if it is true about the data, put it in Unity Catalog. If it is true about how
+*these people* talk, put it here.
 
 ### The reference, once you know what the words mean
 
