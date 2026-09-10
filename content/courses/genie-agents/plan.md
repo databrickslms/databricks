@@ -1261,7 +1261,24 @@ hide with reasons.
 > object is `<schema>.mfg_core_vw_aum_reporting`. Use whichever your notebook 01 printed — they are the same
 > objects.
 
-Worked answer: notebooks `06_curated.sql` and `07_metric_view.sql`. **Attempt the lab before running them.**
+**This lab is graded by machine, against the data.** Build your answer in a schema of your own,
+then:
+
+```python
+import databricks360 as academy
+
+academy.lab('genie-agents', 7)                                  # the brief and the checks
+academy.check_lab('genie-agents', 7, schema='lab07_yourname')   # grade it
+```
+
+Ten checks, and the numeric ones compare your views against the reference at the latest reporting
+date. A view that runs but sums the daily snapshot, folds held-away into AUM, or counts exchanges
+as sales will produce a number, pass every syntax check, and still fail — which is the whole
+argument of this module made mechanical. Each failure names the fix, not just the fault.
+
+Worked answer: notebooks `06_curated.sql` and `07_metric_view.sql`. **Attempt the lab before running
+them** — they create the reference views in the lab schema, and after that the checks are trivial to
+pass by pointing at them.
 
 ### Anti-patterns to name explicitly
 - Adding every table "just in case."
