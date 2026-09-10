@@ -1264,14 +1264,74 @@ What follows from it in practice:
 
 ### Lab 4 (20 min), diagnostic
 
-You get nine wrong answers from a deliberately uncurated Meridian agent, one per problem planted
-in the dataset. For each, say **which stage failed and which input was missing**, for example
-"summed a daily snapshot, because no join cardinality was declared", or "returned nothing for
-California, because there is no entity matching on `state`".
+Nine wrong answers, one per problem planted in the data. You will diagnose all nine and fix none of
+them.
 
-Diagnosis only. You fix none of them today. Then compare your answers with the sheet you wrote in
-Lab 0, because the gap between what you noticed then and what you can name now is the point of
-the exercise.
+**Diagnosis only.** Resisting the urge to fix is part of the exercise — Modules 7 through 10 are the
+fixing, and an author who fixes before diagnosing fixes in the wrong layer.
+
+---
+
+**Step 1 — Get the nine answers (1 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 4)
+```
+
+Each one shows the question, the answer, and the SQL that produced it. The SQL is the evidence; do
+not skip it.
+
+---
+
+**Step 2 — Diagnose the first one together (4 min).**
+
+Answer 1 says Meridian manages **$65,398,441,073,204**. Here is the SQL:
+
+```sql
+SELECT sum(market_value_local) FROM fct_aum_snapshot
+```
+
+Work through it in two parts, and write both down:
+
+- **Which stage failed?** Not the understanding — it found the right table and the right column.
+  The failure is in what it assumed about the data.
+- **Which input was missing?** Nobody declared that `fct_aum_snapshot` holds one row per account per
+  day. That fact belongs in a column comment or a grain declaration, and neither existed.
+
+So the diagnosis reads: *"summed a daily snapshot across every date, because the grain was never
+declared."* It names a stage and an input, and it points at something you could go and do.
+
+---
+
+**Step 3 — Do the other eight (12 min).**
+
+Same two questions for each. One line per answer, in this shape:
+
+> **[what it did wrong], because [the input that was missing].**
+
+Three are not what they first appear:
+
+- **Number 3** returns nothing for California. The stage that failed is not understanding — it chose
+  `state` correctly. It guessed the *value*.
+- **Number 7** answers with `benchmark_return`. That is not a wrong number; it is the right number
+  for a different question.
+- **Number 8** returns PII. That is not a curation failure at all. It is governance.
+
+---
+
+**Step 4 — Compare with your Lab 0 sheet (3 min).**
+
+Get out the notes you wrote in Module 0, when you read the data for twenty minutes and listed the
+questions it could answer two ways.
+
+How many of these nine did you already sense then, without the vocabulary to name them?
+
+**That gap is the exercise.** In Module 0 you noticed something was odd. Now you can say which
+component, which input, and where the fix belongs.
+
+*You know it worked when:* every one of the nine has a stage and a missing input, and none of your
+diagnoses is "the AI got it wrong".
 
 ---
 
