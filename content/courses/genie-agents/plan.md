@@ -2025,8 +2025,21 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 >
 > ```python
 > academy.install('genie-agents', tier='large', schema='large_tier')
-> academy.create_agents('genie-agents', schema='large_tier')
+> # then run 01, 02, 03 and 04 from that folder, and:
+> academy.create_agents('genie-agents', schema='large_tier',
+>                       title_suffix='(large tier)')
 > ```
+>
+> The suffix matters: without it the large-tier agent collides with the one you
+> already built, and you want both — the small-tier agent is what every other
+> module uses.
+>
+> **What this actually produces**, measured on a Free Edition serverless warehouse:
+> 900,000,000 flow events, 35.2M daily snapshots, and a first question answered in
+> **26 seconds**. The answer was also wrong, which is the point — the agent wrote
+> `flow_type ILIKE '%transfer in%'` against a column holding `TRANSFER_IN`, matched
+> nothing, and reported null without flagging it. One response gives you both the
+> latency to diagnose and the failure to explain.
 ### Learning outcomes
 1. Split a slow response into **thinking time** vs **query time** before changing anything.
 2. Measure both halves with `system.query.history` and the Conversation API.
