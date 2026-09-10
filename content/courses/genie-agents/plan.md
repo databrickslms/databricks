@@ -762,12 +762,29 @@ resolutions. Each argues about something the tables also record — whether exch
 redemptions, whether held-away belongs in AUM — so a question over them has to reconcile the prose
 against the numbers rather than trusting either alone.
 
-> **Check this works in your workspace before you build a session on it.** The attachment is
-> accepted and the files are there, but on a Databricks Free Edition workspace Agent mode then
-> answers that it has no document-search tool available — and falls back to answering from the
-> schema, correctly, while saying what it could not do. Whether an agent can actually read an
-> attached volume appears to depend on the feature being enabled for your workspace. Ask it a
-> question only the documents can answer, and see what comes back, before the room is watching.
+> **This needs switching on, and it is not a code problem.** A workspace admin must turn on
+> **Analyze Files in Volumes with Genie Agents** from the **Previews** page. Until they do, the
+> volume attaches, the files sit there, and the agent answers that it has no document-search tool
+> — which is what happened when this course's own documents were first tested. It falls back to
+> the schema and answers correctly while saying what it could not do, so the failure is polite and
+> easy to miss.
+
+**What file analysis actually requires** — worth knowing before you promise it:
+
+| | |
+|---|---|
+| Enablement | workspace admin enables the preview **Analyze Files in Volumes with Genie Agents** |
+| Mode | **Agent mode only.** Chat mode declines, correctly — one query cannot search a corpus |
+| Without content search | the agent retrieves context from **up to 5 files per question** |
+| With content search | files are prepared and indexed, which improves reasoning and lowers latency |
+| Limits | **10 volumes** per agent · **500 files** · **10 MB** per file, larger ones ignored silently |
+| Permissions | `READ VOLUME` for **every user of the agent**, plus Workspace and Databricks SQL entitlements |
+| Not available | AWS GovCloud; consumer-only, SQL-only and account-only users cannot use it |
+
+Note the five-file ceiling against this course's forty documents. A question like *"what has the
+committee said about exchanges over the past year"* spans more memos than that, so without content
+search the agent answers from whichever five it retrieved and never mentions the rest existed.
+That is not a bug; it is the difference between retrieval and search, and it is worth showing.
 | "What was the market value of account AC000884120 as of 30 June 2026?" | Chat | one lookup |
 | "Show net flows by channel for FY2026 Q3" | Chat | recurring, well-defined, belongs on a dashboard |
 | "Why are private-client redemptions up, and is it advisors or clients leaving?" | Agent | the question contains a hypothesis to test, not a metric to fetch |
