@@ -45,7 +45,67 @@ Three published **tracks** from one build:
 - Assessment: 17 knowledge checks (auto-graded) + 9 graded labs (2, 6, 7, 8, 9, 10, 11, 13, 16) + 1 capstone (rubric-scored).
 - **All build and tune labs are done in Genie Code or the Genie Workbench.** Reading about curation is not curation.
 
-### A.5 Teaching language rules (enforce in every script)
+### A.5 Module shape — the pattern every module follows
+
+Module 9 is the reference implementation. Modules written before it read like reference cards:
+learning outcomes in jargon, then a table of limits, before a reader knew what the thing was or why
+they would want it. That is documentation for someone who already knows.
+
+Every module now follows this order.
+
+**1. Open with a failure, not an agenda.** A named person asks a real question and gets a wrong
+answer. Show the answer, show the SQL that produced it, show what was actually in the column. Ana
+Reyes asking for her California advisors and getting *No results found* does more work in six lines
+than any list of outcomes.
+
+**2. Explain why it happened, in plain language.** Not "entity matching was not configured" —
+*"the agent had the column's name and had to guess at its values, and guessing 'California' for a
+column called state is a reasonable guess. It is just wrong here."*
+
+**3. Introduce each capability as the answer to a specific failure.** Never as an item in a feature
+list. If you cannot name the failure a feature prevents, the feature does not belong in the module.
+
+**4. Say where the thing lives, and what follows from that.** This is the single most common gap for
+a reader new to Databricks. Agent-scoped or catalog-scoped? Does a second agent inherit it? Does it
+overwrite Unity Catalog? Give the consequence, not just the fact.
+
+**5. Put the reference table at the end**, once the words in it mean something. Limits, budgets and
+option lists are for looking up later, not for reading first.
+
+**6. Close with what would have gone wrong** without the module.
+
+**Calibration.** The reader writes SQL competently and has probably never opened Databricks. Do not
+explain joins, `GROUP BY` or `CASE WHEN`. Do explain Unity Catalog scoping, what a Genie Agent is as
+an object, metric views, volumes, warehouses, trusted assets, and every piece of Genie-specific
+vocabulary. The rule of thumb: assume they can read the SQL and cannot place the Databricks concept.
+
+### A.6 Lab shape — the pattern every lab follows
+
+**Numbered actions, not outcomes.** "Put each synonym where the thing it names actually lives" is
+meaningless to someone who has not seen the Configure tab. Write the click path:
+
+> 1. Click **Configure**, then **Sources**.
+> 2. Click the table name **`dim_advisor`**.
+> 3. Click the **pencil icon** next to the column **`region`**.
+> 4. In the **Synonyms** field, type: …
+> 5. **Save.**
+
+**Do one slowly, then repeat against a table.** Teach the path once with a worked example, then give
+the remaining rows as data. This is shorter *and* clearer than describing all five.
+
+**Every step ends with a check.** A question to ask the agent and the answer that means it worked —
+ideally the question the module opened with, so the loop closes.
+
+**Ship what the lab references.** A step saying "the nine questions from Lab 4" must give the one
+line that prints them. Never send a learner hunting for material.
+
+**Never ask for an argument the lab does not use.** An agent-graded lab does not need a schema.
+
+**Say when partial failure is correct.** If four of nine questions should still fail after the lab,
+say so and say why — otherwise the diligent learner keeps going and writes prose to patch a data
+problem.
+
+### A.7 Teaching language rules (enforce in every script)
 | Say this | Not this |
 |---|---|
 | "A Genie Agent is a data room you curate for one team" | "a semantic layer abstraction" |
@@ -1225,68 +1285,131 @@ who correctly sees the firm-wide total. Learners who predict those two have unde
 
 **Summary:** Choosing the few objects worth exposing and shaping them properly, which decides more about answer quality than any later tuning.
 
-### Learning outcomes
-1. Scope an agent to a single audience and topic.
-2. Cut well below the 30-object ceiling — toward the documented ≤ 5 — using pre-joined views.
-3. Write column descriptions and hide noise.
-4. Decide when to build a **metric view** instead of curating in the agent.
+### Start here: the agent that knew too much
 
-### Key concepts and hard limits
-| Limit | What Databricks documents | Where |
+Meridian's first Genie Agent was built by pointing it at the wealth schema and clicking save. All
+fourteen tables. It seemed obviously right — why hide data from an agent whose job is answering
+questions about data?
+
+The Head of Distribution asked it what the firm managed. It answered **$65 trillion**.
+
+Meridian manages about **$98 billion**. The agent had summed `fct_aum_snapshot` across every day in
+the table. That table holds one row per account per day, so each day already carries the whole book;
+adding 730 of them multiplies the firm by 730.
+
+Nobody noticed for a fortnight. Not because people are careless — because the *next* answer was
+$4.1 billion for one region, which is entirely plausible, and the one after that was a rounding
+difference on a fund. The huge number got laughed at. The plausible ones got used.
+
+**Every fix for this is upstream of the agent.** You cannot instruct your way out of it. That is
+what this module is about: the shape of the data you expose decides more about answer quality than
+anything you do afterwards.
+
+### Why fewer objects is not a tidiness preference
+
+There is a limit — 30 tables or views per agent — and a recommendation, five or fewer. The gap
+between those numbers is where most people go wrong, because 30 sounds like the target and it is
+the ceiling.
+
+Three separate things go wrong as you add objects.
+
+**The agent has more ways to be wrong.** Two AUM tables means a coin flip on every AUM question.
+Two asset-class hierarchies means the same allocation question rolls up two ways on two days. Every
+extra object is another chance to pick the wrong one, and it picks silently.
+
+**It gets slower.** Every table and column is context the agent reads before it writes a line of
+SQL. A 380-column custodian feed is 380 column names to consider on every question, including
+questions that have nothing to do with holdings. Module 13 puts a stopwatch on this.
+
+**Nobody can tell you what it is for.** An agent over fourteen tables has no answer to "what should
+I ask this?" — which is the first thing a business user needs and the reason most of them stop
+after one attempt.
+
+### What you are actually choosing between
+
+The instinct is to hide columns and hope. The better move is usually to build something new: a view
+that answers the question the way your firm has agreed it should be answered.
+
+Compare the two ways of getting to the same number.
+
+**Exposed raw**, the agent must know all of this on its own: that `fct_aum_snapshot` is daily, that
+`market_value_local` is in local currency and needs `dim_fx_rate` joined at the snapshot date, that
+held-away sits in its own column and is not AUM, and that `dim_portfolio.is_discretionary` decides
+which mandates count.
+
+**Exposed as `vw_aum_reporting`**, all four decisions are already made. One row per account per
+reporting date, converted to USD, discretionary flag explicit, held-away in a separate column. The
+agent cannot get the currency wrong because there is no currency left to get wrong.
+
+That is the trade this module keeps making: **move the decision from the agent, which guesses, to
+the view, which is reviewed.**
+
+### Where each kind of fix belongs
+
+Four places to put a rule, and they are not interchangeable. Getting this wrong is the most
+expensive mistake in the course, because a rule in the wrong place works once and rots.
+
+| Put it here | When | Who sees it |
 |---|---|---|
-| Tables/views per agent | **30.** *"You can add up to 30 tables or views to a Genie Agent."* | Create and manage a Genie Agent |
-| Recommended starting size | **≤ 5.** *"Aim for five or fewer tables. The more focused your selection, the better."* | Genie best practices |
-| Conversations per agent | **10,000**, each up to **10,000 messages.** *"Each Genie Agent can support up to 10,000 conversations, and each conversation can include up to 10,000 messages."* | Create and manage a Genie Agent |
+| **A curated view** | the fix is structural — a grain, a join, a conversion | everyone who queries it |
+| **A metric view** | a metric must mean one thing across several agents and dashboards | every agent and BI tool |
+| **A Unity Catalog function** | the logic is complex and shared | anyone with EXECUTE |
+| **Agent instructions** | genuinely last resort — a phrasing convention, a clarification rule | one agent only |
 
-Note the shape of those two numbers. **30 is the ceiling; 5 is the advice.** An agent with 28 objects is
-within the limit and still badly built. Everything below is about getting to the second number, not the first.
+Read that table bottom-up if it helps: instructions are the weakest tool, and they are the one
+everybody reaches for first because they are the easiest to write.
 
-> **On limits generally.** Databricks also documents **100 instructions** and **200 knowledge store
-> snippets** per agent — Module 13 covers both, and they matter once you start writing SQL expressions.
-> What is *not* documented anywhere is a **character limit on the instructions text**. Module 13 uses a
-> ~5,000–7,000 character degradation threshold observed in practice: a sound operating heuristic,
-> but do not present it to a client as a published platform limit.
+### Metric views, if you have not met one
 
-**Databricks' framing:** *"Think of Genie as a new data analyst joining your company. Like any new team member,
-Genie needs clear context to be effective."* You would give a new analyst a clean, documented, narrow dataset —
-not the whole lakehouse.
+A metric view is a Unity Catalog object that separates **measures** from **dimensions**. You define
+AUM once — the expression, not the answer — and anything that queries the view can group it by
+region, quarter, asset class or client segment without redefining anything.
 
-**Start small.** The docs are explicit: *"Start as small as possible, with minimal instructions and a limited
-set of questions to answer. Then, you can add as you iterate based on feedback and monitoring."* Do not try to be
-complete on day one.
+The reason it matters here: a curated view lives inside your agent's world, but a metric view is a
+catalog object. Point five agents, three dashboards and the regulatory extract at the same metric
+view and all nine of them compute AUM identically. That is not achievable with instructions, no
+matter how carefully written.
 
-**Define purpose.** *"An agent should answer questions for a particular topic and audience, not general questions
-across various domains."* An agent covering AUM reporting *and* trade operations *and* fee billing covers all three badly.
+Metric views also carry **agent metadata** — synonyms, display names and formatting — which is the
+same vocabulary work Module 9 does inside an agent, but done once at the catalog level.
 
-**Pre-join.** *"You can simplify your datasets by prejoining tables and removing unnecessary columns before adding
-data to an agent."* This is not a technique you reach for only once you exceed 30 — it is how you get from 14 objects
-to 7. Fewer, richer objects beat many thin ones, and pre-joining is where the AUM definition, the flow netting and
-the snapshot grain get settled permanently.
+Two practical notes, both learned the hard way: synonyms, display names and formatting require YAML
+specification **1.1**, and a measure column must be wrapped in `MEASURE()` when you query it.
 
-**Narrow is *faster*, not just more accurate.** Every table and column is context Genie must read before writing SQL, so a bloated agent is slow **and** wrong. Wide tables are the worst offenders — replace the 380-column `fct_holdings_raw` with a slim view holding only what anyone asks about. Module 13 puts a stopwatch on this.
+### Certify what is authoritative, deprecate what is not
 
-**Certify and deprecate in Unity Catalog.** `certified` and `deprecated` are the two values of one Unity Catalog
-system tag. Certify `fct_aum_snapshot`, deprecate `fct_aum_legacy`. "We have two AUM tables" then stops being the
-agent's problem and becomes a governance decision made once.
+Meridian has two AUM tables. `fct_aum_snapshot` is current; `fct_aum_legacy` is superseded and
+nobody retired it. Unity Catalog has a system tag for exactly this:
 
-> **Be precise about what each tag does.** Databricks documents a ranking effect for **certified** only —
-> *"This helps Genie One improve its answers by prioritizing the assets your organization vouches for."*
-> For **deprecated**, the documented behaviour is a warning to people: it *"warns that a data asset is outdated,
-> no longer reliable, or should not be used in new workflows"* and shows a restricted icon. Deprecating
-> `fct_aum_legacy` is worth doing, but do not tell a client it removes the table from Genie's consideration.
-> The thing that reliably keeps it out of an answer is not adding it to the agent.
+```sql
+ALTER TABLE core.fct_aum_snapshot
+  SET TAGS ('system.certification_status' = 'certified');
+```
 
-**Metric views** — the core implementation of Unity Catalog semantics. They *"provide a centralized way to define
-and manage business metrics by separating measure definitions from the fields (also called dimensions) used to group,
-filter, and aggregate them, so you can define metrics once and query them at runtime."* Defined in YAML. They also
-carry **agent metadata**: *"Add synonyms, display names, and formatting rules to improve agent accuracy and display
-consistent formats across tools."*
+Be precise about what that buys you. Databricks documents that certification helps Genie prioritise
+the assets your organisation vouches for. It documents **no** equivalent ranking effect for
+`deprecated` — that value warns people and shows a restricted icon in Catalog Explorer.
 
-| Situation | Build |
+So deprecating the legacy table is worth doing, and it is not what keeps it out of your answers.
+**The thing that reliably keeps a table out of an answer is not adding it to the agent.**
+
+One more trap: the tag key must be `system.certification_status`. A custom tag that merely spells
+the word `certified` is decoration — it looks right in the catalog and does nothing.
+
+### The limits, now that the words mean something
+
+| Limit | What Databricks documents |
 |---|---|
-| One team, a handful of metrics, moving fast | curate inside the agent |
-| "AUM" must mean one thing across 5 agents, 3 dashboards and the regulatory filing | **metric view**, then point agents at it |
-| You already curated an agent and want to promote its semantics | **export the agent as a metric view** — kebab menu → **Export to metric view**, then refine with Genie Code |
+| Tables/views per agent | **30.** *"You can add up to 30 tables or views to a Genie Agent."* |
+| Recommended starting size | **≤ 5.** *"Aim for five or fewer tables. The more focused your selection, the better."* |
+| Conversations per agent | **10,000**, each up to **10,000 messages** |
+
+**30 is the ceiling; 5 is the advice.** An agent with 28 objects is inside the limit and still badly
+built.
+
+Databricks also documents **100 instructions** and **200 knowledge store snippets** per agent, both
+covered in Modules 9 and 10. What is *not* documented anywhere is a character limit on instruction
+text — Module 10 uses a degradation threshold observed in practice, and labels it as such.
 
 ### Business example — scoping the MFG "Wealth Reporting" agent
 **Before (bad): all 14 base objects**, which is what pointing an agent at the schema gets you.
@@ -1369,37 +1492,126 @@ answer, no prompt tricks.
 > instead. That ratio *is* the module.
 
 ### Lab 7 (30 min) — GRADED
-**Before you start**, run Module 0 notebooks `01`, `02`, `03`, `04_staging`, then `99_validate` — every row
-must read PASS. `04_staging` is marked optional in the manifest but is not optional here: it creates
-`fct_holdings_raw` and `fct_aum_legacy`, which are two of the objects this lab is about cutting.
+You are going to build the curated layer by hand, then have it graded against the reference.
 
-From the **14 base MFG objects** created by Module 0 notebooks 02–04: choose ≤ 8, write the
-`vw_aum_reporting` and `vw_net_flows` view SQL, write descriptions for 10 columns, and list 6 columns to
-hide with reasons.
+**Before you start:** run Module 0 notebooks `01`, `02`, `03` and `04_staging`, then `99_validate` —
+every row must read PASS. `04_staging` is marked optional in the manifest and is not optional here:
+it creates `fct_holdings_raw` and `fct_aum_legacy`, two of the objects this lab is about cutting.
 
-> **Object naming.** Bare names above assume the default layout (schemas `core` / `ref` / `staging`, so
-> `core.vw_aum_reporting`). If you installed the dataset into a single schema with a table prefix, the same
-> object is `<schema>.mfg_core_vw_aum_reporting`. Use whichever your notebook 01 printed — they are the same
-> objects.
+Do **not** run `06_curated` or `07_metric_view` yet. Those are the answer.
 
-**This lab is graded by machine, against the data.** Build your answer in a schema of your own,
-then:
+---
 
-```python
-import databricks360 as academy
+**Step 1 — Make somewhere to work (2 min).**
 
-academy.lab('genie-agents', 7)                                  # the brief and the checks
-academy.check_lab('genie-agents', 7, schema='lab07_yourname')   # grade it
+1. Open a SQL editor or a notebook.
+2. Create your own schema, named so nobody confuses it with the reference:
+   ```sql
+   CREATE SCHEMA IF NOT EXISTS lab07_yourname;
+   ```
+3. Everything you build goes in there. Leave `genie_agent` alone.
+
+---
+
+**Step 2 — Look at what you have (5 min).**
+
+1. List the fourteen base objects:
+   ```sql
+   SHOW TABLES IN genie_agent;
+   ```
+2. For each one, ask yourself a single question: *would a wealth reporting user ever ask about this?*
+3. Write down your keep/drop decision for all fourteen before you build anything.
+
+Four should be obvious drops once you look: `fct_holdings_raw` (380 columns of custodian feed),
+`fct_aum_legacy` (superseded), `dim_client` (carries the PII), and one of the two asset-class
+hierarchy columns.
+
+---
+
+**Step 3 — Build `vw_aum_reporting` (10 min).**
+
+This is the hard one, and four decisions have to be right. Write a view in your schema that:
+
+1. **Fixes the grain.** Join `dim_date` and filter to `is_reporting_date`, so you get one row per
+   account per *month-end* rather than per day.
+2. **Converts to USD.** Join `dim_fx_rate` on both currency **and** `snapshot_date` — the rate is
+   as-of, not fixed.
+3. **Separates held-away.** Keep `managed_value_usd` and `held_away_value_usd` as two columns. Do
+   not add them together.
+4. **Carries the discretionary flag**, from `dim_portfolio.is_discretionary`.
+
+Check it before moving on:
+```sql
+SELECT count(*) FROM (
+  SELECT account_id, as_of_date FROM lab07_yourname.vw_aum_reporting
+  GROUP BY 1,2 HAVING count(*) > 1
+);
+```
+Zero means your grain is right. Anything else means a join is fanning out, and every total you build
+on top will be wrong.
+
+---
+
+**Step 4 — Build `vw_net_flows` (7 min).**
+
+1. Start from `fct_flows`, filtered to `status = 'SETTLED'`.
+2. Convert `amount_local` to USD using `dim_fx_rate` at the **settlement** date.
+3. Add a signed column so netting is unambiguous:
+   ```sql
+   CASE WHEN flow_type IN ('SUBSCRIPTION','TRANSFER_IN')  THEN 1
+        WHEN flow_type IN ('REDEMPTION','TRANSFER_OUT')   THEN -1
+        ELSE 0 END AS external_sign
+   ```
+4. Add `is_internal` for the exchanges, so anyone can see why they net to zero.
+
+The `ELSE 0` is the whole point. Exchanges move money between Meridian products, so they are neither
+a sale nor a redemption, and giving them a sign of zero makes that structural rather than something
+a user has to remember.
+
+---
+
+**Step 5 — Build `dim_client_safe` (3 min).**
+
+1. Select from `dim_client`.
+2. Take `client_id`, `client_segment`, `advisor_id`, and banded versions of tenure and age.
+3. Leave behind `ssn_last4`, `email`, `dob` and `annual_income`.
+
+Banding is the point: `tenure_band` answers every question anyone actually asks, and `dob` answers
+none of them while being a governance incident waiting to happen.
+
+---
+
+**Step 6 — Write the column comments (5 min).**
+
+At least ten columns, and write them for a stranger. `COMMENT ON COLUMN` is the syntax:
+
+```sql
+COMMENT ON COLUMN lab07_yourname.vw_aum_reporting.managed_value_usd IS
+  'Assets Meridian manages, in USD. This is what AUM means unless someone says otherwise.';
 ```
 
-Ten checks, and the numeric ones compare your views against the reference at the latest reporting
-date. A view that runs but sums the daily snapshot, folds held-away into AUM, or counts exchanges
-as sales will produce a number, pass every syntax check, and still fail — which is the whole
-argument of this module made mechanical. Each failure names the fix, not just the fault.
+A comment earns its place when it says something the column name does not. Compare:
 
-Worked answer: notebooks `06_curated.sql` and `07_metric_view.sql`. **Attempt the lab before running
-them** — they create the reference views in the lab schema, and after that the checks are trivial to
-pass by pointing at them.
+| ❌ | ✅ |
+|---|---|
+| "the market value" | "Assets Meridian manages, in USD. Excludes held-away — see `held_away_value_usd`." |
+| "snapshot date" | "Month-end reporting date, the last business day of the month. Not the last calendar day." |
+
+---
+
+**Step 7 — Get it graded (2 min).**
+
+```python
+academy.check_lab('genie-agents', 7, schema='lab07_yourname')
+```
+
+Ten checks. The numeric ones compare your views against the reference at the latest reporting date,
+so a view that runs but sums the daily snapshot, folds held-away into AUM, or counts exchanges as
+sales will produce a number, pass every syntax check, and still fail. Each failure names the fix.
+
+**Only when you are passing**, run `06_curated.sql` and `07_metric_view.sql` and compare their SQL
+with yours. They are the worked answer, and reading them before you have attempted this wastes the
+lab.
 
 ### Anti-patterns to name explicitly
 - Adding every table "just in case."
