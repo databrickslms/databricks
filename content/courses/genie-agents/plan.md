@@ -764,10 +764,21 @@ against the numbers rather than trusting either alone.
 
 > **This needs switching on, and it is not a code problem.** A workspace admin must turn on
 > **Analyze Files in Volumes with Genie Agents** from the **Previews** page. Until they do, the
-> volume attaches, the files sit there, and the agent answers that it has no document-search tool
-> — which is what happened when this course's own documents were first tested. It falls back to
-> the schema and answers correctly while saying what it could not do, so the failure is polite and
-> easy to miss.
+> volume attaches, the files sit there, and the agent answers that it has no document-search tool.
+> It falls back to the schema and answers correctly while saying what it could not do, so the
+> failure is polite and easy to miss.
+>
+> This course's documents were tested on two workspaces. On one, with the preview off, the agent
+> reported no document-search tool. On the other, with it on, the same question returned:
+>
+> > *"The investment committee decided, at its meeting recorded in the memo dated **14 October
+> > 2025**, that internal exchanges do not count as redemptions… This is consistent with how flows
+> > are modeled in the current reporting tables — `vw_net_flows` assigns exchanges an external sign
+> > of 0."*
+>
+> It cited the memo by filename with a link to the file, and then reconciled it against the table.
+> That is the whole argument for Agent mode in one answer, and it is worth showing rather than
+> describing — but only after you have checked the preview is on.
 
 **What file analysis actually requires** — worth knowing before you promise it:
 
