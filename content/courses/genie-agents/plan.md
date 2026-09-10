@@ -666,17 +666,68 @@ Data → Context → Instructions → Relationships → Logic → Testing → Go
 
 ### Lab 1 (15 min)
 
-You're given twelve real questions from a Meridian shared inbox. Sort each into one of four
-buckets:
+Twelve questions arrived in a Meridian shared inbox over one week. Your job is to work out which
+tool answers each — and to notice that two of them nothing answers.
 
-- **Genie One**: a business question over existing data
-- **Genie Agent**: needs a curated domain built first
-- **Genie Code**: someone needs help writing or fixing code
-- **Not a data question at all**
+---
 
-Then pick the single hardest one and list every business definition that would have to be settled
-before any tool could answer it correctly. Compare your list with a colleague's. The
-disagreements are the interesting part, and they preview Module 5.
+**Step 1 — Get the twelve questions (1 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 1)
+```
+
+That prints all twelve, exactly as they were written. Do not tidy them up in your head; the
+sloppiness is part of what you are reading.
+
+---
+
+**Step 2 — Sort each into one of four buckets (7 min).**
+
+Write the number and the bucket. One line each.
+
+| Bucket | It belongs here when |
+|---|---|
+| **Genie One** | it is a business question over data that already exists, and someone could answer it today |
+| **Genie Agent** | it needs a curated domain built first — the data exists but nobody has agreed what the words mean |
+| **Genie Code** | somebody needs help writing or fixing code, not an answer about the business |
+| **Not a data question** | no amount of data answers it |
+
+Give a reason, not just a label. "Genie Agent" is not an answer; *"Genie Agent — the data is there
+but 'net sales' means two different things to Distribution and Finance"* is.
+
+Two are deliberately unfair. Number 7 — *"Which advisors are underperforming?"* — has no definition
+of underperforming anywhere in the firm. Number 10 asks whether to open an office in Denver, which
+is a judgement no dataset makes for you. Putting either in a tool bucket is the mistake.
+
+---
+
+**Step 3 — Take the hardest one apart (5 min).**
+
+Pick the single hardest question and list **every business definition** that would have to be
+settled before any tool could answer it correctly.
+
+Number 11 is the one worth choosing: *"How much do we manage for the Hartmann family?"* It looks
+trivial. Work through what has to be true first:
+
+- What is a "family"? Meridian's data has clients and accounts. It has no household.
+- Which of the three AUM definitions applies?
+- As at which date, on which calendar?
+- Does held-away money count as something "we manage"?
+
+Four unsettled definitions inside one apparently simple sentence.
+
+---
+
+**Step 4 — Compare with a colleague (2 min).**
+
+Swap lists. **The disagreements are the finding, not a problem with the exercise.** If two people
+who know the business cannot agree what a question means, no agent will do better — and that is the
+argument for Module 5.
+
+*You know it worked when:* you can point at a question and say which of the four buckets it belongs
+in **and** what would have to be settled before anyone could answer it.
 
 
 **Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 1)` prints the brief, the material this lab works on, and what a reviewer looks for.
@@ -690,6 +741,26 @@ disagreements are the interesting part, and they preview Module 5.
 3. Use follow-up questions in one thread instead of starting again.
 4. Check an answer before you put it in front of anyone.
 5. Give feedback that actually improves the agent.
+
+### Start here: four chats, four numbers
+
+A product manager at Meridian needed AUM for a quarterly review. She asked Genie, got a number,
+and wanted it split by asset class — so she opened a new chat and asked for that. Then a new chat
+for the channel split. Then a fourth for the year-on-year comparison.
+
+Four chats, four answers, and the four did not reconcile. The asset-class figures summed to more
+than the total. The channel split summed to less.
+
+Nothing was broken. Each chat started from nothing and made its own reasonable assumptions: one
+used the fiscal year, one the calendar year; one included advisory mandates, one did not. Every
+answer was defensible on its own, and together they were nonsense.
+
+She spent the afternoon reconciling four correct answers to a question she had asked four slightly
+different ways — which is longer than the analyst would have taken, and is the outcome that makes
+people say the tool does not work.
+
+**This module is about asking in a way that does not produce that afternoon.** Two habits do most
+of the work: name four things in the question, and stay in one thread.
 
 ### What happens when you ask
 
@@ -789,11 +860,73 @@ everybody.
 
 ### Lab 2 (20 min), graded
 
-Rewrite 8 poorly worded questions from Meridian colleagues, run each one against the Wealth
-agent, and paste in the query it produced. You are marked on the rewrites, not the SQL.
+Eight questions, as Meridian colleagues actually wrote them. You will rewrite six of them and work
+out why the other two cannot be saved.
 
-Two of the eight cannot be fixed by rewording at all. Say which, and why. Spotting a question
-Genie should not be asked is the skill being tested.
+**You are marked on the rewrites, not on the SQL.**
+
+---
+
+**Step 1 — Get the eight questions (1 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 2)
+```
+
+---
+
+**Step 2 — Run one as written, before you fix anything (3 min).**
+
+1. Open your Wealth agent.
+2. Ask question 1 exactly as it is: **"AUM please"**
+3. Click **Show code** and read the SQL it wrote.
+4. Write down which of the four things it had to guess: the measure, the breakdown, the filter, or
+   the point in time.
+
+You will usually find it guessed three of the four. That is the gap you are closing.
+
+---
+
+**Step 3 — Rewrite six of them (8 min).**
+
+For each, produce a version that names all four: **measure, breakdown, filter, point in time.**
+
+Worked example:
+
+| | |
+|---|---|
+| ❌ As written | "AUM please" |
+| ✅ Rewritten | "What was discretionary AUM by asset class as of 30 June 2026, in USD?" |
+| What changed | measure pinned to *discretionary* AUM · breakdown by asset class · point in time named · currency stated |
+
+Do the same for questions 2, 3, 4, 5 and 6.
+
+---
+
+**Step 4 — Run each rewrite and keep the SQL (4 min).**
+
+1. Ask your rewritten version.
+2. Click **Show code**.
+3. Paste the query beside your rewrite.
+
+You are not marked on the SQL. You are reading it to check the agent did what you meant — which is
+the habit this module is really teaching.
+
+---
+
+**Step 5 — Find the two that cannot be fixed (4 min).**
+
+Two of the eight cannot be rescued by rewording. Say which, and why.
+
+The reason must be about **the data or an unsettled definition**, not about phrasing. "It is vague"
+is not an answer — every question here is vague, and six of them you just fixed.
+
+Ask yourself: is there a version of this sentence that Meridian's data could answer? If the answer
+is no, no amount of rewriting helps, and recognising that is the skill being tested.
+
+*You know it worked when:* your six rewrites each name four things, and you can say what is
+missing from the world — not from the sentence — for the other two.
 
 
 ---
