@@ -1219,9 +1219,39 @@ resolve most of it (`vw_aum_reporting` has already applied `dim_fx_rate` and spl
 them anyway: the base tables outlive this agent, and the next author starts from what Unity Catalog says.
 
 ### Demo (15 min)
-Ask an under-prepared agent *"What was our AUM in California at the end of last year?"* → it sums a daily snapshot, includes held-away assets, uses the calendar year, and returns nothing for "California". Four problems in one answer, none of them flagged. Then ask the prepared 7-object agent. Same question, right answer, no prompt tricks.
+**Setup — both agents are provisioned from code, not built by hand.** Create Genie Space takes the whole
+configuration in one call, so the two demo agents are checked-in `serialized_space` definitions:
+
+```
+databricks360/courses/genie_agents/agents/broken.geniespace.json
+databricks360/courses/genie_agents/agents/curated.geniespace.json
+
+python3 scripts/create_agents.py --dry-run   # render, check every object exists
+python3 scripts/create_agents.py             # create both
+```
+
+Object names come from the same `{{CORE}}` / `{{STAGING}}` placeholders the notebooks use, so the agents
+follow whichever layout you installed. The dry run fails loudly if a table is missing — an agent pointed at
+a table that does not exist fails on every question, and the failure looks like a Genie problem rather than
+a notebook you skipped.
+
+**Requires** `04_staging`, `06_curated` and `07_metric_view` to have been run.
+
+**The demo.** Ask the uncurated agent *"What was our AUM in California at the end of last year?"* → it sums a
+daily snapshot, includes held-away assets, uses the calendar year, and returns nothing for "California". Four
+problems in one answer, none of them flagged. Then ask the prepared 7-object agent. Same question, right
+answer, no prompt tricks.
+
+> **Worth showing the two definitions side by side.** The uncurated agent carries 14 objects and a
+> 10,300-character wall of prose. The prepared one carries 7 objects and 916 characters, because the
+> arguments the prose was trying to settle — what AUM means, how exchanges net — were settled in the views
+> instead. That ratio *is* the module.
 
 ### Lab 7 (30 min) — GRADED
+**Before you start**, run Module 0 notebooks `01`, `02`, `03`, `04_staging`, then `99_validate` — every row
+must read PASS. `04_staging` is marked optional in the manifest but is not optional here: it creates
+`fct_holdings_raw` and `fct_aum_legacy`, which are two of the objects this lab is about cutting.
+
 From the **14 base MFG objects** created by Module 0 notebooks 02–04: choose ≤ 8, write the
 `vw_aum_reporting` and `vw_net_flows` view SQL, write descriptions for 10 columns, and list 6 columns to
 hide with reasons.
@@ -1772,13 +1802,13 @@ Verdict: a thinking problem, plus 3 seconds we added ourselves.
 
 What the agent actually looked like:
   all 14 base objects, including fct_holdings_raw (380 columns) and fct_aum_legacy
-  9,400 characters of prose instructions  ← over the ~5–7k warning threshold
+  10,300 characters of prose instructions ← well over the ~5–7k degradation threshold
   no join specs declared
 
 Fixes applied:
   → 14 objects down to 7 (Module 7)
   → 380-column raw table replaced with a slim view
-  → 6,000 chars of prose converted to 4 SQL expressions + 3 example queries
+  → prose cut to 916 chars; the rest became SQL snippets + 3 example queries
   → poll interval fixed at 2 s with a proper backoff
 Result: ~14 seconds total.
 
@@ -2089,7 +2119,7 @@ and fund operations) — and deliver an agent a business team could use on Monda
 | **Synthetic document set for the volume** | 40 PDFs | investment committee memos, advisor call notes, client complaint letters |
 | **Governance objects** | 1 set | one row filter, four column masks, three personas |
 | Reference agent (fully curated, 7 objects) | 1 | the instructors' answer key |
-| Broken agent (uncurated, all 14 base objects, 9,400-char prose) | 1 | Lab 4 diagnosis, Module 7 demo, **Module 13 latency lab** |
+| Broken agent (uncurated, all 14 base objects, 10,300-char prose) | 1 | Lab 4 diagnosis, Module 7 demo, **Module 13 latency lab** |
 | Concept videos | 18 | 6–10 min each, business language per §A.5 |
 | Guided demo recordings | 18 | all on the Meridian dataset |
 | Lab guides + solution keys | 17 (Lab 0–16) | graded: Labs 2, 6, 7, 8, 9, 10, 11, 13, 16, plus the capstone |
@@ -2250,7 +2280,7 @@ being made.
 | **9** | International portfolios report in **EUR, GBP and JPY**, needing `dim_fx_rate` joined *as of the reporting date*. `fct_flows` also separates `trade_date` from `settlement_date` | currency mixing; totals that don't tie to finance; flows landing in the wrong period | 9, 10 |
 
 Two more flaws are added to the *agent*, not the data, in Module 8: a bloated agent pointed at
-all 14 base objects, and 9,400 characters of prose instructions — the raw material for Module 13's latency lab.
+all 14 base objects, and 10,300 characters of prose instructions — the raw material for Module 13's latency lab.
 
 **Why this set is stronger than a retail-banking one.** Every ambiguity above is an argument
 asset managers genuinely have. AUM versus AUA appears in regulatory filings. The distinction
@@ -2283,7 +2313,7 @@ one people actually make.
 | Example SQL & parameters | 10 | fiscal-period and asset-class parameters |
 | UC functions as trusted assets | 10 | `aum_by_asset_class`, `net_flows`, `to_usd`, `fiscal_period` |
 | Clarification instructions | 10 | flaws 1 and 7 — which AUM, and which return |
-| Instruction length ceiling | 10, 13 | the planted 9,400-character prose block |
+| Instruction length ceiling | 10, 13 | the planted 10,300-character prose block |
 | Benchmarks & scoring | 11 | ground-truth SQL for all nine flaws |
 | Monitoring & feedback triage | 12 | seeded conversation history with feedback |
 | Nondeterminism expectation-setting | 4, 11, 12 | flaw 7 produces legitimately varying answers |
