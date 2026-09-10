@@ -563,7 +563,7 @@ before any tool could answer it correctly. Compare your list with a colleague's.
 disagreements are the interesting part, and they preview Module 5.
 
 
-**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 1)` lists what a reviewer looks for.
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 1)` prints the brief, the material this lab works on, and what a reviewer looks for.
 ## Module 2 — Asking Questions That Actually Work
 **Level:** Beginner · **Duration:** 60 min · **Audience:** business consumers, and the whole of the Business User track
 
@@ -684,6 +684,8 @@ Genie should not be asked is the skill being tested.
 
 
 **Reviewed by a person.** `academy.check_lab('genie-agents', 2, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
+
+**The material for this lab ships with the package.** `academy.lab('genie-agents', 2)` prints the brief and *the eight questions, exactly as colleagues wrote them* — so you can start without waiting for a handout.
 ## Module 3 — Chat Mode vs Agent Mode (Answers vs Research)
 **Level:** Beginner–Intermediate · **Duration:** 45 min
 
@@ -750,7 +752,7 @@ answering usefully needs several. Spotting those is the point of the lab.
 
 ---
 
-**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 3)` lists what a reviewer looks for.
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 3)` prints the brief, the material this lab works on, and what a reviewer looks for.
 ### LEVEL 2 — HOW IT WORKS
 
 ---
@@ -913,6 +915,8 @@ the exercise.
 
 
 **Reviewed by a person.** `academy.check_lab('genie-agents', 4, schema='<your schema>')` confirms the 1 prerequisite only — the judgement is what is being assessed.
+
+**The material for this lab ships with the package.** `academy.lab('genie-agents', 4)` prints the brief and *nine answers from the uncurated agent. every one is wrong.* — so you can start without waiting for a handout.
 ## Module 5 — Fiscal Calendars, Metric Definitions, and Why Business Language Is the Hard Part
 **Level:** Intermediate · **Duration:** 45 min
 
@@ -955,7 +959,7 @@ being quietly swapped for its near neighbour.
 ### Lab 5 (25 min)
 In pairs, build a 10-term glossary for the MFG wealth domain using the template — start with AUM, return, net flows, quarter-end, and "client". Every term needs a named owner and an implementation route. Disagreements are the point of the exercise, not a problem with it.
 
-**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 5)` lists what a reviewer looks for.
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 5)` prints the brief, the material this lab works on, and what a reviewer looks for.
 ### Teaching line
 > *"Genie didn't get the answer wrong. Your company has three answers and never picked one."*
 
@@ -1088,6 +1092,8 @@ Two of the eight are the cases above: the CFO who correctly sees zero rows, and 
 who correctly sees the firm-wide total. Learners who predict those two have understood the module.
 
 **Reviewed by a person.** `academy.check_lab('genie-agents', 6, schema='<your schema>')` confirms the 2 prerequisites only — the judgement is what is being assessed.
+
+**The material for this lab ships with the package.** `academy.lab('genie-agents', 6)` prints the brief and *the meridian access matrix, and eight questions to predict* — so you can start without waiting for a handout.
 ### Common mistakes
 - Assuming the author's permissions apply to consumers (they don't).
 - **Reading an empty answer as an empty business.** Check group membership before believing a zero.
@@ -1962,7 +1968,7 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 ---
 
 
-**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 12)` lists what a reviewer looks for.
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 12)` prints the brief, the material this lab works on, and what a reviewer looks for.
 ## Module 13 — Performance: Why Genie Feels Slow, and What Actually Fixes It
 **Level:** Advanced · **Duration:** 90 min · **Audience:** authors + platform owners
 
@@ -2082,6 +2088,8 @@ doubled it. Twice. For nothing.
 Given the deliberately slow MFG agent on the Large tier: measure both halves using `system.query.history` and the Conversation API, produce a written diagnosis, apply **at least three fixes at the correct layer**, re-measure, and report before/after with evidence. **Grading rewards a correct diagnosis over a large speedup** — a learner who correctly identifies a thinking-bound problem and improves it 20% scores higher than one who doubles the warehouse and gets lucky.
 
 **Reviewed by a person.** `academy.check_lab('genie-agents', 13, schema='<your schema>')` confirms the 3 prerequisites only — the judgement is what is being assessed.
+
+**The material for this lab ships with the package.** `academy.lab('genie-agents', 13)` prints the brief and *measurement worksheet — fill this in before you change anything* — so you can start without waiting for a handout.
 ### Common mistakes
 - Scaling the warehouse for a thinking-bound problem.
 - Timing Genie from system-table timestamps.
@@ -2173,7 +2181,7 @@ Given 8 real symptom reports, classify each (curation / platform bug / performan
 ---
 
 
-**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 14)` lists what a reviewer looks for.
+**Reviewed by a person.** No automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 14)` prints the brief, the material this lab works on, and what a reviewer looks for.
 ## Module 15 — Cost, Budgets, and Scaling to Many Domains
 **Level:** Advanced · **Duration:** 60 min · **Audience:** authors + platform owners
 
