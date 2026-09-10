@@ -2081,6 +2081,26 @@ Genie ships fast, and "Genie spaces" were renamed "Genie Agents".
 
 **Summary:** Build and share an agent end to end, review what the Genie Code bootstrap suggests, and choose starter questions that hold up.
 
+### Start here: the agent nobody opened twice
+
+Meridian's first attempt at a shared agent was built properly. Seven curated objects, sensible
+descriptions, a warehouse that was always warm. The author shared it with forty people in
+Distribution and wrote a short note explaining what it was for.
+
+Eleven of them opened it. Nine asked one question. Two came back the following week.
+
+The agent was not wrong. It was *unusable*, in a specific and fixable way: it opened to an empty
+chat box with no starter questions, and a description that read `Wealth agent`. Someone landing on
+it had no idea what it covered, what it did not, or what a good question looked like — so they typed
+something vague, got a vague answer, and concluded the tool was not for them.
+
+**Everything in this module is about the first ninety seconds.** The data work is done; Module 7
+did it. What remains decides whether anyone ever benefits from that work.
+
+Two things carry almost all the weight. The description tells someone whether their question belongs
+here. The starter questions show them what a good one looks like. Get those wrong and the curation
+underneath is invisible.
+
 ### Learning outcomes
 1. Create an agent end to end and share it.
 2. Use the **Genie Code** bootstrap and critically review its suggestions.
@@ -3020,6 +3040,26 @@ instructions and cannot tell whether the question you wrote is one a user would 
 
 **Summary:** Build a benchmark set with known-correct answers, so you can state accuracy as a number instead of asserting it.
 
+### Start here: "it seems pretty good"
+
+You have built the agent. You curated the data, taught it your vocabulary, wrote the examples and
+the clarification rules. You have asked it maybe thirty questions along the way and the answers
+looked right.
+
+Now someone senior asks the only question that matters: **how do you know?**
+
+"It seems pretty good" is not an answer you can give about a system that produces numbers people act
+on. Neither is "I tested it" — with what, against what, and would you notice if next month's change
+broke something that worked today?
+
+The honest position before this module is that you do not know. You have anecdotes: thirty questions
+you happened to ask, chosen by you, checked by eye, none written down. That is not evidence, and it
+gives you no way to tell whether a fix helped or quietly broke something else.
+
+**A benchmark turns an opinion into a number.** Thirty questions with expected answers, run before
+and after every change. It is the difference between "I think this is better" and "it went from 22
+to 27, and here are the five that still fail".
+
 ### Learning outcomes
 1. Build a benchmark set with ground-truth answers.
 2. Interpret Chat-mode vs Agent-mode scoring.
@@ -3150,6 +3190,26 @@ Report before and after, with the layer for each fix. **The layer is what is mar
 2. Run a feedback triage process.
 3. Route each symptom to the correct fix *layer*.
 4. Operate a curation cadence with clear ownership.
+
+### Start here: the agent that got worse without changing
+
+Six months after launch, Meridian's Wealth agent answers worse than it did in week one. Nobody has
+touched it.
+
+What changed is everything around it. A new share class launched and nobody added the synonym.
+Distribution started saying "net new money" after a reorganisation, and the agent had only been
+taught "net flows". Two clients were reclassified into a segment that did not exist when the agent
+was built. The fiscal calendar rolled, so "last quarter" now means something else.
+
+None of those is a defect you could have caught at launch. **An agent decays because the business
+moves and the agent does not.**
+
+The other half of the problem is that nobody tells you. A user who gets a bad answer rarely files a
+ticket — they stop using it and mention to a colleague that it is unreliable. By the time you hear,
+you have lost the room and cannot reconstruct which question failed.
+
+This module is the routine that catches decay before it becomes reputation: what to look at, how
+often, and — the part that matters most — **which layer to fix it in.**
 
 ### Key concepts
 - **Monitor tab** — usage and trends, conversation history, quality review of conversations, delete a conversation, and a **weekly digest**.
