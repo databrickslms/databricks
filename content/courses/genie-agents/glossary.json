@@ -108,11 +108,11 @@
   },
   "certify": {
     "match": "certif(y|ied|ication)",
-    "def": "Marking an object as the official source, so Genie prefers it over lookalikes."
+    "def": "One value of a Unity Catalog system tag, marking an object as meeting your organisation's standards. Databricks documents that this helps Genie improve answers by prioritising the assets your organisation vouches for."
   },
   "deprecate": {
     "match": "deprecat(e|ed|ion)",
-    "def": "Marking an object as superseded, so Genie avoids it."
+    "def": "The other value of that tag, warning that an object is outdated, no longer reliable, or should not be used in new work. It shows a restricted icon and is a signal to people; unlike `certified`, no effect on how Genie ranks the object is documented."
   },
   "fact table": {
     "match": "fact tables?|\\bfct_",

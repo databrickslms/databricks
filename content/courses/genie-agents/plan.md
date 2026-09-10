@@ -1106,43 +1106,81 @@ who correctly sees the firm-wide total. Learners who predict those two have unde
 
 ### Learning outcomes
 1. Scope an agent to a single audience and topic.
-2. Get under the 30-object limit using pre-joined views.
+2. Cut well below the 30-object ceiling — toward the documented ≤ 5 — using pre-joined views.
 3. Write column descriptions and hide noise.
 4. Decide when to build a **metric view** instead of curating in the agent.
 
 ### Key concepts and hard limits
-| Limit | Value |
-|---|---|
-| Tables/views per agent | **30 max** |
-| Recommended starting size | **≤ 5** |
-| Conversations per agent | 10,000 (10,000 messages each) |
+| Limit | What Databricks documents | Where |
+|---|---|---|
+| Tables/views per agent | **30.** *"You can add up to 30 tables or views to a Genie Agent."* | Create and manage a Genie Agent |
+| Recommended starting size | **≤ 5.** *"Aim for five or fewer tables. The more focused your selection, the better."* | Genie best practices |
+| Conversations per agent | **10,000**, each up to **10,000 messages.** *"Each Genie Agent can support up to 10,000 conversations, and each conversation can include up to 10,000 messages."* | Create and manage a Genie Agent |
 
-**Databricks' framing:** *treat Genie like a new analyst joining your company.* You'd give a new credit analyst a clean, documented, narrow dataset — not the whole lakehouse.
+Note the shape of those two numbers. **30 is the ceiling; 5 is the advice.** An agent with 28 objects is
+within the limit and still badly built. Everything below is about getting to the second number, not the first.
 
-**Start small.** Minimal instructions, a limited question set, then expand from feedback. Do not try to be complete on day one.
+> **On limits generally.** Databricks also documents **100 instructions** and **200 knowledge store
+> snippets** per agent — Module 13 covers both, and they matter once you start writing SQL expressions.
+> What is *not* documented anywhere is a **character limit on the instructions text**. Module 13 uses a
+> ~5,000–7,000 character degradation threshold from the *Genie Performance & Issues Playbook*: a sound
+> operating heuristic, but do not present it to a client as a published platform limit.
 
-**Define purpose.** One audience, one topic. An agent covering AUM reporting *and* trade operations *and* fee billing covers all three badly.
+**Databricks' framing:** *"Think of Genie as a new data analyst joining your company. Like any new team member,
+Genie needs clear context to be effective."* You would give a new analyst a clean, documented, narrow dataset —
+not the whole lakehouse.
 
-**Pre-join.** Beyond 30 objects, build views that pre-join related tables. Fewer, richer objects beat many thin ones — and pre-joining is where the AUM definition, the flow netting and the snapshot grain get settled permanently.
+**Start small.** The docs are explicit: *"Start as small as possible, with minimal instructions and a limited
+set of questions to answer. Then, you can add as you iterate based on feedback and monitoring."* Do not try to be
+complete on day one.
+
+**Define purpose.** *"An agent should answer questions for a particular topic and audience, not general questions
+across various domains."* An agent covering AUM reporting *and* trade operations *and* fee billing covers all three badly.
+
+**Pre-join.** *"You can simplify your datasets by prejoining tables and removing unnecessary columns before adding
+data to an agent."* This is not a technique you reach for only once you exceed 30 — it is how you get from 14 objects
+to 7. Fewer, richer objects beat many thin ones, and pre-joining is where the AUM definition, the flow netting and
+the snapshot grain get settled permanently.
 
 **Narrow is *faster*, not just more accurate.** Every table and column is context Genie must read before writing SQL, so a bloated agent is slow **and** wrong. Wide tables are the worst offenders — replace the 380-column `fct_holdings_raw` with a slim view holding only what anyone asks about. Module 13 puts a stopwatch on this.
 
-**Certify and deprecate in Unity Catalog.** Certify `fct_aum_snapshot`, deprecate `fct_aum_legacy`. "We have two AUM tables" then stops being the agent's problem and becomes a governance decision made once.
+**Certify and deprecate in Unity Catalog.** `certified` and `deprecated` are the two values of one Unity Catalog
+system tag. Certify `fct_aum_snapshot`, deprecate `fct_aum_legacy`. "We have two AUM tables" then stops being the
+agent's problem and becomes a governance decision made once.
 
-**Metric views** — Unity Catalog semantics that separate **measures** from **dimensions**, defined in YAML, so a metric is defined once and grouped/filtered any way at runtime. They carry **agent metadata** (synonyms, display names, formatting rules) that directly improves accuracy and keeps formatting consistent across tools.
+> **Be precise about what each tag does.** Databricks documents a ranking effect for **certified** only —
+> *"This helps Genie One improve its answers by prioritizing the assets your organization vouches for."*
+> For **deprecated**, the documented behaviour is a warning to people: it *"warns that a data asset is outdated,
+> no longer reliable, or should not be used in new workflows"* and shows a restricted icon. Deprecating
+> `fct_aum_legacy` is worth doing, but do not tell a client it removes the table from Genie's consideration.
+> The thing that reliably keeps it out of an answer is not adding it to the agent.
+
+**Metric views** — the core implementation of Unity Catalog semantics. They *"provide a centralized way to define
+and manage business metrics by separating measure definitions from the fields (also called dimensions) used to group,
+filter, and aggregate them, so you can define metrics once and query them at runtime."* Defined in YAML. They also
+carry **agent metadata**: *"Add synonyms, display names, and formatting rules to improve agent accuracy and display
+consistent formats across tools."*
 
 | Situation | Build |
 |---|---|
 | One team, a handful of metrics, moving fast | curate inside the agent |
 | "AUM" must mean one thing across 5 agents, 3 dashboards and the regulatory filing | **metric view**, then point agents at it |
-| You already curated an agent and want to promote its semantics | **export the agent as a metric view** |
+| You already curated an agent and want to promote its semantics | **export the agent as a metric view** — kebab menu → **Export to metric view**, then refine with Genie Code |
 
 ### Business example — scoping the MFG "Wealth Reporting" agent
-**Before (bad):** 22 objects including `fct_holdings_raw` (380 columns), `fct_aum_legacy`,
-`dim_client` with its identifiers, both asset-class hierarchies, staff and headcount tables,
-and `_tmp_flow_backfill`.
+**Before (bad): all 14 base objects**, which is what pointing an agent at the schema gets you.
+```
+dim_account        dim_advisor       dim_asset_class    dim_benchmark
+dim_client         dim_date          dim_fund           dim_fx_rate
+dim_portfolio      fct_aum_snapshot  fct_flows          fct_performance
+fct_aum_legacy     fct_holdings_raw
+```
+Four of those are actively harmful: `fct_holdings_raw` (380 columns of custodian feed),
+`fct_aum_legacy` (superseded, sitting beside its replacement), `dim_client` (carries the PII),
+and `dim_asset_class` with **both** its hierarchy columns visible — `investment_class` and
+`regulatory_class` answer the same allocation question two different ways.
 
-**After (good):** 6 objects
+**After (good): 7 objects** — six curated objects plus the metric view.
 ```
 vw_aum_reporting     -- month-end AUM per account, converted to USD, with the
                      -- discretionary split explicit and held-away separated
@@ -1154,34 +1192,70 @@ dim_asset_class      -- regulatory_class hidden; one hierarchy exposed
 dim_date             -- fiscal (Oct 1 start), calendar, and reporting dates
 mv_wealth_metrics    -- metric view: AUM, AUA, held-away, counts, averages
 ```
+> **Where did `dim_advisor` go?** It is not exposed. `mv_wealth_metrics` joins to it internally and
+> surfaces `Region` and `State` as dimensions, so "AUM in California" still answers — through one
+> governed object instead of a join the agent has to work out for itself. Pre-joining does not just
+> reduce the count; it decides *which* joins are allowed.
+
+**14 → 7 is the honest headline**, and 7 is still above the documented ≤ 5. Say so in the room. The
+next cut — folding `dim_portfolio` and `dim_asset_class` into the views — is a real trade-off between
+object count and the flexibility to group by things the metric view does not expose.
+
 > **Note what happened.** Most of the hard problems were solved *in the data layer*, before a
 > single instruction was written. That is the module's whole point.
 
 ### Business example — column descriptions that earn their keep
 | Column | ❌ Weak | ✅ Strong |
 |---|---|---|
-| `market_value_local` | "the market value" | "Market value of managed assets in the account's local currency. Convert with `dim_fx_rate` at `snapshot_date` before totalling. Excludes held-away assets — see `held_away_value_local`." |
-| `held_away_value_local` | "held away value" | "Assets Meridian reports on but does not manage. **Excluded from AUM.** Include only when the question says 'advised' or 'AUA'." |
-| `flow_type` | "type of flow" | "SUBSCRIPTION, REDEMPTION, EXCHANGE_IN, EXCHANGE_OUT, TRANSFER_IN, TRANSFER_OUT. **Exchanges move money between Meridian products and are not sales or redemptions.**" |
-| `snapshot_date` | "snapshot date" | "This table holds **one row per account per day**. Never SUM across dates; filter to a reporting date for a point-in-time figure." |
-| `region` | "region code" | "Advisor coverage region. Values: NE, SE, MW, WEST. Users say 'Northeast', 'the West Coast', 'Midwest'." |
-| `twr_net` | "net return" | "Time-weighted return after fees, for the `period_type` on the row. Not the same as `mwr`, which reflects the timing of client cash flows." |
+| `fct_aum_snapshot.market_value_local` | "the market value" | "Market value of managed assets in the account's local currency. Convert with `dim_fx_rate` at `snapshot_date` before totalling. Excludes held-away assets — see `held_away_value_local`." |
+| `fct_aum_snapshot.held_away_value_local` | "held away value" | "Assets Meridian reports on but does not manage. **Excluded from AUM.** Include only when the question says 'advised' or 'AUA'." |
+| `fct_flows.flow_type` | "type of flow" | "SUBSCRIPTION, REDEMPTION, EXCHANGE_IN, EXCHANGE_OUT, TRANSFER_IN, TRANSFER_OUT. **Exchanges move money between Meridian products and are not sales or redemptions.**" |
+| `fct_aum_snapshot.snapshot_date` | "snapshot date" | "This table holds **one row per account per day**. Never SUM across dates; filter to a reporting date for a point-in-time figure." |
+| `dim_advisor.region` | "region code" | "Advisor coverage region. Values: NE, SE, MW, WEST. Users say 'Northeast', 'the West Coast', 'Midwest'." |
+| `fct_performance.twr_net` | "net return" | "Time-weighted return after fees, for the `period_type` on the row. Not the same as `mwr`, which reflects the timing of client cash flows." |
+
+These are descriptions for the **base** columns, which is where the ambiguity lives — the curated views
+resolve most of it (`vw_aum_reporting` has already applied `dim_fx_rate` and split out held-away). Write
+them anyway: the base tables outlive this agent, and the next author starts from what Unity Catalog says.
 
 ### Demo (15 min)
-Ask an under-prepared agent *"What was our AUM in California at the end of last year?"* → it sums a daily snapshot, includes held-away assets, uses the calendar year, and returns nothing for "California". Four problems in one answer, none of them flagged. Then ask the prepared 6-object agent. Same question, right answer, no prompt tricks.
+Ask an under-prepared agent *"What was our AUM in California at the end of last year?"* → it sums a daily snapshot, includes held-away assets, uses the calendar year, and returns nothing for "California". Four problems in one answer, none of them flagged. Then ask the prepared 7-object agent. Same question, right answer, no prompt tricks.
 
 ### Lab 7 (30 min) — GRADED
-From the 22 raw MFG objects: choose ≤ 8, write the `mfg_core_vw_aum_reporting` and `mfg_core_vw_net_flows` view SQL, write descriptions for 10 columns, and list 6 columns to hide with reasons.
+From the **14 base MFG objects** created by Module 0 notebooks 02–04: choose ≤ 8, write the
+`vw_aum_reporting` and `vw_net_flows` view SQL, write descriptions for 10 columns, and list 6 columns to
+hide with reasons.
+
+> **Object naming.** Bare names above assume the default layout (schemas `core` / `ref` / `staging`, so
+> `core.vw_aum_reporting`). If you installed the dataset into a single schema with a table prefix, the same
+> object is `<schema>.mfg_core_vw_aum_reporting`. Use whichever your notebook 01 printed — they are the same
+> objects.
+
+Worked answer: notebooks `06_curated.sql` and `07_metric_view.sql`. **Attempt the lab before running them.**
 
 ### Anti-patterns to name explicitly
 - Adding every table "just in case."
-- Accepting **AI-generated column descriptions without verifying them** — the docs call this out, and here the suggested text gets AUM and the asset-class hierarchy wrong.
-- Leaving both asset-class hierarchies visible.
+- Accepting **AI-generated column descriptions without verifying them.** The docs are direct about this: *"Inspect any AI-generated descriptions for accuracy and clarity, and use them only if they align with what you would manually provide."* On this dataset the suggested text gets planted flaws 1 (AUM has three defensible readings) and 5 (the two asset-class hierarchies) wrong.
+- Leaving both of `dim_asset_class`'s hierarchy **columns** visible — `investment_class` and `regulatory_class` roll the same assets up two different ways.
 - Exposing a daily-snapshot table without a warning in its description.
 - Exposing `dim_client` when `dim_client_safe` exists.
 
 
 ---
+
+### Sources for the quoted limits and guidance
+Every quotation in this module is verbatim from Databricks documentation. Re-check before each delivery —
+Genie ships fast, and "Genie spaces" were renamed "Genie Agents".
+
+| Claim | Page |
+|---|---|
+| 30 tables/views; 10,000 conversations × 10,000 messages; Export to metric view | *Create and manage a Genie Agent* — `docs.databricks.com/aws/en/genie-agents/set-up` |
+| ≤ 5 tables; new-analyst framing; prejoining; hide confusing columns; inspect AI-generated descriptions | *Genie best practices* — `docs.databricks.com/aws/en/genie/best-practices` |
+| Metric views: measures vs dimensions, agent metadata (synonyms, display names, formatting rules) | *Unity Catalog metric views* — `docs.databricks.com/aws/en/uc-semantics/metric-views/` |
+| `certified` / `deprecated` system tag and its documented effects | *Flag data as certified or deprecated* — `docs.databricks.com/aws/en/data-governance/unity-catalog/certify-deprecate-data` |
+| 100 instructions / 200 knowledge store snippets per agent (Module 13) | *Tune Genie Agent quality* — `docs.databricks.com/aws/en/genie-agents/tune-quality` |
+| The 14 base objects, the 380-column feed, the nine planted flaws | This course's Module 0 notebooks and Reference Part F |
+
 
 ## Module 8 — Create Your First Genie Agent
 **Level:** Intermediate · **Duration:** 75 min
@@ -1622,15 +1696,28 @@ typical observed:        ~20+ seconds            ~3–10 seconds
 ### Limits to know before you tune
 *Many "problems" are really a limit being hit.*
 
+**Documented by Databricks** — quote these freely:
+
 | Limit | Value | What happens at the limit |
 |---|---|---|
-| Tables per agent | **≤ 30 (aim ≤ 5)** | worse routing, slower thinking |
-| Text instructions | warning at **~5,000–7,000 chars**; **~100** max | Genie may **silently ignore** parts of long instructions |
-| Knowledge store snippets | **~200** | extra context stops being used |
-| **SQL query time** | **90 sec — cannot be raised** | query returns a timeout error |
-| **Backend response** | **~597 sec (~10 min)** | "runaway" answer — **billed but never shown** |
-| Ontology snippets (good coverage) | ~1,000+ (non-CMK workspace) | too few = little learned context |
-| **AI model requests** | **200/sec shared** · 300,000/sec dedicated | heavy sequential use hits **429 / rate limit** |
+| Tables/views per agent | **30** (docs advise **≤ 5**) | worse routing, slower thinking |
+| **Instructions** | **100 per agent** — each example SQL query, each SQL function, and the *entire* General instructions block each count as **one** | no room for the instruction that would have fixed the answer |
+| **Knowledge store snippets** | **200 per agent** — table descriptions, join relationships and SQL expressions (measures, filters, dimensions) share this limit; text instructions, example queries, SQL functions, column descriptions and prompt matching do **not** count | extra context stops being used |
+| Entity matching | string columns only; up to **120 columns**; **1,024 distinct values** per column, each **≤ 127 characters** | values beyond the cap are not matched |
+| Conversations | **10,000 per agent**, each up to **10,000 messages** | — |
+
+**From the *Genie Performance & Issues Playbook*, not the docs** — field-observed, and useful, but
+label them as such in front of a client:
+
+| Heuristic | Observed value | What happens |
+|---|---|---|
+| General instructions length | degrades around **~5,000–7,000 chars** | Genie may **silently ignore** parts of long instructions |
+| SQL query time | **~90 sec** | query returns a timeout error |
+| Backend response | **~597 sec (~10 min)** | "runaway" answer — **billed but never shown.** The docs' own API guidance is to stop polling after 10 minutes and return a timeout |
+| Ontology snippets for good coverage | ~1,000+ (non-CMK workspace) | too few = little learned context |
+| AI model requests | 200/sec shared · 300,000/sec dedicated | heavy sequential use hits **429 / rate limit** |
+
+The split matters. The first table is what you promise; the second is what you plan for.
 
 ### Step 1 — find out where the time goes (never tune blind)
 - **Compare total response time vs SQL run time.** Query fast but total 30 s+ → it's **thinking** (Step 2). Query slow → **warehouse/tables** (Step 3).
@@ -1684,12 +1771,12 @@ Measurement:
 Verdict: a thinking problem, plus 3 seconds we added ourselves.
 
 What the agent actually looked like:
-  22 objects, including fct_holdings_raw (380 columns) and fct_aum_legacy
+  all 14 base objects, including fct_holdings_raw (380 columns) and fct_aum_legacy
   9,400 characters of prose instructions  ← over the ~5–7k warning threshold
   no join specs declared
 
 Fixes applied:
-  → 22 objects down to 7 (Module 7)
+  → 14 objects down to 7 (Module 7)
   → 380-column raw table replaced with a slim view
   → 6,000 chars of prose converted to 4 SQL expressions + 3 example queries
   → poll interval fixed at 2 s with a proper backoff
@@ -2002,7 +2089,7 @@ and fund operations) — and deliver an agent a business team could use on Monda
 | **Synthetic document set for the volume** | 40 PDFs | investment committee memos, advisor call notes, client complaint letters |
 | **Governance objects** | 1 set | one row filter, four column masks, three personas |
 | Reference agent (fully curated, 7 objects) | 1 | the instructors' answer key |
-| Broken agent (uncurated, 22 objects, 9,400-char prose) | 1 | Lab 4 diagnosis, Module 7 demo, **Module 13 latency lab** |
+| Broken agent (uncurated, all 14 base objects, 9,400-char prose) | 1 | Lab 4 diagnosis, Module 7 demo, **Module 13 latency lab** |
 | Concept videos | 18 | 6–10 min each, business language per §A.5 |
 | Guided demo recordings | 18 | all on the Meridian dataset |
 | Lab guides + solution keys | 17 (Lab 0–16) | graded: Labs 2, 6, 7, 8, 9, 10, 11, 13, 16, plus the capstone |
@@ -2162,8 +2249,8 @@ being made.
 | **8** | `dim_client` holds real **PII**: `ssn_last4`, `email`, `dob`, `annual_income` | a governance incident, not a data-quality one | 6, 17 |
 | **9** | International portfolios report in **EUR, GBP and JPY**, needing `dim_fx_rate` joined *as of the reporting date*. `fct_flows` also separates `trade_date` from `settlement_date` | currency mixing; totals that don't tie to finance; flows landing in the wrong period | 9, 10 |
 
-Two more flaws are added to the *agent*, not the data, in Module 8: a bloated 22-object agent
-and 9,000 characters of prose instructions — the raw material for Module 13's latency lab.
+Two more flaws are added to the *agent*, not the data, in Module 8: a bloated agent pointed at
+all 14 base objects, and 9,400 characters of prose instructions — the raw material for Module 13's latency lab.
 
 **Why this set is stronger than a retail-banking one.** Every ambiguity above is an argument
 asset managers genuinely have. AUM versus AUA appears in regulatory filings. The distinction
@@ -2183,7 +2270,7 @@ one people actually make.
 | Row filters | 6 | `dim_advisor.region` — filter by regional sales lead |
 | Column masks | 6 | `dim_client.ssn_last4`, `email`, `dob`, `annual_income` |
 | Per-user credentials | 6 | three personas, three correct answers to one question |
-| 30-object limit / pre-joining | 7 | 14 base objects → curated 6 |
+| 30-object limit / pre-joining | 7 | 14 base objects → 7 curated (6 objects + 1 metric view) |
 | Slim views vs wide tables | 7, 13 | a 380-column `fct_holdings_raw` custodian feed is included |
 | Metric views | 7, 15 | `AUM`, `Assets Under Advisement`, `Held Away Assets` used by 3+ agents |
 | Certify / deprecate | 6, 12 | two AUM tables ship: `fct_aum_snapshot` (certify) and `fct_aum_legacy` (deprecate) |
@@ -2196,7 +2283,7 @@ one people actually make.
 | Example SQL & parameters | 10 | fiscal-period and asset-class parameters |
 | UC functions as trusted assets | 10 | `aum_by_asset_class`, `net_flows`, `to_usd`, `fiscal_period` |
 | Clarification instructions | 10 | flaws 1 and 7 — which AUM, and which return |
-| Instruction length ceiling | 10, 13 | the planted 9,000-character prose block |
+| Instruction length ceiling | 10, 13 | the planted 9,400-character prose block |
 | Benchmarks & scoring | 11 | ground-truth SQL for all nine flaws |
 | Monitoring & feedback triage | 12 | seeded conversation history with feedback |
 | Nondeterminism expectation-setting | 4, 11, 12 | flaw 7 produces legitimately varying answers |
