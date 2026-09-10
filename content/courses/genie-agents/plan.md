@@ -1395,6 +1395,7 @@ the result. Module 10 comes back to it when you write the clarification instruct
 > **The highest-value module in the course.** Everything before it prepares for this, and
 > everything after it measures or operates what you build here.
 
+**Graded by machine.** `academy.check_lab('genie-agents', 8, schema='<your schema>')` runs 4 checks against your work.
 ### Learning outcomes
 1. Build agent-scoped metadata and synonyms.
 2. Configure **entity matching / value dictionaries** for categorical columns.
@@ -1470,6 +1471,7 @@ Genie proposes new joins and SQL expressions by reading Unity Catalog schemas an
 ### Lab 9 (40 min) — GRADED, hardest lab
 On the MFG agent: add synonyms for 10 business terms (start with AUM, AUA, net new money, equities, cash), enable entity matching on 4 categorical columns, declare all 6 join relationships with correct cardinality, and author 8 SQL expressions (3 filters, 4 measures, 1 field). Then re-run the 9 broken questions from Lab 4 and show which now pass.
 
+**Graded by machine.** `academy.check_lab('genie-agents', 9, schema='<your schema>')` runs 6 checks against your work.
 ### Common mistakes
 - Adding synonyms to the column but not the values (or vice versa).
 - Wrong cardinality (One-to-Many where it's Many-to-One) → fan-out and inflated totals.
@@ -1571,6 +1573,7 @@ EXAMPLE      — the exact question to ask
 ### Lab 10 (40 min) — GRADED
 Add 10 example queries (≥3 parameterised with typed, commented parameters), register 2 UC functions as trusted assets (one must settle the AUM definition, one the flow netting), and write 4 text instruction blocks including one clarification rule for "return" using the four-part template. Submit an instruction budget table.
 
+**Graded by machine.** `academy.check_lab('genie-agents', 10, schema='<your schema>')` runs 4 checks against your work.
 ### Common mistakes
 - Generic SQL patterns as examples (Genie already knows `GROUP BY`) instead of **organisation-specific logic**.
 - Conflicting guidance between a text instruction and a SQL expression → nondeterministic answers. The docs are explicit: *"a key task is to review and resolve any inconsistencies."*
@@ -1664,6 +1667,7 @@ Build a 30-question benchmark set (10 smoke, 12 coverage, 8 traps — at least o
 
 **Summary:** Find quality problems before users report them, and turn each piece of feedback into a curation change that lasts.
 
+**Graded by machine.** `academy.check_lab('genie-agents', 11, schema='<your schema>')` runs 3 checks against your work.
 ### Learning outcomes
 1. Use the Monitor tab to find quality problems before users complain.
 2. Run a feedback triage process.
@@ -1725,6 +1729,7 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 
 > Sourced from the *Genie Performance & Issues Playbook*. This module needs the **Large** data tier from Module 0 — you cannot teach latency on a toy dataset.
 
+**Reviewed by a person.** There is no automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 12)` lists what a reviewer looks for.
 ### Learning outcomes
 1. Split a slow response into **thinking time** vs **query time** before changing anything.
 2. Measure both halves with `system.query.history` and the Conversation API.
@@ -1837,6 +1842,7 @@ doubled it. Twice. For nothing.
 ### Lab 13 (40 min) — GRADED
 Given the deliberately slow MFG agent on the Large tier: measure both halves using `system.query.history` and the Conversation API, produce a written diagnosis, apply **at least three fixes at the correct layer**, re-measure, and report before/after with evidence. **Grading rewards a correct diagnosis over a large speedup** — a learner who correctly identifies a thinking-bound problem and improves it 20% scores higher than one who doubles the warehouse and gets lucky.
 
+**Reviewed by a person.** `academy.check_lab('genie-agents', 13, schema='<your schema>')` confirms the 3 prerequisites only — the judgement in this lab is what is being assessed, and a checker cannot read it.
 ### Common mistakes
 - Scaling the warehouse for a thinking-bound problem.
 - Timing Genie from system-table timestamps.
@@ -1932,6 +1938,7 @@ Given 8 real symptom reports, classify each (curation / platform bug / performan
 
 **Summary:** How Genie is billed, where budgets bite, and how to run several agents without their definitions drifting apart.
 
+**Reviewed by a person.** There is no automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 14)` lists what a reviewer looks for.
 ### Learning outcomes
 1. Explain how Genie is billed.
 2. Set account-level budgets with the right thresholds.
@@ -1990,6 +1997,7 @@ and shared, and say which agent would cause the most damage by redefining it.
 
 ---
 
+**Reviewed by a person.** There is no automatic grade: the judgement *is* the exercise. `academy.lab('genie-agents', 15)` lists what a reviewer looks for.
 ### LEVEL 5 — ADVANCED / EXTEND
 
 ---
@@ -2092,6 +2100,7 @@ concern, and in line with sector-wide EM redemptions over the period.
 
 **Summary:** Ship an agent a business team could use on Monday, with a charter, a measured benchmark score and a governance review.
 
+**Reviewed by a person.** `academy.check_lab('genie-agents', 16, schema='<your schema>')` confirms the 2 prerequisites only — the judgement in this lab is what is being assessed, and a checker cannot read it.
 ### The brief
 Learners pick a domain — their own real one if available, otherwise one of the provided
 asset-management profiles (distribution, investment performance, institutional relations, product
@@ -2120,6 +2129,17 @@ and fund operations) — and deliver an agent a business team could use on Monda
 | Measured accuracy | 18 | real benchmark run, honest before/after, Tier-1 at 100%, failures triaged not hidden |
 | Performance & operations | 12 | thinking-vs-query measured before tuning; correct fix layer; real cadence, owners, budget, escalation path |
 | Business communication | 10 | a non-technical sponsor understands the value **and the limits** in 5 minutes |
+
+### Checking your own work first
+Before you submit, run the checks the earlier labs used. The capstone re-checks them in one pass:
+
+```python
+academy.check_lab('genie-agents', 17, schema='<your schema>')
+```
+
+Five checks: the agent exists and is narrow, starter questions are set, the knowledge store has
+its SQL expressions, example queries are present, and a benchmark exists with ground truth — the
+work of Labs 7 through 11, assembled. The handover document is read by a person.
 
 ### Pass bar
 ≥ 70 points, **and** Tier-1 smoke tests at 100%, **and** the readout explicitly states what the agent should *not* be asked *and* that consistency is guidance rather than guarantee above the Unity Catalog layer. (Stating limits is a graded requirement — it is what makes an agent trustworthy in production.)
