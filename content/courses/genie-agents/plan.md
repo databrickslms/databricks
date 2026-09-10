@@ -3294,7 +3294,70 @@ often, and — the part that matters most — **which layer to fix it in.**
 | Platform admin | enablement, warehouse, **budgets**, latency | quarterly |
 
 ### Lab 12 (25 min)
-Given a Monitor export of 40 MFG conversations with feedback, produce a triage sheet: root cause, correct fix **layer**, owner, priority. Fix the top 5.
+Forty conversations with user feedback. You will triage all of them and fix five — and the marks
+are for the **layer**, not the fix.
+
+---
+
+**Step 1 — Get the export (1 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 12)
+```
+
+Forty rows: how many users hit it, what feedback they left, the question, and what came back.
+
+---
+
+**Step 2 — Sort by how many people hit it (2 min).**
+
+The export is already ordered that way. Read the top ten and notice something: the loudest
+complaints are not at the top. Number 1 affected fourteen people and got a plain thumbs-down;
+number 33 affected one person and came with a paragraph.
+
+**Triage by reach, not by volume of complaint.** The person who wrote a paragraph is engaged. The
+fourteen who clicked thumbs-down and left are the ones you are losing.
+
+---
+
+**Step 3 — Give every row a layer (10 min).**
+
+For each conversation, name the layer that owns the fix:
+
+| Layer | It belongs here when |
+|---|---|
+| **data** | the view, the grain or the conversion is wrong |
+| **knowledge store** | a synonym, a value list or a join is missing |
+| **example query** | the shape of the question needs demonstrating |
+| **instruction** | a convention or a clarification rule is needed |
+| **not a defect** | the agent behaved correctly, or should decline |
+
+The layer matters more than the fix. **A fix in the wrong layer works once and rots** — patch a data
+problem with prose and the next person who phrases the question differently breaks it again.
+
+---
+
+**Step 4 — Find the five that are not defects (5 min).**
+
+Five of the forty are questions this agent should decline rather than answer. Fee revenue is not in
+this data. "The Hartmann family" has no household concept. A forecast is not a retrieval.
+
+**Closing those correctly is worth as much as fixing the rest.** An agent that answers a question it
+should have refused is more dangerous than one that refuses too often, and a triage sheet that
+records five "not a defect" decisions is doing its job.
+
+---
+
+**Step 5 — Fix the top five and record the before and after (7 min).**
+
+1. Take the five with the highest reach.
+2. Fix each in the layer you named.
+3. Re-ask the original question.
+4. Record what changed.
+
+*You know it worked when:* every row has a layer, at least one is correctly marked "data is wrong"
+rather than an agent problem, and at least one is closed as expected behaviour.
 
 
 ---
@@ -3456,7 +3519,101 @@ doubled it. Twice. For nothing.
 **Teaching line:** *"Doubling the warehouse when the thinking is slow is like buying a faster car to fix a traffic jam."*
 
 ### Lab 13 (40 min) — GRADED
-Given the deliberately slow MFG agent on the Large tier: measure both halves using `system.query.history` and the Conversation API, produce a written diagnosis, apply **at least three fixes at the correct layer**, re-measure, and report before/after with evidence. **Grading rewards a correct diagnosis over a large speedup** — a learner who correctly identifies a thinking-bound problem and improves it 20% scores higher than one who doubles the warehouse and gets lucky.
+You have a slow agent on the large tier. **Measure before you change anything** — that instruction
+is the whole lab, and the one most people ignore.
+
+**Before you start:** the large tier built, and the uncurated agent pointed at it. Module 0 section
+0.0 has both commands.
+
+---
+
+**Step 1 — Get the worksheet (1 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 13)
+```
+
+Print it. You are going to fill in a before column and an after column, and having them side by side
+is the point.
+
+---
+
+**Step 2 — Ask one slow question and time it end to end (4 min).**
+
+1. Warm the warehouse first — ask any trivial question and discard it. A cold start is real latency
+   but it is not the latency you are diagnosing.
+2. Now ask: *"What were total net flows in FY2026 Q3?"*
+3. Record wall-clock time from pressing enter to the answer appearing.
+
+Expect something in the region of 25–40 seconds.
+
+---
+
+**Step 3 — Split it into two halves (8 min).**
+
+This is the measurement that decides everything after it.
+
+**The query half** — from `system.query.history`:
+```sql
+SELECT statement_text, execution_duration_ms, compilation_duration_ms,
+       waiting_for_compute_duration_ms, waiting_at_capacity_duration_ms,
+       result_fetch_duration_ms
+FROM   system.query.history
+WHERE  warehouse_id = '<your warehouse>'
+  AND  start_time > current_timestamp() - INTERVAL 15 MINUTES
+ORDER BY start_time DESC
+```
+
+**The thinking half** — from the Conversation API. Timestamp the transition from `submit` to
+`EXECUTING_QUERY` yourself. That gap is context-gathering, planning and SQL-writing.
+
+Three traps, all of which produce a wrong diagnosis:
+
+1. **Do not time from `last_updated_timestamp`.** It moves, and it is not reliable.
+2. **Instrument your own poll loop as its own span.** A naive loop has been measured adding 6–8
+   seconds, which then gets blamed on Genie.
+3. **There is no `statement_id` in the API response.** Match on `statement_text` plus warehouse plus
+   a narrow time window.
+
+---
+
+**Step 4 — Write the diagnosis before you touch anything (3 min).**
+
+One sentence: **thinking-bound** or **query-bound**, and the numbers that say so.
+
+Write it down now. If you fix first and diagnose after, you will attribute the improvement to
+whichever change you happened to make.
+
+On this agent you should find the SQL taking a handful of seconds and the thinking taking most of
+the rest. That means no amount of warehouse helps — which is the lesson Meridian's platform team
+paid for twice.
+
+---
+
+**Step 5 — Apply three fixes, each at the layer the measurement pointed to (12 min).**
+
+For a thinking-bound problem:
+
+| Fix | Why it helps |
+|---|---|
+| Cut the object count | fewer tables and columns to read before writing SQL |
+| Replace the 380-column feed with a slim view | the single biggest context saving here |
+| Convert prose into SQL expressions and example queries | 10,300 characters is a lot to re-read every time |
+
+Name the layer for each fix as you make it. A fix you cannot attribute to a measurement is a guess.
+
+---
+
+**Step 6 — Re-measure and report (7 min).**
+
+Same question, same warm warehouse, same two halves. Fill in the after column.
+
+Report **before, after, and the layer of each fix** — with your poll-loop overhead shown separately
+from Genie's time, so the numbers are honest.
+
+**A correct diagnosis with a 20% gain scores higher than doubling the warehouse and getting lucky.**
+The grading is about whether you can say *why* it got faster.
 
 **Reviewed by a person.** `academy.check_lab('genie-agents', 13)` confirms the 3 prerequisites only — the judgement is what is being assessed. This lab grades your agent, so it needs no schema.
 
@@ -3564,7 +3721,65 @@ Did it hit a documented limit?                 → capacity/design       → Mod
 **Teaching point:** only one of the three was the author's bug. Knowing which is which is the skill this module sells.
 
 ### Lab 14 (30 min)
-Given 8 real symptom reports, classify each (curation / platform bug / performance / expected variation / governance), name the evidence to capture, and write the escalation note for the two that are platform bugs.
+Eight symptom reports as they were raised. Two are genuine platform bugs. Finding which two, and
+being able to prove it, is the lab.
+
+---
+
+**Step 1 — Get the eight reports (1 min).**
+
+```python
+import databricks360 as academy
+academy.lab('genie-agents', 14)
+```
+
+---
+
+**Step 2 — Classify each one (10 min).**
+
+Five categories. Write the number, the category, and one line of reasoning:
+
+| Category | Signature |
+|---|---|
+| **curation** | a missing synonym, value list, join or example — yours to fix |
+| **platform bug** | reproducible, and no configuration you control changes it |
+| **performance** | it works, it is slow — Module 13 |
+| **expected variation** | the agent behaved correctly and the reporter expected something else |
+| **governance** | a mask, a filter or a grant is doing its job |
+
+---
+
+**Step 3 — Rule things out before you escalate (6 min).**
+
+For each one you are tempted to call a platform bug, work through this first:
+
+1. Does it reproduce? Same question, same agent, twice.
+2. Does it reproduce for another user? If not, it is governance, not a bug.
+3. Does changing the curation change it? If yes, it is yours.
+4. Is it slow rather than wrong? Then it is Module 13, not an escalation.
+
+Most "platform bugs" die at step 3. Report 1 — *"a different number this morning for the same
+question"* — is the classic: it is expected variation, and closing it correctly is worth more than
+escalating it.
+
+---
+
+**Step 4 — Write the two escalation notes (10 min).**
+
+For the two that survived, write a note containing all four of these. A note missing any one goes to
+the back of a queue and stays there:
+
+1. **A reproduction** — the exact question, the agent, and that it happens every time.
+2. **A timestamp and workspace id** — so someone can find it in the logs.
+3. **What you already ruled out** — the four checks above, and what each showed.
+4. **The impact** — how many users, how often.
+
+The third is the one people skip and the one that gets a ticket read. It tells the person receiving
+it that you have done the work, and it stops the first reply being a request for information you
+already have.
+
+*You know it worked when:* exactly two are escalated, they are the right two, at least one is closed
+as expected variation, and nothing is escalated that you could have fixed in curation.
 
 
 ---
@@ -3643,10 +3858,75 @@ instruction block reused in every agent.
 **Portfolio hygiene:** delete old and unused agents. Too many agents hurts routing for everyone in the workspace.
 
 ### Lab 15 (25 min)
-Design an agent portfolio for an asset manager (or, if learners prefer, their own firm's shape):
-4–6 agents with audience, objects and owner, plus the shared metric-view foundation and a budget
-plan with thresholds and blocking decisions. Name at least one metric that must be defined once
-and shared, and say which agent would cause the most damage by redefining it.
+One agent works. This lab is about the next five, and what goes wrong between them.
+
+Design for Meridian, or for your own firm if its shape is more useful to you.
+
+---
+
+**Step 1 — Name four to six agents (6 min).**
+
+For each: **audience**, **topic**, **objects**, **owner**.
+
+One audience and one topic each. If an agent's audience is "the business" or its topic is "reporting",
+split it — that is the mistake Module 7 warned about, arriving at portfolio scale.
+
+| Agent | Audience | Topic | Owner |
+|---|---|---|---|
+| Wealth & Distribution | regional leads, distribution | AUM and flows | *a person* |
+| … | | | |
+
+---
+
+**Step 2 — Find the metric that must be shared (5 min).**
+
+Look across your agents and find at least one metric that appears in more than one.
+
+For Meridian it is AUM: it is in the wealth agent, the institutional agent, the board reporting
+agent and the regulatory extract. Four places, and if each defines it locally you have four numbers
+and a meeting.
+
+Write down **where the shared definition lives** — a metric view, since that is catalog-scoped and
+every agent sees it.
+
+---
+
+**Step 3 — Name the agent that would do the most damage (4 min).**
+
+Pick the one agent that, by redefining that metric locally, would cause the worst outcome. Say what
+the damage looks like when it reaches someone outside the firm.
+
+For Meridian it is whichever agent feeds client reporting: an internal disagreement about AUM is an
+argument, and the same disagreement on a client statement is a complaint and possibly a
+restatement.
+
+---
+
+**Step 4 — Write the budget plan (6 min).**
+
+1. Set a **shared threshold** for the pool.
+2. Set **per-user thresholds**.
+3. Decide **blocking** separately for people and for service principals.
+
+The rule worth writing down: **block service principals, alert humans.** A runaway integration loop
+is the real cost risk — it has no free allowance and no judgement — and a curious regional lead
+asking twenty questions is not.
+
+Say what happens *at* each threshold, not just what the number is. "Alert at 80%" is not a plan
+unless someone is named to receive it.
+
+---
+
+**Step 5 — Say how a new agent inherits the foundation (4 min).**
+
+Write the three sentences you would give someone building agent number seven: which metric view to
+point at, which definitions they may not redefine, and who signs off.
+
+If you cannot write that, your portfolio is five agents that will diverge.
+
+*You know it worked when:* every agent has one audience and one named owner, at least one metric is
+identified as shared with a home, and your budget blocks service principals before it blocks
+people.
 
 
 ---
@@ -3763,7 +4043,90 @@ concern, and in line with sector-wide EM redemptions over the period.
 > **Teaching line:** *"A supervisor adds capability, never speed. If the complaint is 'slow' or 'wrong', the fix is upstream in the Genie Agent."*
 
 ### Lab 16 (40 min) — GRADED
-**(a)** Write a script that starts a conversation against the MFG agent, polls correctly (2 s interval, capped, instrumented as its own span), retrieves the SQL and result set, then asks a follow-up on the same `conversation_id`. Report your poll-loop overhead separately from Genie's time. **(b)** Export the agent's `serialized_space`, change one instruction, re-import as a second agent, and diff the two configs.
+Two halves. Part A makes the agent something other software can use. Part B makes its configuration
+something a team can review.
+
+---
+
+## Part A — drive it from the API
+
+**Step 1 — Start a conversation (5 min).**
+
+```python
+from databricks.sdk import WorkspaceClient
+w = WorkspaceClient()
+
+c = w.genie.start_conversation(space_id="<your agent id>",
+                               content="What was AUM by asset class at the last reporting date?")
+print(c.conversation_id, c.message_id)
+```
+
+Keep `conversation_id`. Everything in Part A depends on reusing it.
+
+**Step 2 — Write the poll loop, and time your own overhead (8 min).**
+
+1. Poll `get_message` on a **fixed 2-second interval**.
+2. **Cap it** — stop after a sensible ceiling rather than looping forever.
+3. Wrap your own loop in a timer, separate from Genie's time.
+
+That third point is the one being marked. A naive loop has been measured adding 6–8 seconds, and if
+you report total time without separating it you will be blaming Genie for your own code.
+
+**Step 3 — Retrieve the SQL and the results (4 min).**
+
+From the completed message, pull the `query` attachment for the SQL and fetch the result set. Print
+both. A caller that gets a number without the SQL cannot check anything.
+
+**Step 4 — Ask a follow-up on the same conversation (4 min).**
+
+```python
+w.genie.create_message(space_id="<id>", conversation_id=c.conversation_id,
+                       content="Now split that by region.")
+```
+
+Use the **same** `conversation_id`. Starting a new conversation loses the context, and "split that"
+means nothing without it — which is the API equivalent of the four-chats problem from Module 2.
+
+**Step 5 — Report your timings (3 min).**
+
+Three numbers: Genie's time, your poll-loop overhead, total. Separately.
+
+---
+
+## Part B — manage it as code
+
+**Step 6 — Export the configuration (4 min).**
+
+```python
+d = w.api_client.do("GET", f"/api/2.0/genie/spaces/{sid}",
+                    query={"include_serialized_space": True})
+space = json.loads(d["serialized_space"])
+```
+
+Read what comes back. Data sources, instructions, example queries, SQL snippets, benchmarks — the
+whole agent as one JSON document.
+
+**Step 7 — Change exactly one thing and re-import as a second agent (6 min).**
+
+1. Edit one instruction. One. Anything more and the diff stops being a demonstration.
+2. `POST /api/2.0/genie/spaces` with the modified `serialized_space` and a new title.
+
+Two things will bite, and both are worth meeting here rather than in production:
+
+- Every list in the payload must be **sorted by id** — tables by `identifier`. An unsorted list is
+  rejected.
+- The API will happily create a second agent with the **same title** and quietly append a timestamp.
+  Give it a distinct name.
+
+**Step 8 — Diff the two configurations (6 min).**
+
+Export both and diff them.
+
+**You should see exactly one difference.** If you see more, something you did not intend changed —
+which is precisely the argument for managing agents as files rather than as clicks.
+
+*You know it worked when:* your follow-up reused the conversation, your poll overhead is reported
+separately, and your diff shows one intended change and no accidental ones.
 
 
 ---
