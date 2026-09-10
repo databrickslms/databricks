@@ -3204,6 +3204,26 @@ to 27, and here are the five that still fail".
 ### Key concepts and limits
 - **Benchmarks: up to 500 questions per agent.** They **measure** accuracy — explicitly *not* context, and they never improve answers.
 - **Chat-mode scoring:** each question needs a **SQL query whose result set is the correct answer**; scoring compares result sets automatically.
+
+  **Ground truth is a SQL query, and it is judged on what it returns.** That changes how you
+  write it. You are not trying to guess the SQL Genie will produce — write the clearest query
+  you can, because a benchmark passes on any of four criteria:
+
+  | Passes when |
+  |---|
+  | the SQL matches exactly |
+  | the result set matches exactly |
+  | the same data comes back in a different order |
+  | numeric values agree to 4 significant digits |
+
+  So a different join order, a different alias, a `WITH` clause instead of a subquery — none of
+  that fails. A different *number* does.
+
+  **A question with no SQL answer is still a valid benchmark question.** It is scored by hand
+  rather than automatically. That is what makes the two clarification traps in Lab 11 legitimate
+  rather than a gap: "what was our return last year?" has no correct result set, because the
+  correct behaviour is to ask which return is meant. You cannot express "it should have asked me"
+  as a query, and you should not try.
 - **Agent-mode scoring:** uses **LLM judges** (the output is a report, not a comparable result set).
 - **Access benchmark evaluations**, review individual evaluations, and **analyse a whole run with Genie Code**.
 - **The fix loop:** view the generated query → correct it → **save it as an example query**. A bug fix becomes permanent training. The single most efficient curation move in the product.
