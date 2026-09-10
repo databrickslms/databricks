@@ -75,6 +75,31 @@ Three published **tracks** from one build:
 2. Describe what Meridian's business does and which tables record it.
 3. Read the data closely enough to notice where a question could have more than one honest answer.
 
+### 0.0 Two sizes, and which one you need
+
+The dataset ships in two tiers, and picking the wrong one costs you either accuracy or an hour.
+
+| Tier | Flow events | Build time | Use it for |
+|---|---|---|---|
+| **`small`** (default) | 20M | under a minute on a warm serverless warehouse | **everything except Module 13** |
+| **`large`** | 900M | tens of minutes, and it is real compute | **Module 13 only** — you cannot measure latency on a toy dataset |
+
+```python
+academy.install('genie-agents')                              # small
+academy.install('genie-agents', tier='large', schema='large_tier')
+```
+
+Build the large tier into **its own schema**, as above. It is not a replacement for the small one —
+every other module wants the small dataset, and regenerating it later to get back is an hour you
+did not need to spend. Module 13 then points an agent at the large schema:
+
+```python
+academy.create_agents('genie-agents', schema='large_tier')
+```
+
+Do this the day before Module 13, not during it. Only `03_facts` scales with the tier; the
+dimensions are identical either way.
+
 ### 0.1 The company: Meridian Financial Group (MFG)
 
 A mid-size US investment manager, close to **$100B** under management across **4,500 portfolios**
@@ -1994,7 +2019,14 @@ Given a Monitor export of 40 MFG conversations with feedback, produce a triage s
 
 **Summary:** Split a slow answer into thinking time and query time first, because the fixes for the two are entirely different.
 
-> Sourced from the *Genie Performance & Issues Playbook*. This module needs the **Large** data tier from Module 0 — you cannot teach latency on a toy dataset.
+> Sourced from the *Genie Performance & Issues Playbook*. This module needs the **large** data
+> tier — see Module 0 section 0.0. Build it into its own schema *before* the session, not during
+> it: 900M flow events takes tens of minutes of real compute, and only `03_facts` scales.
+>
+> ```python
+> academy.install('genie-agents', tier='large', schema='large_tier')
+> academy.create_agents('genie-agents', schema='large_tier')
+> ```
 ### Learning outcomes
 1. Split a slow response into **thinking time** vs **query time** before changing anything.
 2. Measure both halves with `system.query.history` and the Conversation API.
