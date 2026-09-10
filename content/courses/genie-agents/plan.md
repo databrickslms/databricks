@@ -1164,14 +1164,23 @@ not which mode sounds more impressive.
 
 **Step 3 — Find the two disguised ones (5 min).**
 
-Two of the ten name a single measure and still need several to answer usefully. They read like
-metric questions and are not.
+Two of the ten name what sounds like a single number and still need several queries. They are not
+the obvious ones — numbers 2 and 9 announce themselves with "why" and "summarise", and spotting
+those proves nothing.
 
-Look at numbers 5 and 7. Both mention one thing — growth, performance — and neither can be answered
-by one query, because the useful answer is a comparison across several angles the asker has not
-specified.
+The two that matter read exactly like questions 1 and 6 until you try to answer them:
 
-Say for each what the extra angles are. That list is what Agent mode would go and get.
+**Number 5 — "What was our organic growth last year?"** Sounds like one measure. It is not in the
+data at all. Organic growth is net flows *excluding market movement*, so answering it means
+separating flow from performance, deciding whether exchanges count, and choosing a calendar. Three
+questions hiding inside one noun.
+
+**Number 7 — "How concentrated is the book?"** Sounds like a ratio. Concentrated by what — client,
+fund, channel, asset class? Each gives a different answer and the asker has not said. Working out
+which concentration matters *is* the research.
+
+For each, write down the extra angles a useful answer needs. That list is what Agent mode would go
+and get, and it is why one query cannot substitute.
 
 ---
 
